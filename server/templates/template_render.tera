@@ -1,9 +1,9 @@
 
 
 <fieldset style="float:right">
-    <horfimbor-template-state endpoint={{endpoint}}></horfimbor-template-state>
+    <horfimbor-mono-state endpoint={{endpoint}}></horfimbor-mono-state>
 </fieldset>
 
 <fieldset>
-    <horfimbor-template-input endpoint={{endpoint}}></horfimbor-template-input>
+    <horfimbor-mono-input endpoint={{endpoint}}></horfimbor-mono-input>
 </fieldset>

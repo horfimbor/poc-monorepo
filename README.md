@@ -1,6 +1,8 @@
-# horfimbor-template
+# horfimbor/poc-monorepo
 
-this repository is a template to create microservices using [horfimbor-eventsource](https://github.com/galakhygame/horfimbor-eventsource)
+this repository is a monorepo as a poc for the horfimbor game
+
+after the poc phase, this repo will be broken into pieces and archieved.
 
 ## development : 
 
@@ -34,7 +36,7 @@ just watch-server
 ```
 
 ```shell
-cargo build -p template-server
+cargo build -p mono-server
 ```
 
 before any commit please run the following : 

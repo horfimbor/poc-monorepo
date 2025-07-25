@@ -9,37 +9,37 @@ use yew::platform::spawn_local;
 use yew::platform::time::sleep;
 use yew::prelude::*;
 
-use template_shared::dto::TemplateDto;
-use template_shared::event::TemplateEvent;
+use mono_shared::dto::MonoDto;
+use mono_shared::event::MonoEvent;
 
 #[allow(dead_code)]
-pub struct TemplateState {
+pub struct MonoState {
     es: Option<EventSource>,
-    dto: Result<TemplateDto, String>,
+    dto: Result<MonoDto, String>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum DtoMessage {
-    Dto(TemplateDto),
-    Event(TemplateEvent),
+    Dto(MonoDto),
+    Event(MonoEvent),
     Error(String),
     Reconnect,
 }
 
 #[derive(WebComponent)]
-#[component(TemplateState)]
+#[component(MonoState)]
 #[derive(Default, Properties, PartialEq)]
-pub struct TemplateStateProps {
+pub struct MonoStateProps {
     pub endpoint: String,
 }
 
-impl TemplateState {
+impl MonoState {
     fn connect(&mut self, ctx: &Context<Self>) {
         if self.es.is_some() {
             return;
         }
-        self.dto = Ok(TemplateDto::default());
+        self.dto = Ok(MonoDto::default());
 
         let endpoint = ctx.props().endpoint.clone();
 
@@ -84,14 +84,14 @@ impl TemplateState {
     }
 }
 
-impl Component for TemplateState {
+impl Component for MonoState {
     type Message = DtoMessage;
-    type Properties = TemplateStateProps;
+    type Properties = MonoStateProps;
 
     fn create(ctx: &Context<Self>) -> Self {
         let mut state = Self {
             es: None,
-            dto: Ok(TemplateDto::default()),
+            dto: Ok(MonoDto::default()),
         };
 
         state.connect(ctx);

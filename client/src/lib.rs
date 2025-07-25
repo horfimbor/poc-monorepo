@@ -6,6 +6,6 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn run() {
-    state::optional::ComponentWrapper::define("horfimbor-template-state");
-    input::optional::ComponentWrapper::define("horfimbor-template-input");
+    state::optional::ComponentWrapper::define("horfimbor-mono-state");
+    input::optional::ComponentWrapper::define("horfimbor-mono-input");
 }

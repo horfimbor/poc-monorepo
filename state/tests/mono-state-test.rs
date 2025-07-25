@@ -1,29 +1,29 @@
 use cucumber::{World, given, then, when};
 use horfimbor_eventsource::{Dto, State};
-use template_shared::command::Delay;
-use template_shared::command::TemplateCommand::{Add, Delayed, Finalize, Reset};
-use template_shared::error::TemplateError;
-use template_shared::event::TemplateEvent;
-use template_state::TemplateState;
+use mono_shared::command::Delay;
+use mono_shared::command::MonoCommand::{Add, Delayed, Finalize, Reset};
+use mono_shared::error::MonoError;
+use mono_shared::event::MonoEvent;
+use mono_state::MonoState;
 
 #[derive(World, Debug, Default)]
-pub struct TemplateWorld {
-    model: TemplateState,
-    err: Option<TemplateError>,
+pub struct MonoWorld {
+    model: MonoState,
+    err: Option<MonoError>,
 }
 
-#[given(regex = r"^a template$")]
-fn a_template(world: &mut TemplateWorld) {
-    world.model = TemplateState::default();
+#[given(regex = r"^a mono$")]
+fn a_mono(world: &mut MonoWorld) {
+    world.model = MonoState::default();
 }
 
 #[when(regex = r"^i try to add (\d+)")]
-fn add_to_template(world: &mut TemplateWorld, nb: usize) {
+fn add_to_mono(world: &mut MonoWorld, nb: usize) {
     play_result(world, world.model.try_command(Add(nb)));
 }
 
 #[when(regex = r"^i try to delay (\d+) by (\d+) secs")]
-fn delay_template(world: &mut TemplateWorld, nb: usize, delay: usize) {
+fn delay_mono(world: &mut MonoWorld, nb: usize, delay: usize) {
     play_result(
         world,
         world
@@ -33,36 +33,36 @@ fn delay_template(world: &mut TemplateWorld, nb: usize, delay: usize) {
 }
 
 #[when(regex = r"^i try to reset it$")]
-fn reset_template(world: &mut TemplateWorld) {
+fn reset_mono(world: &mut MonoWorld) {
     play_result(world, world.model.try_command(Reset));
 }
 
 #[when(regex = r"^i wait (\d+) seconds$")]
-fn wait_template(world: &mut TemplateWorld, nb: u64) {
+fn wait_mono(world: &mut MonoWorld, nb: u64) {
     world.model.time_pass(nb);
 }
 #[when(regex = r"^i try to finalize the delay (\d+)$")]
-fn finalize_template(world: &mut TemplateWorld, nb: usize) {
+fn finalize_mono(world: &mut MonoWorld, nb: usize) {
     let id = world.model.get_id(nb);
     play_result(world, world.model.try_command(Finalize(id)));
 }
 
 #[then(regex = r"^it got a value of (\d+)$")]
-fn result(world: &mut TemplateWorld, nb: usize) {
+fn result(world: &mut MonoWorld, nb: usize) {
     assert_eq!(nb, world.model.get_value());
 }
 
 #[then(regex = r"^it got an error$")]
-fn error(world: &mut TemplateWorld) {
+fn error(world: &mut MonoWorld) {
     assert!(world.err.is_some());
 }
 
 #[then(regex = r"^remaining delay is (\d+)$")]
-fn remaining(world: &mut TemplateWorld, nb: usize) {
+fn remaining(world: &mut MonoWorld, nb: usize) {
     assert_eq!(nb, world.model.delayed().len());
 }
 
-fn play_result(world: &mut TemplateWorld, events: Result<Vec<TemplateEvent>, TemplateError>) {
+fn play_result(world: &mut MonoWorld, events: Result<Vec<MonoEvent>, MonoError>) {
     match events {
         Ok(list) => {
             for e in list {
@@ -75,5 +75,5 @@ fn play_result(world: &mut TemplateWorld, events: Result<Vec<TemplateEvent>, Tem
 
 #[tokio::main]
 async fn main() {
-    TemplateWorld::run("tests/book").await;
+    MonoWorld::run("tests/book").await;
 }

@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use thiserror::Error;
 
 #[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub enum TemplateError {
+pub enum MonoError {
     AlreadyEmpty,
     CannotAdd(usize),
     DelayOutOfBound(usize),
@@ -11,7 +11,7 @@ pub enum TemplateError {
     DelayNotFound,
 }
 
-impl Display for TemplateError {
+impl Display for MonoError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::AlreadyEmpty => {

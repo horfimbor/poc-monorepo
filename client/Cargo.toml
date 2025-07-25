@@ -1,5 +1,5 @@
 [package]
-name = "template-client"
+name = "mono-client"
 version = "0.1.0"
 edition = "2024"
 
@@ -13,7 +13,7 @@ horfimbor-client-derive = "0.1"
 bounce = "0.9"
 yew = { version= "0.21", features=["csr"] }
 custom-elements = "0.2"
-template-shared = { path = "../shared" }
+mono-shared = { path = "../shared" }
 gloo-net = "0.6"
 reqwasm = "0.5"
 weblog = "0.3"

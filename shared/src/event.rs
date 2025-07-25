@@ -5,7 +5,7 @@ use horfimbor_eventsource::{Event, EventName};
 use std::fmt::Display;
 
 #[cfg(feature = "server")]
-use crate::TEMPLATE_STATE_NAME;
+use crate::MONO_STATE_NAME;
 
 use serde::{Deserialize, Serialize};
 
@@ -17,16 +17,16 @@ pub struct Delayed {
 }
 
 #[cfg_attr(feature = "server", derive(Event))]
-#[cfg_attr(feature = "server", state(TEMPLATE_STATE_NAME))]
+#[cfg_attr(feature = "server", state(MONO_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub enum TemplateEvent {
+pub enum MonoEvent {
     Added(usize),
     Removed(usize),
     Delayed(Delayed),
     DelayDone(usize),
 }
 
-impl Display for TemplateEvent {
+impl Display for MonoEvent {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let str = match self {
             Self::Added(n) => {

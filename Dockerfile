@@ -38,8 +38,8 @@ RUN --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
 #!/bin/bash
 
 set -e
-cargo build --locked --release --bin template-server
-cp ./target/release/template-server /bin/template-server
+cargo build --locked --release --bin mono-server
+cp ./target/release/mono-server /bin/mono-server
 
 WASM_TAG=${WASM_TAG//./-}
 
@@ -82,9 +82,9 @@ RUN adduser \
 USER appuser
 
 # Copy the executable from the "build" stage.
-COPY --from=build /bin/template-server /bin/
-COPY --from=build /bin/webcomponent/ /app/server/web/template/
-COPY server/templates/ /app/server/templates/
+COPY --from=build /bin/mono-server /bin/
+COPY --from=build /bin/webcomponent/ /app/server/web/mono/
+COPY server/monos/ /app/server/templates/
 
 # Expose the port that the application listens on.
 EXPOSE 8000

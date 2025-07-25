@@ -1,6 +1,6 @@
 services:
 
-  template-web:
+  mono-web:
     build:
       args:
         - WASM_TAG=v0.1.0
@@ -11,12 +11,12 @@ services:
       - "8000:8000"
     environment:
       - APP_PORT=8000
-      - APP_HOST=http://template.localhost:8000
+      - APP_HOST=http://mono.localhost:8000
       - EVENTSTORE_URI=esdb://admin:changeit@eventstore:2113?tls=false&tlsVerifyCert=false
       - REDIS_URI=redis://redis:6379/
-    command: template-server --real-env service --list web
+    command: mono-server --real-env service --list web
 
-  template-consumer:
+  mono-consumer:
     build:
       args:
         - WASM_TAG=v0.1.0
@@ -25,10 +25,10 @@ services:
     restart: on-failure
     environment:
       - APP_PORT=8000
-      - APP_HOST=http://template.localhost:8000
+      - APP_HOST=http://mono.localhost:8000
       - EVENTSTORE_URI=esdb://admin:changeit@eventstore:2113?tls=false&tlsVerifyCert=false
       - REDIS_URI=redis://redis:6379/
-    command: template-server --real-env service --list delay  --list state  --list dto
+    command: mono-server --real-env service --list delay  --list state  --list dto
 
   eventstore:
     image: eventstore/eventstore:24.2.0-bookworm-slim

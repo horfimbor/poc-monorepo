@@ -1,5 +1,5 @@
-use crate::web::controller::{index, stream_dto, template_command};
-use crate::{Host, TemplateDtoCache, TemplateDtoRepository, TemplateRepository, built_info};
+use crate::web::controller::{index, mono_command, stream_dto};
+use crate::{Host, MonoDtoCache, MonoDtoRepository, MonoRepository, built_info};
 use anyhow::{Context, Error};
 use redis::Client as RedisClient;
 use rocket::fs::{FileServer, relative};
@@ -13,9 +13,9 @@ use std::env;
 pub mod controller;
 
 pub async fn start_server(
-    repo_state: TemplateRepository,
-    repo_dto: TemplateDtoRepository,
-    dto_cache: TemplateDtoCache,
+    repo_state: MonoRepository,
+    repo_dto: MonoDtoRepository,
+    dto_cache: MonoDtoCache,
     dto_redis: RedisClient,
 ) -> Result<(), Error> {
     let auth_port = env::var("APP_PORT")
@@ -51,7 +51,7 @@ pub async fn start_server(
         .manage(host)
         .manage(dto_cache)
         .mount("/", routes![index, redirect_index_js])
-        .mount("/api", routes![template_command, stream_dto])
+        .mount("/api", routes![mono_command, stream_dto])
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)
         .attach(Template::fairing())
@@ -62,10 +62,10 @@ pub async fn start_server(
     Ok(())
 }
 
-#[get("/template/index.js")]
+#[get("/mono/index.js")]
 fn redirect_index_js() -> Redirect {
     Redirect::temporary(format!(
-        "/template/index-v{}.js",
+        "/mono/index-v{}.js",
         built_info::PKG_VERSION.replace('.', "-")
     ))
 }

@@ -2400,6 +2400,73 @@ dependencies = [
 ]
 
 [[package]]
+name = "mono-client"
+version = "0.1.0"
+dependencies = [
+ "bounce",
+ "custom-elements",
+ "futures",
+ "gloo-net 0.6.0",
+ "horfimbor-client-derive",
+ "mono-shared",
+ "reqwasm",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "web-sys",
+ "weblog",
+ "yew",
+]
+
+[[package]]
+name = "mono-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "built",
+ "chrono",
+ "clap",
+ "dotenvy",
+ "futures",
+ "horfimbor-eventsource",
+ "kurrentdb",
+ "mono-shared",
+ "mono-state",
+ "redis",
+ "rocket",
+ "rocket_cors",
+ "rocket_dyn_templates",
+ "serde",
+ "serde_json",
+ "signal-hook",
+ "signal-hook-tokio",
+ "thiserror 2.0.12",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "mono-shared"
+version = "0.1.0"
+dependencies = [
+ "horfimbor-eventsource",
+ "serde",
+ "thiserror 2.0.12",
+]
+
+[[package]]
+name = "mono-state"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cucumber",
+ "horfimbor-eventsource",
+ "mono-shared",
+ "serde",
+ "tokio",
+]
+
+[[package]]
 name = "multer"
 version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3852,73 +3919,6 @@ dependencies = [
  "once_cell",
  "rustix 1.0.7",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "template-client"
-version = "0.1.0"
-dependencies = [
- "bounce",
- "custom-elements",
- "futures",
- "gloo-net 0.6.0",
- "horfimbor-client-derive",
- "reqwasm",
- "serde",
- "serde_json",
- "template-shared",
- "wasm-bindgen",
- "web-sys",
- "weblog",
- "yew",
-]
-
-[[package]]
-name = "template-server"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "built",
- "chrono",
- "clap",
- "dotenvy",
- "futures",
- "horfimbor-eventsource",
- "kurrentdb",
- "redis",
- "rocket",
- "rocket_cors",
- "rocket_dyn_templates",
- "serde",
- "serde_json",
- "signal-hook",
- "signal-hook-tokio",
- "template-shared",
- "template-state",
- "thiserror 2.0.12",
- "tokio",
- "uuid",
-]
-
-[[package]]
-name = "template-shared"
-version = "0.1.0"
-dependencies = [
- "horfimbor-eventsource",
- "serde",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "template-state"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cucumber",
- "horfimbor-eventsource",
- "serde",
- "template-shared",
- "tokio",
 ]
 
 [[package]]

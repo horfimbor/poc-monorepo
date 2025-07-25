@@ -12,18 +12,18 @@ use clap::{Parser, Subcommand, ValueEnum};
 use horfimbor_eventsource::cache_db::redis::StateDb;
 use horfimbor_eventsource::repository::{DtoRepository, Repository, StateRepository};
 use kurrentdb::Client;
+use mono_shared::dto::MonoDto;
+use mono_state::MonoState;
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
 use signal_hook::consts::signal::*;
 use signal_hook_tokio::Signals;
 use std::env;
-use template_shared::dto::TemplateDto;
-use template_state::TemplateState;
 
-type TemplateStateCache = StateDb<TemplateState>;
-type TemplateRepository = StateRepository<TemplateState, TemplateStateCache>;
-type TemplateDtoCache = StateDb<TemplateDto>;
-type TemplateDtoRepository = DtoRepository<TemplateDto, TemplateDtoCache>;
+type MonoStateCache = StateDb<MonoState>;
+type MonoRepository = StateRepository<MonoState, MonoStateCache>;
+type MonoDtoCache = StateDb<MonoDto>;
+type MonoDtoRepository = DtoRepository<MonoDto, MonoDtoCache>;
 type Host = String;
 
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
@@ -34,7 +34,7 @@ enum Service {
     Dto,
 }
 
-const STREAM_NAME: &str = "template2";
+const STREAM_NAME: &str = "mono2";
 
 mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
@@ -81,14 +81,14 @@ async fn main() -> Result<()> {
     let event_store_db =
         Client::new(settings).map_err(|e| anyhow!(" cannot connect to eventstore : {e}"))?;
 
-    let repo_state = TemplateRepository::new(
+    let repo_state = MonoRepository::new(
         event_store_db.clone(),
-        TemplateStateCache::new(redis_client.clone()),
+        MonoStateCache::new(redis_client.clone()),
     );
 
-    let dto_redis = TemplateDtoCache::new(redis_client.clone());
+    let dto_redis = MonoDtoCache::new(redis_client.clone());
 
-    let repo_dto = TemplateDtoRepository::new(event_store_db.clone(), dto_redis.clone());
+    let repo_dto = MonoDtoRepository::new(event_store_db.clone(), dto_redis.clone());
 
     match args.command {
         Command::Service { list } => {

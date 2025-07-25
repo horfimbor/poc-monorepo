@@ -1,4 +1,4 @@
-use crate::{Host, STREAM_NAME, TemplateDtoCache, TemplateDtoRepository, TemplateRepository};
+use crate::{Host, MonoDtoCache, MonoDtoRepository, MonoRepository, STREAM_NAME};
 use chrono::prelude::*;
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::cache_db::CacheDb;
@@ -6,20 +6,20 @@ use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
+use mono_shared::command::MonoCommand;
+use mono_shared::event::MonoEvent;
 use rocket::State;
 use rocket::http::{Cookie, CookieJar};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket_dyn_templates::{Template, context};
-use template_shared::command::TemplateCommand;
-use template_shared::event::TemplateEvent;
 use uuid::Uuid;
 
 #[post("/", format = "json", data = "<command>")]
-pub async fn template_command(
-    state_repository: &State<TemplateRepository>,
+pub async fn mono_command(
+    state_repository: &State<MonoRepository>,
     cookies: &CookieJar<'_>,
-    command: Json<TemplateCommand>,
+    command: Json<MonoCommand>,
 ) -> Result<(), String> {
     let uuid = get_uuid_from_cookies(cookies)?;
 
@@ -52,8 +52,8 @@ fn get_uuid_from_cookies(cookies: &CookieJar) -> Result<String, String> {
 
 #[get("/data")]
 pub async fn stream_dto(
-    dto_redis: &State<TemplateDtoCache>,
-    dto_repository: &State<TemplateDtoRepository>,
+    dto_redis: &State<MonoDtoCache>,
+    dto_repository: &State<MonoDtoRepository>,
     cookies: &CookieJar<'_>,
 ) -> Result<EventStream![], String> {
     let uuid = match get_uuid_from_cookies(cookies) {
@@ -97,7 +97,7 @@ pub async fn stream_dto(
 
             if metadata.is_event(){
 
-                match original_event.as_json::<TemplateEvent>(){
+                match original_event.as_json::<MonoEvent>(){
                     Ok(event) =>{
                         yield Event::json(&event);
                     },

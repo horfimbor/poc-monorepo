@@ -2,16 +2,16 @@
 use horfimbor_eventsource::Dto;
 
 use crate::START_VALUE;
-use crate::event::TemplateEvent;
+use crate::event::MonoEvent;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
-pub struct TemplateDto {
+pub struct MonoDto {
     last_ten: Vec<(char, usize)>,
     average: f32,
 }
 
-impl Default for TemplateDto {
+impl Default for MonoDto {
     fn default() -> Self {
         Self {
             last_ten: vec![('+', START_VALUE)],
@@ -20,7 +20,7 @@ impl Default for TemplateDto {
     }
 }
 
-impl TemplateDto {
+impl MonoDto {
     #[must_use]
     pub fn empty() -> Self {
         Self {
@@ -28,12 +28,12 @@ impl TemplateDto {
             average: 0.0,
         }
     }
-    pub fn play_event(&mut self, event: &TemplateEvent) {
+    pub fn play_event(&mut self, event: &MonoEvent) {
         match event {
-            TemplateEvent::Added(nb) => self.last_ten.push(('+', *nb)),
-            TemplateEvent::Removed(nb) => self.last_ten.push(('-', *nb)),
-            TemplateEvent::Delayed(_) => {}
-            TemplateEvent::DelayDone(_) => {}
+            MonoEvent::Added(nb) => self.last_ten.push(('+', *nb)),
+            MonoEvent::Removed(nb) => self.last_ten.push(('-', *nb)),
+            MonoEvent::Delayed(_) => {}
+            MonoEvent::DelayDone(_) => {}
         };
         if self.last_ten.len() > 10 {
             self.last_ten.remove(0);
@@ -58,8 +58,8 @@ impl TemplateDto {
 }
 
 #[cfg(feature = "server")]
-impl Dto for TemplateDto {
-    type Event = TemplateEvent;
+impl Dto for MonoDto {
+    type Event = MonoEvent;
 
     fn play_event(&mut self, event: &Self::Event) {
         self.play_event(event);

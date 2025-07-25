@@ -3,7 +3,7 @@
 
 
     <script type="module">
-    import init, { run } from './template/index.js';
+    import init, { run } from './mono/index.js';
     async function main() {
         await init();
         run();
@@ -12,5 +12,5 @@
     </script>
 </head>
 <body>
-    {% include "template_render" %}
+    {% include "mono_render" %}
 </body>

@@ -7,13 +7,13 @@ use weblog::console_info;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
-use template_shared::command::{Delay, TemplateCommand};
-use template_shared::dto::TemplateDto;
+use mono_shared::command::{Delay, MonoCommand};
+use mono_shared::dto::MonoDto;
 
 #[derive(WebComponent)]
-#[component(TemplateInput)]
+#[component(MonoInput)]
 #[derive(Default, Properties, PartialEq)]
-pub struct TemplateInputProps {
+pub struct MonoInputProps {
     pub endpoint: String,
 }
 
@@ -123,7 +123,7 @@ fn local_data_setter() -> Html {
 }
 
 #[function_component(Sender)]
-fn sender(props: &TemplateInputProps) -> Html {
+fn sender(props: &MonoInputProps) -> Html {
     let data = use_atom::<LocalData>();
     let err = use_atom::<LocalError>();
     let endpoint = props.endpoint.clone();
@@ -133,9 +133,9 @@ fn sender(props: &TemplateInputProps) -> Html {
         let err = err.clone();
 
         let cmd = if data.delay == 0 {
-            TemplateCommand::Add(data.nb)
+            MonoCommand::Add(data.nb)
         } else {
-            TemplateCommand::Delayed(Delay {
+            MonoCommand::Delayed(Delay {
                 delay: data.delay,
                 to_add: data.nb,
             })
@@ -160,7 +160,7 @@ fn sender(props: &TemplateInputProps) -> Html {
     html! { <button id="btn-send" onclick={on_send_clicked}>{"Send"}</button> }
 }
 
-async fn send_command(cmd: &TemplateCommand, endpoint: String) -> Result<Response, String> {
+async fn send_command(cmd: &MonoCommand, endpoint: String) -> Result<Response, String> {
     Request::post(endpoint.as_str())
         .body(serde_json::to_string(&cmd).map_err(|_| format!("cannot serialize cmd {:?}", &cmd))?)
         .header("Content-Type", "application/json")
@@ -170,7 +170,7 @@ async fn send_command(cmd: &TemplateCommand, endpoint: String) -> Result<Respons
 }
 
 #[function_component(Reset)]
-fn reset(props: &TemplateInputProps) -> Html {
+fn reset(props: &MonoInputProps) -> Html {
     let err = use_atom::<LocalError>();
     let endpoint = props.endpoint.clone();
 
@@ -178,7 +178,7 @@ fn reset(props: &TemplateInputProps) -> Html {
         let err = err.clone();
         let endpoint = endpoint.clone();
         spawn_local(async move {
-            let cmd = TemplateCommand::Reset;
+            let cmd = MonoCommand::Reset;
             let endpoint = endpoint.clone();
 
             spawn_local(async move {
@@ -202,16 +202,16 @@ fn reset(props: &TemplateInputProps) -> Html {
 #[allow(dead_code)]
 #[derive(PartialEq, Atom, Default)]
 struct State {
-    content: TemplateDto,
+    content: MonoDto,
 }
 
 #[allow(dead_code)]
-pub struct TemplateInput {}
+pub struct MonoInput {}
 
-impl Component for TemplateInput {
+impl Component for MonoInput {
     type Message = ();
 
-    type Properties = TemplateInputProps;
+    type Properties = MonoInputProps;
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {}

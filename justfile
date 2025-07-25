@@ -25,7 +25,7 @@ watch-client:
 
 watch-server:
     cargo watch -w server -w shared -w state -i server/web/ -i server/templates \
-        -x "run -p template-server service"
+        -x "run -p mono-server service"
 
 precommit:
     cargo fmt
@@ -34,4 +34,4 @@ precommit:
 
 test-mutation:
     cargo test
-    cargo mutants -p template-state
+    cargo mutants -p mono-state

@@ -1,21 +1,21 @@
 use horfimbor_eventsource::horfimbor_eventsource_derive::StateNamed;
 use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
+use mono_shared::command::MonoCommand;
+use mono_shared::error::MonoError;
+use mono_shared::event::{Delayed, MonoEvent};
+use mono_shared::{MONO_STATE_NAME, START_VALUE};
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use template_shared::command::TemplateCommand;
-use template_shared::error::TemplateError;
-use template_shared::event::{Delayed, TemplateEvent};
-use template_shared::{START_VALUE, TEMPLATE_STATE_NAME};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed)]
-#[state(TEMPLATE_STATE_NAME)]
-pub struct TemplateState {
+#[state(MONO_STATE_NAME)]
+pub struct MonoState {
     value: usize,
     last_id: usize,
     delayed: Vec<Delayed>,
 }
 
-impl TemplateState {
+impl MonoState {
     #[must_use]
     pub fn get_value(&self) -> usize {
         self.value
@@ -38,7 +38,7 @@ impl TemplateState {
     }
 }
 
-impl Default for TemplateState {
+impl Default for MonoState {
     fn default() -> Self {
         Self {
             value: START_VALUE,
@@ -48,18 +48,18 @@ impl Default for TemplateState {
     }
 }
 
-impl Dto for TemplateState {
-    type Event = TemplateEvent;
+impl Dto for MonoState {
+    type Event = MonoEvent;
 
     fn play_event(&mut self, event: &Self::Event) {
         match event {
-            TemplateEvent::Added(i) => self.value += i,
-            TemplateEvent::Removed(i) => self.value -= i,
-            TemplateEvent::Delayed(d) => {
+            MonoEvent::Added(i) => self.value += i,
+            MonoEvent::Removed(i) => self.value -= i,
+            MonoEvent::Delayed(d) => {
                 self.last_id = d.id;
                 self.delayed.push(d.clone());
             }
-            TemplateEvent::DelayDone(id) => {
+            MonoEvent::DelayDone(id) => {
                 self.delayed = self
                     .delayed
                     .clone()
@@ -71,27 +71,27 @@ impl Dto for TemplateState {
     }
 }
 
-impl State for TemplateState {
-    type Command = TemplateCommand;
-    type Error = TemplateError;
+impl State for MonoState {
+    type Command = MonoCommand;
+    type Error = MonoError;
 
     fn try_command(&self, command: Self::Command) -> Result<Vec<Self::Event>, Self::Error> {
         match command {
-            TemplateCommand::Add(i) => {
+            MonoCommand::Add(i) => {
                 if self.value + i > 3000 {
                     Err(Self::Error::CannotAdd(i))
                 } else {
                     Ok(vec![Self::Event::Added(i)])
                 }
             }
-            TemplateCommand::Reset => {
+            MonoCommand::Reset => {
                 if self.value == 0 {
                     Err(Self::Error::AlreadyEmpty)
                 } else {
                     Ok(vec![Self::Event::Removed(self.value)])
                 }
             }
-            TemplateCommand::Delayed(d) => {
+            MonoCommand::Delayed(d) => {
                 if d.delay < 1 || d.delay > 10 {
                     return Err(Self::Error::DelayOutOfBound(d.delay));
                 }
@@ -109,7 +109,7 @@ impl State for TemplateState {
                     to_add: d.to_add,
                 })])
             }
-            TemplateCommand::Finalize(id) => {
+            MonoCommand::Finalize(id) => {
                 let now = SystemTime::now();
                 let epoch = now
                     .duration_since(UNIX_EPOCH)
