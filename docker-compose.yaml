@@ -1,0 +1,61 @@
+services:
+
+  template-web:
+    build:
+      args:
+        - WASM_TAG=v0.1.0
+      target: final-server
+      context: .
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_PORT=8000
+      - APP_HOST=http://template.localhost:8000
+      - EVENTSTORE_URI=esdb://admin:changeit@eventstore:2113?tls=false&tlsVerifyCert=false
+      - REDIS_URI=redis://redis:6379/
+    command: template-server --real-env service --list web
+
+  template-consumer:
+    build:
+      args:
+        - WASM_TAG=v0.1.0
+      target: final-server
+      context: .
+    restart: on-failure
+    environment:
+      - APP_PORT=8000
+      - APP_HOST=http://template.localhost:8000
+      - EVENTSTORE_URI=esdb://admin:changeit@eventstore:2113?tls=false&tlsVerifyCert=false
+      - REDIS_URI=redis://redis:6379/
+    command: template-server --real-env service --list delay  --list state  --list dto
+
+  eventstore:
+    image: eventstore/eventstore:24.2.0-bookworm-slim
+    environment:
+      - EVENTSTORE_CLUSTER_SIZE=1
+      - EVENTSTORE_RUN_PROJECTIONS=All
+      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
+      - EVENTSTORE_HTTP_PORT=2113
+      - EVENTSTORE_INSECURE=true
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+      - EVENTSTORE_EXT_IP=0.0.0.0
+    ports:
+      - "2113:2113"
+    volumes:
+      - type: volume
+        source: eventstore-volume-data
+        target: /var/lib/eventstore
+      - type: volume
+        source: eventstore-volume-logs
+        target: /var/log/eventstore
+
+  redis:
+    image: redis:7.2.4-bookworm
+    ports:
+      - "6379:6379"
+
+
+volumes:
+  eventstore-volume-data:
+  eventstore-volume-logs:
