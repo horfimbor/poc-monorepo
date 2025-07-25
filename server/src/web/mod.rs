@@ -1,18 +1,22 @@
-use crate::web::controller::{index, mono_command, stream_dto};
-use crate::{Host, MonoDtoCache, MonoDtoRepository, MonoRepository, built_info};
+use crate::web::controller::{ mono_command, stream_dto};
+use crate::{Host, MonoDtoCache, MonoDtoRepository, MonoRepository};
 use anyhow::{Context, Error};
+use horfimbor_jwt::Claims;
 use redis::Client as RedisClient;
 use rocket::fs::{FileServer, relative};
 use rocket::http::Method;
-use rocket::response::Redirect;
 use rocket::response::content::RawHtml;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use rocket_dyn_templates::Template;
 use std::env;
+use kurrentdb::Client;
+use crate::web::base::load_base_routes;
 
 pub mod controller;
+mod base;
 
 pub async fn start_server(
+    event_store_db: Client,
     repo_state: MonoRepository,
     repo_dto: MonoDtoRepository,
     dto_cache: MonoDtoCache,
@@ -22,10 +26,19 @@ pub async fn start_server(
         .context("APP_PORT is not defined")?
         .parse::<u16>()
         .context("APP_PORT cannot be parse in u16")?;
-    let auth_host = env::var("APP_HOST").context("APP_HOST is not defined")?;
-    let host: Host = auth_host.clone();
+    let app_host = env::var("APP_HOST").context("APP_HOST is not defined")?;
+    let app_key = env::var("APP_KEY").context("APP_KEY is not defined")?;
+    let auth_host = env::var("AUTH_HOST").context("APP_HOST is not defined")?;
+    let auth_callback_host =
+        env::var("AUTH_CALLBACK_HOST").context("AUTH_CALLBACK_HOST is not defined")?;
+    let auth_config = AuthConfig {
+        app_host: app_host.clone(),
+        app_key,
+        auth_host,
+        auth_callback_host,
+    };
 
-    let allowed_origins = AllowedOrigins::some_exact(&[auth_host]);
+    let allowed_origins = AllowedOrigins::some_exact(&[app_host]);
 
     let cors = rocket_cors::CorsOptions {
         allowed_origins,
@@ -47,10 +60,10 @@ pub async fn start_server(
     let _rocket = rocket::custom(figment)
         .manage(repo_state)
         .manage(repo_dto)
+        .manage(auth_config)
         .manage(dto_redis)
-        .manage(host)
         .manage(dto_cache)
-        .mount("/", routes![index, redirect_index_js])
+        .mount("/", load_base_routes())
         .mount("/api", routes![mono_command, stream_dto])
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)
@@ -62,14 +75,6 @@ pub async fn start_server(
     Ok(())
 }
 
-#[get("/mono/index.js")]
-fn redirect_index_js() -> Redirect {
-    Redirect::temporary(format!(
-        "/mono/index-v{}.js",
-        built_info::PKG_VERSION.replace('.', "-")
-    ))
-}
-
 #[catch(404)]
 fn general_not_found() -> RawHtml<&'static str> {
     RawHtml(
@@ -77,4 +82,25 @@ fn general_not_found() -> RawHtml<&'static str> {
         <p>Hmm... This is not the droïd you are looking for, oupsi</p>
     ",
     )
+}
+
+
+#[derive(Debug)]
+pub struct AuthConfig {
+    app_host: String,
+    app_key: String,
+    auth_host: String,
+    auth_callback_host: String,
+}
+
+fn get_jwt_claims(response: &str) -> Result<Claims, String> {
+
+    let secret = env::var("JWT_SECRET_KEY").map_err(|_| "JWT_SECRET_KEY is missing")?;
+    let auth_host = env::var("AUTH_HOST").map_err(|_| "AUTH_HOST is missing")?;
+    let app_id = env::var("APP_ID").map_err(|_| "APP_ID is missing")?;
+    let claims = Claims::from_jwt(response, &secret, &app_id, &auth_host).map_err(|e| {
+        println!("claims error : {e:?}");
+        "Invalid claims"
+    })?;
+    Ok(claims)
 }

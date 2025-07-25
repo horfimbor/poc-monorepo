@@ -96,7 +96,7 @@ async fn main() -> Result<()> {
 
             if list.is_empty() || list.contains(&Service::Web) {
                 services.push(
-                    web::start_server(repo_state, repo_dto, dto_redis, redis_client.clone())
+                    web::start_server(event_store_db.clone(),repo_state, repo_dto, dto_redis, redis_client.clone())
                         .boxed(),
                 );
             }

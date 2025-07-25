@@ -1,9 +1,0 @@
-
-
-<fieldset style="float:right">
-    <horfimbor-mono-state endpoint={{endpoint}}></horfimbor-mono-state>
-</fieldset>
-
-<fieldset>
-    <horfimbor-mono-input endpoint={{endpoint}}></horfimbor-mono-input>
-</fieldset>

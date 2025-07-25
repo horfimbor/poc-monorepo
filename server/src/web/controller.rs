@@ -1,5 +1,4 @@
-use crate::{Host, MonoDtoCache, MonoDtoRepository, MonoRepository, STREAM_NAME};
-use chrono::prelude::*;
+use crate::{ MonoDtoCache, MonoDtoRepository, MonoRepository, STREAM_NAME};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::cache_db::CacheDb;
 use horfimbor_eventsource::helper::get_subscription;
@@ -12,7 +11,6 @@ use rocket::State;
 use rocket::http::{Cookie, CookieJar};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
-use rocket_dyn_templates::{Template, context};
 use uuid::Uuid;
 
 #[post("/", format = "json", data = "<command>")]
@@ -112,14 +110,3 @@ pub async fn stream_dto(
     })
 }
 
-#[get("/")]
-pub async fn index(host: &State<Host>) -> Template {
-    let local: DateTime<Local> = Local::now();
-    Template::render(
-        "index",
-        context! {
-            title: format!("Hello, world! {}",local.format("%x %T")),
-            endpoint: format!("{host}/api/" )
-        },
-    )
-}
