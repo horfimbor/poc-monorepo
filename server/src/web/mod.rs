@@ -1,7 +1,9 @@
-use crate::web::controller::{ mono_command, stream_dto};
-use crate::{Host, MonoDtoCache, MonoDtoRepository, MonoRepository};
+use crate::web::base::load_base_routes;
+use crate::web::controller::{mono_command, stream_dto};
+use crate::{MonoDtoCache, MonoDtoRepository, MonoRepository};
 use anyhow::{Context, Error};
 use horfimbor_jwt::Claims;
+use kurrentdb::Client;
 use redis::Client as RedisClient;
 use rocket::fs::{FileServer, relative};
 use rocket::http::Method;
@@ -9,11 +11,9 @@ use rocket::response::content::RawHtml;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use rocket_dyn_templates::Template;
 use std::env;
-use kurrentdb::Client;
-use crate::web::base::load_base_routes;
 
-pub mod controller;
 mod base;
+pub mod controller;
 
 pub async fn start_server(
     event_store_db: Client,
@@ -63,6 +63,7 @@ pub async fn start_server(
         .manage(auth_config)
         .manage(dto_redis)
         .manage(dto_cache)
+        .manage(event_store_db)
         .mount("/", load_base_routes())
         .mount("/api", routes![mono_command, stream_dto])
         .mount("/", FileServer::from(relative!("web")))
@@ -84,7 +85,6 @@ fn general_not_found() -> RawHtml<&'static str> {
     )
 }
 
-
 #[derive(Debug)]
 pub struct AuthConfig {
     app_host: String,
@@ -94,7 +94,6 @@ pub struct AuthConfig {
 }
 
 fn get_jwt_claims(response: &str) -> Result<Claims, String> {
-
     let secret = env::var("JWT_SECRET_KEY").map_err(|_| "JWT_SECRET_KEY is missing")?;
     let auth_host = env::var("AUTH_HOST").map_err(|_| "AUTH_HOST is missing")?;
     let app_id = env::var("APP_ID").map_err(|_| "APP_ID is missing")?;

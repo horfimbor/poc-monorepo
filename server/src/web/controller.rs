@@ -1,4 +1,4 @@
-use crate::{ MonoDtoCache, MonoDtoRepository, MonoRepository, STREAM_NAME};
+use crate::{MonoDtoCache, MonoDtoRepository, MonoRepository, STREAM_NAME};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::cache_db::CacheDb;
 use horfimbor_eventsource::helper::get_subscription;
@@ -109,4 +109,3 @@ pub async fn stream_dto(
         }
     })
 }
-

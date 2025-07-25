@@ -1,6 +1,6 @@
+mod auth;
 mod input;
 mod state;
-mod auth;
 
 use custom_elements::CustomElement;
 use wasm_bindgen::prelude::*;

@@ -1,6 +1,6 @@
 use horfimbor_client_derive::WebComponent;
 use weblog::{console_info, console_warn};
-use yew::{html, Component, Context, Html, Properties};
+use yew::{Component, Context, Html, Properties, html};
 
 #[derive(WebComponent)]
 #[component(GalaxyAuth)]

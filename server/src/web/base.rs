@@ -3,7 +3,7 @@ use crate::{built_info, web};
 use chrono::prelude::*;
 use rocket::response::Redirect;
 use rocket::{Route, State};
-use rocket_dyn_templates::{context, Template};
+use rocket_dyn_templates::{Template, context};
 use std::env;
 use std::time::Duration;
 

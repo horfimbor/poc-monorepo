@@ -24,7 +24,6 @@ type MonoStateCache = StateDb<MonoState>;
 type MonoRepository = StateRepository<MonoState, MonoStateCache>;
 type MonoDtoCache = StateDb<MonoDto>;
 type MonoDtoRepository = DtoRepository<MonoDto, MonoDtoCache>;
-type Host = String;
 
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
 enum Service {
@@ -96,8 +95,14 @@ async fn main() -> Result<()> {
 
             if list.is_empty() || list.contains(&Service::Web) {
                 services.push(
-                    web::start_server(event_store_db.clone(),repo_state, repo_dto, dto_redis, redis_client.clone())
-                        .boxed(),
+                    web::start_server(
+                        event_store_db.clone(),
+                        repo_state,
+                        repo_dto,
+                        dto_redis,
+                        redis_client.clone(),
+                    )
+                    .boxed(),
                 );
             }
 
