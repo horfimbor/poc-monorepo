@@ -20,7 +20,7 @@ watch-client:
     cargo watch -w client -w shared -- \
         wasm-pack build ./client \
           --target web \
-          --out-dir ../server/web/template \
+          --out-dir ../server/web/mono \
           --out-name index-v0-1-0
 
 watch-server:
