@@ -114,98 +114,12 @@ impl Component for GalaxyAuth {
             return html! {
                 <>
                     <a href={target}>{"login"}</a>
-                    <micro-test alpha="1" beta="2" gamma="trois" theta="oupsi"></micro-test>
                 </>
             };
         };
 
         html! {
-            <>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-
-                <fieldset>
-                    <horfimbor-galaxy-input endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-input>
-                </fieldset>
-
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-                <fieldset style="float:right">
-                    <horfimbor-galaxy-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-galaxy-state>
-                </fieldset>
-            </>
-
+            <horfimbor-account-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-account-state>
         }
     }
 }

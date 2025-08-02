@@ -1,13 +1,12 @@
+mod account;
 mod auth;
-mod input;
-mod state;
 
 use custom_elements::CustomElement;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn run() {
-    state::optional::ComponentWrapper::define("horfimbor-mono-state");
-    input::optional::ComponentWrapper::define("horfimbor-mono-input");
+    account::state::optional::ComponentWrapper::define("horfimbor-account-state");
+    account::input::optional::ComponentWrapper::define("horfimbor-account-input");
     auth::optional::ComponentWrapper::define("horfimbor-auth");
 }

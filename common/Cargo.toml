@@ -1,0 +1,15 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde.workspace = true
+horfimbor-eventsource = { workspace = true, optional = true }
+
+
+[lints]
+workspace = true
+
+[features]
+server = ["horfimbor-eventsource"]

@@ -1,25 +1,29 @@
+use crate::web::account::{mono_command, stream_dto};
 use crate::web::base::load_base_routes;
-use crate::web::controller::{mono_command, stream_dto};
-use crate::{MonoDtoCache, MonoDtoRepository, MonoRepository};
+use crate::{AccountDtoCache, AccountDtoRepository, AccountRepository};
 use anyhow::{Context, Error};
+use common::account::{ACCOUNT_STREAM, UUID_V8_KIND};
+use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_jwt::Claims;
 use kurrentdb::Client;
 use redis::Client as RedisClient;
+use rocket::Request;
 use rocket::fs::{FileServer, relative};
-use rocket::http::Method;
+use rocket::http::{Method, Status};
+use rocket::request::{FromRequest, Outcome};
 use rocket::response::content::RawHtml;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use rocket_dyn_templates::Template;
 use std::env;
 
+pub mod account;
 mod base;
-pub mod controller;
 
 pub async fn start_server(
     event_store_db: Client,
-    repo_state: MonoRepository,
-    repo_dto: MonoDtoRepository,
-    dto_cache: MonoDtoCache,
+    repo_state: AccountRepository,
+    repo_dto: AccountDtoRepository,
+    dto_cache: AccountDtoCache,
     dto_redis: RedisClient,
 ) -> Result<(), Error> {
     let auth_port = env::var("APP_PORT")
@@ -65,7 +69,7 @@ pub async fn start_server(
         .manage(dto_cache)
         .manage(event_store_db)
         .mount("/", load_base_routes())
-        .mount("/api", routes![mono_command, stream_dto])
+        .mount("/api/account", routes![mono_command, stream_dto])
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)
         .attach(Template::fairing())
@@ -93,13 +97,49 @@ pub struct AuthConfig {
     auth_callback_host: String,
 }
 
-fn get_jwt_claims(response: &str) -> Result<Claims, String> {
+fn get_jwt_claims(token: &str) -> Result<Claims, String> {
     let secret = env::var("JWT_SECRET_KEY").map_err(|_| "JWT_SECRET_KEY is missing")?;
     let auth_host = env::var("AUTH_HOST").map_err(|_| "AUTH_HOST is missing")?;
     let app_id = env::var("APP_ID").map_err(|_| "APP_ID is missing")?;
-    let claims = Claims::from_jwt(response, &secret, &app_id, &auth_host).map_err(|e| {
+    let claims = Claims::from_jwt(token, &secret, &app_id, &auth_host).map_err(|e| {
         println!("claims error : {e:?}");
         "Invalid claims"
     })?;
     Ok(claims)
+}
+
+pub struct AccountClaim {
+    pub claims: Claims,
+    pub account_model_key: ModelKey,
+}
+
+#[derive(Debug)]
+pub enum AccountClaimError {
+    Claim,
+    Missing,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for AccountClaim {
+    type Error = AccountClaimError;
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match req.headers().get_one("Authorization") {
+            None => Outcome::Error((Status::BadRequest, AccountClaimError::Missing)),
+            Some(token) => match get_jwt_claims(token) {
+                Ok(claims) => Outcome::Success(AccountClaim {
+                    account_model_key: ModelKey::new_uuid_v8(
+                        ACCOUNT_STREAM,
+                        UUID_V8_KIND,
+                        &claims.account().to_string(),
+                    ),
+                    claims,
+                }),
+                Err(e) => {
+                    dbg!(e);
+                    Outcome::Error((Status::BadRequest, AccountClaimError::Claim))
+                }
+            },
+        }
+    }
 }

@@ -1,73 +1,52 @@
-use crate::{MonoDtoCache, MonoDtoRepository, MonoRepository, STREAM_NAME};
+use crate::web::{AccountClaim, get_jwt_claims};
+use crate::{AccountDtoRepository, AccountRepository};
+use account_shared::command::AccountCommand;
+use account_shared::event::AccountEvent;
+use common::account::{ACCOUNT_STREAM, UUID_V8_KIND};
 use horfimbor_eventsource::Stream;
-use horfimbor_eventsource::cache_db::CacheDb;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
-use mono_shared::command::MonoCommand;
-use mono_shared::event::MonoEvent;
 use rocket::State;
-use rocket::http::{Cookie, CookieJar};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
-use uuid::Uuid;
 
 #[post("/", format = "json", data = "<command>")]
 pub async fn mono_command(
-    state_repository: &State<MonoRepository>,
-    cookies: &CookieJar<'_>,
-    command: Json<MonoCommand>,
+    state_repository: &State<AccountRepository>,
+    command: Json<AccountCommand>,
+    claim: AccountClaim,
 ) -> Result<(), String> {
-    let uuid = get_uuid_from_cookies(cookies)?;
-
-    let key = ModelKey::new(
-        STREAM_NAME,
-        uuid.parse().map_err(|e: uuid::Error| e.to_string())?,
-    );
     state_repository
-        .add_command(&key, command.0, None)
+        .add_command(&claim.account_model_key, command.0, None)
         .await
         .map_err(|e| e.to_string())?;
 
     Ok(())
 }
 
-fn get_uuid_from_cookies(cookies: &CookieJar) -> Result<String, String> {
-    let uuid = match cookies.get("uuid") {
-        None => {
-            return Err("no cookies".to_string());
-        }
-        Some(crumb) => crumb.to_string(),
-    }
-    .split('=')
-    .next_back()
-    .ok_or("invalid cookie".to_string())?
-    .to_string();
-
-    Ok(uuid)
-}
-
-#[get("/data")]
+#[get("/<jwt>")]
 pub async fn stream_dto(
-    dto_redis: &State<MonoDtoCache>,
-    dto_repository: &State<MonoDtoRepository>,
-    cookies: &CookieJar<'_>,
+    dto_repository: &State<AccountDtoRepository>,
+    jwt: &str,
 ) -> Result<EventStream![], String> {
-    let uuid = match get_uuid_from_cookies(cookies) {
-        Ok(value) => value.parse().map_err(|e: uuid::Error| e.to_string())?,
-        Err(_) => {
-            let uuid = Uuid::new_v4();
-            cookies.add(Cookie::new("uuid", uuid.to_string()));
-            uuid
-        }
-    };
+    let claims = get_jwt_claims(jwt)?;
 
-    let key = ModelKey::new(STREAM_NAME, uuid);
-    let dto = dto_redis
-        .get(&key)
-        .map_err(|e| e.to_string())
+    let key = ModelKey::new_uuid_v8(ACCOUNT_STREAM, UUID_V8_KIND, &claims.account().to_string());
+
+    dbg!(&key);
+
+    let dto = dto_repository
+        .get_model(&key)
+        .await
         .map_err(|_| "cannot find the dto".to_string())?;
+
+    dbg!(&dto);
+
+    if dto.position().is_none() {
+        return Err("account not found".to_string());
+    }
 
     let mut subscription = get_subscription(
         dto_repository.event_db(),
@@ -95,7 +74,7 @@ pub async fn stream_dto(
 
             if metadata.is_event(){
 
-                match original_event.as_json::<MonoEvent>(){
+                match original_event.as_json::<AccountEvent>(){
                     Ok(event) =>{
                         yield Event::json(&event);
                     },

@@ -1,5 +1,5 @@
 [package]
-name = "mono-shared"
+name = "account-shared"
 version = "0.1.0"
 edition = "2024"
 
@@ -9,9 +9,10 @@ edition = "2024"
 horfimbor-eventsource = { workspace = true, optional = true }
 serde.workspace = true
 thiserror.workspace = true
+common = {path = "../../common"}
 
 [features]
-server = ["horfimbor-eventsource"]
+server = ["horfimbor-eventsource", "common/server"]
 
 
 [lints]

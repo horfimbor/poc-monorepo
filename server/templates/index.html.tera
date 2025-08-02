@@ -10,10 +10,15 @@
     }
     main();
     </script>
+    <style>
+        body {
+            background-color: darkslateblue;
+            color: lightgray;
+        }
+    </style>
 </head>
 <body>
     <fieldset>
-        {{account_name}}
         <horfimbor-auth endpoint={{endpoint}} auth-endpoint={{auth_endpoint}} account-name={{account_name}} jwt={{jwt}} ></horfimbor-auth>
     </fieldset>
 </body>

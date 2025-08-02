@@ -17,14 +17,14 @@ open:
     firefox $APP_HOST
 
 watch-client:
-    cargo watch -w client -w shared -- \
+    cargo watch -w client -w shared -w common -- \
         wasm-pack build ./client \
           --target web \
           --out-dir ../server/web/mono \
           --out-name index-v0-1-0
 
 watch-server:
-    cargo watch -w server -w shared -w state -i server/web/ -i server/templates \
+    cargo watch -w server -w shared -w state -w common -i server/web/ -i server/templates \
         -x "run -p mono-server service"
 
 precommit:

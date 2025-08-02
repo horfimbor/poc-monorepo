@@ -4,25 +4,24 @@ use horfimbor_client_derive::WebComponent;
 use serde::Deserialize;
 use serde_json::Error;
 use std::time::Duration;
-use weblog::console_info;
 use yew::platform::spawn_local;
 use yew::platform::time::sleep;
 use yew::prelude::*;
 
-use mono_shared::dto::MonoDto;
-use mono_shared::event::MonoEvent;
+use account_shared::dto::AccountDto;
+use account_shared::event::AccountEvent;
 
 #[allow(dead_code)]
 pub struct MonoState {
     es: Option<EventSource>,
-    dto: Result<MonoDto, String>,
+    dto: Result<AccountDto, String>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum DtoMessage {
-    Dto(MonoDto),
-    Event(MonoEvent),
+    Dto(AccountDto),
+    Event(AccountEvent),
     Error(String),
     Reconnect,
 }
@@ -32,6 +31,7 @@ pub enum DtoMessage {
 #[derive(Default, Properties, PartialEq)]
 pub struct MonoStateProps {
     pub endpoint: String,
+    pub jwt: String,
 }
 
 impl MonoState {
@@ -39,14 +39,17 @@ impl MonoState {
         if self.es.is_some() {
             return;
         }
-        self.dto = Ok(MonoDto::default());
+        self.dto = Ok(AccountDto::default());
 
         let endpoint = ctx.props().endpoint.clone();
+        let jwt = ctx.props().jwt.clone();
 
-        let mut es = match EventSource::new(format!("{endpoint}data").as_str()) {
+        let mut es = match EventSource::new(format!("{endpoint}/api/account/{jwt}").as_str()) {
             Ok(es) => es,
             Err(_) => {
-                self.dto = Err(format!("cannot open eventsource to {endpoint}data"));
+                self.dto = Err(format!(
+                    "cannot open eventsource to {endpoint}/api/account/<jwt>"
+                ));
                 return;
             }
         };
@@ -77,7 +80,6 @@ impl MonoState {
                 }
             }
             link.send_message(DtoMessage::Error("EventSource closed".to_string()));
-            console_info!("EventSource Closed");
         });
 
         self.es = Some(es);
@@ -91,7 +93,7 @@ impl Component for MonoState {
     fn create(ctx: &Context<Self>) -> Self {
         let mut state = Self {
             es: None,
-            dto: Ok(MonoDto::default()),
+            dto: Ok(AccountDto::default()),
         };
 
         state.connect(ctx);
@@ -138,19 +140,35 @@ impl Component for MonoState {
         }
     }
 
-    fn view(&self, _ctx: &Context<Self>) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         let state = move || -> Html {
             match &self.dto {
                 Ok(dto) => {
+                    let nation_part = match dto.nation() {
+                        None => {
+                            html! {
+                                <div>
+                                    {"No nation name yet"}
+                                </div>
+                            }
+                        }
+                        Some(nation) => {
+                            html! {
+                                <div>
+                                    <b>{&nation.name}</b><p>{&nation.description}</p>
+                                </div>
+                            }
+                        }
+                    };
+
+                    let world_part = html!(<p>{"TODO"}</p>);
+
                     html! {
-                        <div style="float:right">
-                            {"Average : "}{dto.average()}<br/>
-                            <ul>
-                            { for dto.last_ten().iter().map(|(c, n)| html!{
-                                <li>{c}{n}</li>
-                            } )}
-                            </ul>
-                        </div>
+                        <>
+                            {nation_part}
+                            <horfimbor-account-input endpoint={ctx.props().endpoint.clone()} jwt={ctx.props().jwt.clone()}></horfimbor-account-input>
+                            {world_part}
+                        </>
                     }
                 }
                 Err(e) => {

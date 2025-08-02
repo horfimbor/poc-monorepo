@@ -4,26 +4,24 @@ mod web;
 #[macro_use]
 extern crate rocket;
 
-use crate::consumer::delay::compute_delay;
-use crate::consumer::dto::cache_dto;
-use crate::consumer::state::cache_state;
+use crate::consumer::account::handle_create;
+use account_shared::dto::AccountDto;
+use account_state::AccountState;
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Parser, Subcommand, ValueEnum};
 use horfimbor_eventsource::cache_db::redis::StateDb;
 use horfimbor_eventsource::repository::{DtoRepository, Repository, StateRepository};
 use kurrentdb::Client;
-use mono_shared::dto::MonoDto;
-use mono_state::MonoState;
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
 use signal_hook::consts::signal::*;
 use signal_hook_tokio::Signals;
 use std::env;
 
-type MonoStateCache = StateDb<MonoState>;
-type MonoRepository = StateRepository<MonoState, MonoStateCache>;
-type MonoDtoCache = StateDb<MonoDto>;
-type MonoDtoRepository = DtoRepository<MonoDto, MonoDtoCache>;
+type AccountStateCache = StateDb<AccountState>;
+type AccountRepository = StateRepository<AccountState, AccountStateCache>;
+type AccountDtoCache = StateDb<AccountDto>;
+type AccountDtoRepository = DtoRepository<AccountDto, AccountDtoCache>;
 
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
 enum Service {
@@ -31,9 +29,8 @@ enum Service {
     Delay,
     State,
     Dto,
+    AccountCreated,
 }
-
-const STREAM_NAME: &str = "mono2";
 
 mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
@@ -80,14 +77,14 @@ async fn main() -> Result<()> {
     let event_store_db =
         Client::new(settings).map_err(|e| anyhow!(" cannot connect to eventstore : {e}"))?;
 
-    let repo_state = MonoRepository::new(
+    let repo_state = AccountRepository::new(
         event_store_db.clone(),
-        MonoStateCache::new(redis_client.clone()),
+        AccountStateCache::new(redis_client.clone()),
     );
 
-    let dto_redis = MonoDtoCache::new(redis_client.clone());
+    let dto_redis = AccountDtoCache::new(redis_client.clone());
 
-    let repo_dto = MonoDtoRepository::new(event_store_db.clone(), dto_redis.clone());
+    let repo_dto = AccountDtoRepository::new(event_store_db.clone(), dto_redis.clone());
 
     match args.command {
         Command::Service { list } => {
@@ -97,7 +94,7 @@ async fn main() -> Result<()> {
                 services.push(
                     web::start_server(
                         event_store_db.clone(),
-                        repo_state,
+                        repo_state.clone(),
                         repo_dto,
                         dto_redis,
                         redis_client.clone(),
@@ -106,17 +103,10 @@ async fn main() -> Result<()> {
                 );
             }
 
-            if list.is_empty() || list.contains(&Service::Delay) {
-                services.push(compute_delay(redis_client.clone(), event_store_db.clone()).boxed());
+            if list.is_empty() || list.contains(&Service::AccountCreated) {
+                services.push(handle_create(event_store_db, repo_state).boxed());
             }
 
-            if list.is_empty() || list.contains(&Service::Dto) {
-                services.push(cache_dto(redis_client.clone(), event_store_db.clone()).boxed());
-            }
-
-            if list.is_empty() || list.contains(&Service::State) {
-                services.push(cache_state(redis_client, event_store_db).boxed());
-            }
             let signals = Signals::new([SIGTERM, SIGINT, SIGQUIT])?;
 
             let signals_task = handle_signals(signals).boxed();
