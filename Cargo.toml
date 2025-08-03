@@ -13,7 +13,7 @@ members = [
 #horfimbor-jwt = { path = "../horfimbor-engine/horfimbor-jwt" }
 horfimbor-eventsource = "0.3.5"
 horfimbor-jwt = "0.1.2"
-public-account-event = {git = "https://github.com/horfimbor/hfb-auth", features = ["server"]}
+public-account-event = {git = "https://github.com/horfimbor/hfb-auth", features = ["server"], branch = "fixes-monorepo"}
 anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 redis= { version = "0.32.0", features = ["tokio-rustls-comp"] }

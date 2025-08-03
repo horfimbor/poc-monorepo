@@ -3063,7 +3063,7 @@ dependencies = [
 [[package]]
 name = "public-account-event"
 version = "0.1.0"
-source = "git+https://github.com/horfimbor/hfb-auth#68a7f1295c103f4d520a24d21b75386d740a2432"
+source = "git+https://github.com/horfimbor/hfb-auth?branch=fixes-monorepo#a24ee3e4be65c9ecacc5a598f87d85f1983c228a"
 dependencies = [
  "horfimbor-eventsource",
  "serde",
