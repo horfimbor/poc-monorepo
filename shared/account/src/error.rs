@@ -5,6 +5,7 @@ use thiserror::Error;
 #[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum AccountError {
     AlreadyCreated,
+    InvalidOwner,
     AccountNameCannotBeEmpty,
     NationNameCannotBeEmpty,
     WorldAlreadyAdded(String),
@@ -16,6 +17,9 @@ impl Display for AccountError {
         match self {
             Self::AlreadyCreated => {
                 write!(f, "account already created")
+            }
+            Self::InvalidOwner => {
+                write!(f, "owner id is not a modelkey")
             }
             Self::AccountNameCannotBeEmpty => {
                 write!(f, "account name cannot be empty")

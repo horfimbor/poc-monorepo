@@ -18,6 +18,15 @@ pub async fn mono_command(
     command: Json<AccountCommand>,
     claim: AccountClaim,
 ) -> Result<(), String> {
+    let model = state_repository
+        .get_model(&claim.account_model_key)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if model.state().owner() != claim.claims.user() {
+        return Err("not your account".to_string());
+    }
+
     state_repository
         .add_command(&claim.account_model_key, command.0, None)
         .await

@@ -25,6 +25,11 @@ impl AccountState {
     }
 
     #[must_use]
+    pub fn owner(&self) -> &ModelKey {
+        &self.owner
+    }
+
+    #[must_use]
     pub fn nation(&self) -> &Option<Nation> {
         &self.nation
     }
@@ -48,9 +53,9 @@ impl Dto for AccountState {
                 PrvAccountEvent::WorldRemoved(id) => self.worlds.retain(|w| !w.id.eq(id)),
             },
             AccountEvent::Public(event) => match event {
-                PubAccountEvent::Created(name, owner) => {
+                PubAccountEvent::Created { name, owner } => {
                     self.private_name = name.clone();
-                    self.owner = owner.clone();
+                    self.owner = owner.as_str().try_into().unwrap_or_default();
                 }
             },
         }
@@ -63,16 +68,23 @@ impl State for AccountState {
 
     fn try_command(&self, command: Self::Command) -> Result<Vec<Self::Event>, Self::Error> {
         match command {
-            AccountCommand::Create(name, owner) => {
+            AccountCommand::Create { name, owner } => {
+                let model: Result<ModelKey, _> = owner.as_str().try_into();
+
+                if model.is_err() {
+                    return Err(AccountError::InvalidOwner);
+                }
+
                 if !self.private_name.is_empty() {
                     return Err(AccountError::AlreadyCreated);
                 }
                 if name.is_empty() {
                     return Err(AccountError::AccountNameCannotBeEmpty);
                 }
-                Ok(vec![AccountEvent::Public(PubAccountEvent::Created(
-                    name, owner,
-                ))])
+                Ok(vec![AccountEvent::Public(PubAccountEvent::Created {
+                    name,
+                    owner,
+                })])
             }
             AccountCommand::UpdateNation(nation) => {
                 if nation.name.is_empty() {

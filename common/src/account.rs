@@ -5,8 +5,6 @@ pub const UUID_V8_KIND: &str = "ACCOUNT";
 #[cfg(feature = "server")]
 use horfimbor_eventsource::horfimbor_eventsource_derive::Event;
 #[cfg(feature = "server")]
-use horfimbor_eventsource::model_key::ModelKey;
-#[cfg(feature = "server")]
 use horfimbor_eventsource::{Event, EventName};
 use serde::{Deserialize, Serialize};
 
@@ -14,5 +12,5 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "server", state(PUB_ACCOUNT_EVENT))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PubAccountEvent {
-    Created(String, ModelKey),
+    Created { name: String, owner: String },
 }

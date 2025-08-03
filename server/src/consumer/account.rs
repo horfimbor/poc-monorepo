@@ -65,7 +65,14 @@ pub async fn handle_create(
         {
             let key = ModelKey::new_uuid_v8(ACCOUNT_STREAM, UUID_V8_KIND, event.stream_id());
             repository
-                .add_command(&key, AccountCommand::Create(name, user_id), Some(&metadata))
+                .add_command(
+                    &key,
+                    AccountCommand::Create {
+                        name,
+                        owner: user_id.to_string(),
+                    },
+                    Some(&metadata),
+                )
                 .await
                 .context("cannot create account")?;
         };
