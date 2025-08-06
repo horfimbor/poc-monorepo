@@ -1,0 +1,21 @@
+[package]
+name = "planet-state"
+version = "0.1.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+horfimbor-eventsource.workspace = true
+serde.workspace = true
+planet-shared = { path = "../../shared/planet", features = ["server"] }
+common = {path = "../../common", features = ["server"]}
+
+[dev-dependencies]
+tokio = { version = "1.21", features = ["rt", "rt-multi-thread", "macros"] }
+cucumber = { version = "0.21.1" }
+anyhow.workspace = true
+
+
+[lints]
+workspace = true

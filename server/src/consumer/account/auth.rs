@@ -10,7 +10,7 @@ use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use public_account_event::PubAccountEvent;
 use std::env;
 
-pub async fn handle_create(
+pub async fn handle_account_public_event(
     event_store_db: Client,
     repository: AccountRepository,
 ) -> anyhow::Result<()> {
@@ -23,7 +23,7 @@ pub async fn handle_create(
     };
 
     let stream = Stream::Event(e.event_name());
-    let group_name = "create";
+    let group_name = "mono_account_event";
 
     create_subscription(&event_store_db, &stream, group_name)
         .await

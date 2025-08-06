@@ -16,6 +16,8 @@ uuid.workspace = true
 thiserror.workspace = true
 account-shared = { path = "../shared/account", features = ["server"] }
 account-state = { path = "../state/account" }
+planet-shared = { path = "../shared/planet", features = ["server"] }
+planet-state = { path = "../state/planet" }
 common = {path = "../common"}
 redis= {  workspace = true }
 reqwest = { version = "0.12", features = ["rustls-tls-native-roots", "charset", "http2"], default-features = false }

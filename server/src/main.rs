@@ -4,14 +4,17 @@ mod web;
 #[macro_use]
 extern crate rocket;
 
-use crate::consumer::account::handle_create;
+use crate::consumer::planet::account::handle_account_public_event_for_planet;
 use account_shared::dto::AccountDto;
 use account_state::AccountState;
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Parser, Subcommand, ValueEnum};
+use consumer::account::auth::handle_account_public_event;
+use consumer::account::planet::handle_planet_public_event;
 use horfimbor_eventsource::cache_db::redis::StateDb;
 use horfimbor_eventsource::repository::{DtoRepository, Repository, StateRepository};
 use kurrentdb::Client;
+use planet_state::PlanetState;
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
 use signal_hook::consts::signal::*;
@@ -23,6 +26,11 @@ type AccountRepository = StateRepository<AccountState, AccountStateCache>;
 type AccountDtoCache = StateDb<AccountDto>;
 type AccountDtoRepository = DtoRepository<AccountDto, AccountDtoCache>;
 
+type PlanetStateCache = StateDb<PlanetState>;
+type PlanetRepository = StateRepository<PlanetState, PlanetStateCache>;
+// type PlanetDtoCache = StateDb<PlanetDto>;
+// type PlanetDtoRepository = DtoRepository<PlanetDto, PlanetDtoCache>;
+
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
 enum Service {
     Web,
@@ -30,6 +38,8 @@ enum Service {
     State,
     Dto,
     AccountCreated,
+    PlanetOwnerChange,
+    AccountCreatedForPlanet,
 }
 
 mod built_info {
@@ -77,9 +87,14 @@ async fn main() -> Result<()> {
     let event_store_db =
         Client::new(settings).map_err(|e| anyhow!(" cannot connect to eventstore : {e}"))?;
 
-    let repo_state = AccountRepository::new(
+    let repo_account_state = AccountRepository::new(
         event_store_db.clone(),
         AccountStateCache::new(redis_client.clone()),
+    );
+
+    let repo_planet_state = PlanetRepository::new(
+        event_store_db.clone(),
+        PlanetStateCache::new(redis_client.clone()),
     );
 
     let dto_redis = AccountDtoCache::new(redis_client.clone());
@@ -94,7 +109,7 @@ async fn main() -> Result<()> {
                 services.push(
                     web::start_server(
                         event_store_db.clone(),
-                        repo_state.clone(),
+                        repo_account_state.clone(),
                         repo_dto,
                         dto_redis,
                         redis_client.clone(),
@@ -104,7 +119,21 @@ async fn main() -> Result<()> {
             }
 
             if list.is_empty() || list.contains(&Service::AccountCreated) {
-                services.push(handle_create(event_store_db, repo_state).boxed());
+                services.push(
+                    handle_account_public_event(event_store_db.clone(), repo_account_state.clone())
+                        .boxed(),
+                );
+            }
+            if list.is_empty() || list.contains(&Service::PlanetOwnerChange) {
+                services.push(
+                    handle_planet_public_event(event_store_db.clone(), repo_account_state).boxed(),
+                );
+            }
+            if list.is_empty() || list.contains(&Service::AccountCreatedForPlanet) {
+                services.push(
+                    handle_account_public_event_for_planet(event_store_db, repo_planet_state)
+                        .boxed(),
+                );
             }
 
             let signals = Signals::new([SIGTERM, SIGINT, SIGQUIT])?;

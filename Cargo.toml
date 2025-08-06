@@ -4,8 +4,8 @@ members = [
     "client",
     "common",
     "server",
-    "shared/account",
-    "state/account"
+    "shared/*",
+    "state/*"
 ]
 
 [workspace.dependencies]

@@ -15,7 +15,7 @@ pub struct AccountState {
     private_name: String,
     owner: ModelKey,
     nation: Option<Nation>,
-    worlds: Vec<Component>,
+    worlds: Vec<String>,
 }
 
 impl AccountState {
@@ -35,7 +35,7 @@ impl AccountState {
     }
 
     #[must_use]
-    pub fn worlds(&self) -> &Vec<Component> {
+    pub fn worlds(&self) -> &Vec<String> {
         &self.worlds
     }
 }
@@ -50,7 +50,7 @@ impl Dto for AccountState {
                     self.nation = Some(nation.clone());
                 }
                 PrvAccountEvent::WorldAdded(world) => self.worlds.push(world.clone()),
-                PrvAccountEvent::WorldRemoved(id) => self.worlds.retain(|w| !w.id.eq(id)),
+                PrvAccountEvent::WorldRemoved(id) => todo!(), // self.worlds.retain(|w| !w.id.eq(id)),
             },
             AccountEvent::Public(event) => match event {
                 PubAccountEvent::Created { name, owner } => {
@@ -95,17 +95,18 @@ impl State for AccountState {
                 ))])
             }
             AccountCommand::AddWorld(world) => {
-                if self.worlds.iter().any(|w| w.id.eq(&world.id)) {
-                    return Err(AccountError::WorldAlreadyAdded(world.id));
-                }
+                // if self.worlds.iter().any(|w| w.id.eq(&world.id)) {
+                //     return Err(AccountError::WorldAlreadyAdded(world.id));
+                // }
+
                 Ok(vec![AccountEvent::Private(PrvAccountEvent::WorldAdded(
-                    world,
+                    world.id,
                 ))])
             }
             AccountCommand::RemoveWorld(world_id) => {
-                if !self.worlds.iter().any(|w| w.id.eq(&world_id)) {
-                    return Err(AccountError::WorldNotFound(world_id));
-                }
+                // if !self.worlds.iter().any(|w| w.id.eq(&world_id)) {
+                //     return Err(AccountError::WorldNotFound(world_id));
+                // }
 
                 Ok(vec![AccountEvent::Private(PrvAccountEvent::WorldRemoved(
                     world_id,
