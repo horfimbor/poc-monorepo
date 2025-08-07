@@ -8,20 +8,20 @@ use yew::platform::spawn_local;
 use yew::platform::time::sleep;
 use yew::prelude::*;
 
-use account_shared::dto::AccountDto;
-use account_shared::event::AccountEvent;
+use planet_shared::dto::PlanetDto;
+use planet_shared::event::PlanetEvent;
 
 #[allow(dead_code)]
 pub struct MonoState {
     es: Option<EventSource>,
-    dto: Result<AccountDto, String>,
+    dto: Result<PlanetDto, String>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum DtoMessage {
-    Dto(AccountDto),
-    Event(AccountEvent),
+    Dto(PlanetDto),
+    Event(PlanetEvent),
     Error(String),
     Reconnect,
 }
@@ -32,6 +32,7 @@ pub enum DtoMessage {
 pub struct MonoStateProps {
     pub endpoint: String,
     pub jwt: String,
+    pub id: String,
 }
 
 impl MonoState {
@@ -39,16 +40,17 @@ impl MonoState {
         if self.es.is_some() {
             return;
         }
-        self.dto = Ok(AccountDto::default());
+        self.dto = Ok(PlanetDto::default());
 
         let endpoint = ctx.props().endpoint.clone();
         let jwt = ctx.props().jwt.clone();
+        let id = ctx.props().id.clone();
 
-        let mut es = match EventSource::new(format!("{endpoint}/api/account/{jwt}").as_str()) {
+        let mut es = match EventSource::new(format!("{endpoint}/api/planet/{id}/{jwt}").as_str()) {
             Ok(es) => es,
             Err(_) => {
                 self.dto = Err(format!(
-                    "cannot open eventsource to {endpoint}/api/account/<jwt>"
+                    "cannot open eventsource to {endpoint}/api/planet/<jwt>"
                 ));
                 return;
             }
@@ -93,7 +95,7 @@ impl Component for MonoState {
     fn create(ctx: &Context<Self>) -> Self {
         let mut state = Self {
             es: None,
-            dto: Ok(AccountDto::default()),
+            dto: Ok(PlanetDto::default()),
         };
 
         state.connect(ctx);
@@ -144,47 +146,15 @@ impl Component for MonoState {
         let state = move || -> Html {
             match &self.dto {
                 Ok(dto) => {
-                    let nation_part = match dto.nation() {
-                        None => {
-                            html! {
-                                <div>
-                                    {"No nation name yet"}
-                                </div>
-                            }
-                        }
-                        Some(nation) => {
-                            html! {
-                                <div>
-                                    <b>{&nation.name}</b><p>{&nation.description}</p>
-                                </div>
-                            }
-                        }
-                    };
-
-                    let world_part = html!(<>{
-                        dto.worlds().iter().map(|world|{
-                            html!(
-                                <fieldset>
-                                    <horfimbor-planet-state
-                                        endpoint={ctx.props().endpoint.clone()}
-                                        jwt={ctx.props().jwt.clone()}
-                                        id={world.id.clone()}
-                                    >
-                                    </horfimbor-planet-state>
-                                </fieldset>
-                            )
-                        }).collect::<Html>()
-
-                    }</>);
-
                     html! {
-                        <>
-                            <horfimbor-account-input endpoint={ctx.props().endpoint.clone()} jwt={ctx.props().jwt.clone()}></horfimbor-account-input>
-                            <hr/>
-                            {nation_part}
-                            <hr/>
-                            {world_part}
-                        </>
+                        <div>
+                            {dto.nb()}
+                            <horfimbor-planet-input
+                                    endpoint={ctx.props().endpoint.clone()}
+                                    jwt={ctx.props().jwt.clone()}
+                                    id={ctx.props().id.clone()}>
+                            </horfimbor-planet-input>
+                        </div>
                     }
                 }
                 Err(e) => {

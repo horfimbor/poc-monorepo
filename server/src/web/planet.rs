@@ -1,13 +1,12 @@
 use crate::web::{AuthAccountClaim, get_jwt_claims};
-use crate::{AccountDtoRepository, AccountRepository};
-use account_shared::command::AccountCommand;
-use account_shared::event::AccountEvent;
-use common::account::{MONO_ACCOUNT_STREAM, UUID_V8_KIND};
+use crate::{PlanetDtoRepository, PlanetRepository};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
+use planet_shared::command::PlanetCommand;
+use planet_shared::event::PlanetEvent;
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
@@ -16,41 +15,44 @@ pub fn routes() -> Vec<Route> {
     routes![mono_command, stream_dto]
 }
 
-#[post("/", format = "json", data = "<command>")]
+#[post("/<model_id>", format = "json", data = "<command>")]
 pub async fn mono_command(
-    state_repository: &State<AccountRepository>,
-    command: Json<AccountCommand>,
+    state_repository: &State<PlanetRepository>,
+    command: Json<PlanetCommand>,
     claim: AuthAccountClaim,
+    model_id: &str,
 ) -> Result<(), String> {
+    let key = ModelKey::try_from(model_id).map_err(|_| "invalid id")?;
+
     let model = state_repository
-        .get_model(&claim.account_model_key)
+        .get_model(&key)
         .await
         .map_err(|e| e.to_string())?;
 
-    if model.state().owner() != claim.claims.user() {
-        return Err("not your account".to_string());
-    }
+    dbg!(model.state().owner());
+    dbg!(claim.claims.user());
+
+    // if model.state().owner() != claim.claims.user() {
+    //     return Err("not your planet".to_string());
+    // }
 
     state_repository
-        .add_command(&claim.account_model_key, command.0, None)
+        .add_command(&key, command.0, None)
         .await
         .map_err(|e| e.to_string())?;
 
     Ok(())
 }
 
-#[get("/<jwt>")]
+#[get("/<model_id>/<jwt>")]
 pub async fn stream_dto(
-    dto_repository: &State<AccountDtoRepository>,
+    dto_repository: &State<PlanetDtoRepository>,
+    model_id: &str,
     jwt: &str,
 ) -> Result<EventStream![], String> {
-    let claims = get_jwt_claims(jwt)?;
+    let _ = get_jwt_claims(jwt)?; // TODO move into FromRequest
 
-    let key = ModelKey::new_uuid_v8(
-        MONO_ACCOUNT_STREAM,
-        UUID_V8_KIND,
-        &claims.account().to_string(),
-    );
+    let key = ModelKey::try_from(model_id).map_err(|_| "invalid id")?;
 
     let dto = dto_repository
         .get_model(&key)
@@ -58,7 +60,7 @@ pub async fn stream_dto(
         .map_err(|_| "cannot find the dto".to_string())?;
 
     if dto.position().is_none() {
-        return Err("account not found".to_string());
+        return Err("planet not found".to_string());
     }
 
     let mut subscription = get_subscription(
@@ -87,7 +89,7 @@ pub async fn stream_dto(
 
             if metadata.is_event(){
 
-                match original_event.as_json::<AccountEvent>(){
+                match original_event.as_json::<PlanetEvent>(){
                     Ok(event) =>{
                         yield Event::json(&event);
                     },

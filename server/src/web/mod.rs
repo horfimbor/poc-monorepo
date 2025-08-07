@@ -1,6 +1,8 @@
-use crate::web::account::{mono_command, stream_dto};
 use crate::web::base::load_base_routes;
-use crate::{AccountDtoCache, AccountDtoRepository, AccountRepository};
+use crate::{
+    AccountDtoCache, AccountDtoRepository, AccountRepository, PlanetDtoCache, PlanetDtoRepository,
+    PlanetRepository,
+};
 use anyhow::{Context, Error};
 use common::account::{MONO_ACCOUNT_STREAM, UUID_V8_KIND};
 use horfimbor_eventsource::model_key::ModelKey;
@@ -18,12 +20,16 @@ use std::env;
 
 pub mod account;
 mod base;
+pub mod planet;
 
 pub async fn start_server(
     event_store_db: Client,
-    repo_state: AccountRepository,
-    repo_dto: AccountDtoRepository,
-    dto_cache: AccountDtoCache,
+    account_repo_state: AccountRepository,
+    account_repo_dto: AccountDtoRepository,
+    account_dto_cache: AccountDtoCache,
+    planet_repo_state: PlanetRepository,
+    planet_repo_dto: PlanetDtoRepository,
+    planet_dto_cache: PlanetDtoCache,
     dto_redis: RedisClient,
 ) -> Result<(), Error> {
     let auth_port = env::var("APP_PORT")
@@ -62,14 +68,18 @@ pub async fn start_server(
         .merge(("address", "0.0.0.0"))
         .merge(("template_dir", "server/templates"));
     let _rocket = rocket::custom(figment)
-        .manage(repo_state)
-        .manage(repo_dto)
+        .manage(account_repo_state)
+        .manage(account_repo_dto)
+        .manage(account_dto_cache)
+        .manage(planet_repo_state)
+        .manage(planet_repo_dto)
+        .manage(planet_dto_cache)
         .manage(auth_config)
         .manage(dto_redis)
-        .manage(dto_cache)
         .manage(event_store_db)
         .mount("/", load_base_routes())
-        .mount("/api/account", routes![mono_command, stream_dto])
+        .mount("/api/account", account::routes())
+        .mount("/api/planet", planet::routes())
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)
         .attach(Template::fairing())
@@ -108,7 +118,7 @@ fn get_jwt_claims(token: &str) -> Result<Claims, String> {
     Ok(claims)
 }
 
-pub struct AccountClaim {
+pub struct AuthAccountClaim {
     pub claims: Claims,
     pub account_model_key: ModelKey,
 }
@@ -120,14 +130,14 @@ pub enum AccountClaimError {
 }
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for AccountClaim {
+impl<'r> FromRequest<'r> for AuthAccountClaim {
     type Error = AccountClaimError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         match req.headers().get_one("Authorization") {
             None => Outcome::Error((Status::BadRequest, AccountClaimError::Missing)),
             Some(token) => match get_jwt_claims(token) {
-                Ok(claims) => Outcome::Success(AccountClaim {
+                Ok(claims) => Outcome::Success(AuthAccountClaim {
                     account_model_key: ModelKey::new_uuid_v8(
                         MONO_ACCOUNT_STREAM,
                         UUID_V8_KIND,

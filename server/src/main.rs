@@ -14,6 +14,7 @@ use consumer::account::planet::handle_planet_public_event;
 use horfimbor_eventsource::cache_db::redis::StateDb;
 use horfimbor_eventsource::repository::{DtoRepository, Repository, StateRepository};
 use kurrentdb::Client;
+use planet_shared::dto::PlanetDto;
 use planet_state::PlanetState;
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
@@ -28,8 +29,8 @@ type AccountDtoRepository = DtoRepository<AccountDto, AccountDtoCache>;
 
 type PlanetStateCache = StateDb<PlanetState>;
 type PlanetRepository = StateRepository<PlanetState, PlanetStateCache>;
-// type PlanetDtoCache = StateDb<PlanetDto>;
-// type PlanetDtoRepository = DtoRepository<PlanetDto, PlanetDtoCache>;
+type PlanetDtoCache = StateDb<PlanetDto>;
+type PlanetDtoRepository = DtoRepository<PlanetDto, PlanetDtoCache>;
 
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
 enum Service {
@@ -91,15 +92,17 @@ async fn main() -> Result<()> {
         event_store_db.clone(),
         AccountStateCache::new(redis_client.clone()),
     );
+    let dto_account_redis = AccountDtoCache::new(redis_client.clone());
+    let repo_account_dto =
+        AccountDtoRepository::new(event_store_db.clone(), dto_account_redis.clone());
 
     let repo_planet_state = PlanetRepository::new(
         event_store_db.clone(),
         PlanetStateCache::new(redis_client.clone()),
     );
-
-    let dto_redis = AccountDtoCache::new(redis_client.clone());
-
-    let repo_dto = AccountDtoRepository::new(event_store_db.clone(), dto_redis.clone());
+    let dto_planet_redis = PlanetDtoCache::new(redis_client.clone());
+    let repo_planet_dto =
+        PlanetDtoRepository::new(event_store_db.clone(), dto_planet_redis.clone());
 
     match args.command {
         Command::Service { list } => {
@@ -110,8 +113,11 @@ async fn main() -> Result<()> {
                     web::start_server(
                         event_store_db.clone(),
                         repo_account_state.clone(),
-                        repo_dto,
-                        dto_redis,
+                        repo_account_dto,
+                        dto_account_redis,
+                        repo_planet_state.clone(),
+                        repo_planet_dto,
+                        dto_planet_redis,
                         redis_client.clone(),
                     )
                     .boxed(),

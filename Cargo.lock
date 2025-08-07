@@ -2467,6 +2467,7 @@ dependencies = [
  "futures",
  "gloo-net 0.6.0",
  "horfimbor-client-derive",
+ "planet-shared",
  "reqwasm",
  "serde",
  "serde_json",

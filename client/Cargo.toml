@@ -14,6 +14,7 @@ bounce = "0.9"
 yew = { version= "0.21", features=["csr"] }
 custom-elements = "0.2"
 account-shared = { path = "../shared/account" }
+planet-shared = { path = "../shared/planet" }
 gloo-net = "0.6"
 reqwasm = "0.5"
 weblog = "0.3"
