@@ -70,8 +70,6 @@ pub async fn handle_planet_public_event(
                 .context("cannot remove world")?;
         }
 
-        dbg!("👼");
-
         account_repository
             .add_command(
                 &account_id
@@ -80,9 +78,9 @@ pub async fn handle_planet_public_event(
                     .context("cannot parse account_id")?,
                 AccountCommand::AddWorld(Component {
                     balise: "horfimbor-planet-state".to_string(),
-                    id: account_id,
+                    id: event.stream_id().to_string(),
                 }),
-                None, //Some(&metadata),
+                Some(&metadata),
             )
             .await
             .context("cannot add planet to account")?;

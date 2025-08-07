@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "server", state(PLANET_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PrvPlanetEvent {
-    Created,
-    Pong,
+    Created(usize),
+    Pong(usize),
 }
 
 #[cfg_attr(feature = "server", derive(Event))]

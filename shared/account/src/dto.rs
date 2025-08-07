@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Default)]
 pub struct AccountDto {
     nation: Option<Nation>,
-    worlds: Vec<String>,
+    worlds: Vec<Component>,
 }
 
 impl AccountDto {
@@ -20,7 +20,7 @@ impl AccountDto {
                     self.nation = Some(nation.clone());
                 }
                 PrvAccountEvent::WorldAdded(world) => self.worlds.push(world.clone()),
-                PrvAccountEvent::WorldRemoved(id) => todo!(), //self.worlds.retain(|w| !w.id.eq(id)),
+                PrvAccountEvent::WorldRemoved(id) => self.worlds.retain(|w| !w.id.eq(id)),
             },
             AccountEvent::Public(_) => {}
         }
@@ -32,7 +32,7 @@ impl AccountDto {
     }
 
     #[must_use]
-    pub fn worlds(&self) -> &Vec<String> {
+    pub fn worlds(&self) -> &Vec<Component> {
         &self.worlds
     }
 }

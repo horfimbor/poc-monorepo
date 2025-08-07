@@ -13,8 +13,8 @@ impl PlanetDto {
     pub fn play_event(&mut self, event: &PlanetEvent) {
         match event {
             PlanetEvent::Private(event) => match event {
-                PrvPlanetEvent::Pong => self.nb += 1,
-                PrvPlanetEvent::Created => self.nb = 100,
+                PrvPlanetEvent::Pong(_) => self.nb += 1,
+                PrvPlanetEvent::Created(_) => self.nb = 100,
             },
             PlanetEvent::Public(_) => {}
         }

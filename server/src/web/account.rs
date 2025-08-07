@@ -2,7 +2,7 @@ use crate::web::{AccountClaim, get_jwt_claims};
 use crate::{AccountDtoRepository, AccountRepository};
 use account_shared::command::AccountCommand;
 use account_shared::event::AccountEvent;
-use common::account::{ACCOUNT_STREAM, UUID_V8_KIND};
+use common::account::{MONO_ACCOUNT_STREAM, UUID_V8_KIND};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
@@ -42,16 +42,16 @@ pub async fn stream_dto(
 ) -> Result<EventStream![], String> {
     let claims = get_jwt_claims(jwt)?;
 
-    let key = ModelKey::new_uuid_v8(ACCOUNT_STREAM, UUID_V8_KIND, &claims.account().to_string());
-
-    dbg!(&key);
+    let key = ModelKey::new_uuid_v8(
+        MONO_ACCOUNT_STREAM,
+        UUID_V8_KIND,
+        &claims.account().to_string(),
+    );
 
     let dto = dto_repository
         .get_model(&key)
         .await
         .map_err(|_| "cannot find the dto".to_string())?;
-
-    dbg!(&dto);
 
     if dto.position().is_none() {
         return Err("account not found".to_string());

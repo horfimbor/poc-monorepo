@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PrvAccountEvent {
     NationUpdated(Nation),
-    WorldAdded(String),
+    WorldAdded(Component),
     WorldRemoved(String),
 }
 

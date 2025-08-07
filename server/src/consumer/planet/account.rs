@@ -48,22 +48,20 @@ pub async fn handle_account_public_event_for_planet(
 
         let event = rcv_event.event.as_ref().context("cannot extract event")?;
 
-        let json = event
-            .as_json::<PubAccountEvent>()
-            .context("cannot extract json")?;
+        for _ in 0..3 {
+            let planet_id = ModelKey::new_uuid_v7(PLANET_STREAM);
 
-        let PubAccountEvent::Created { name: _name, owner } = json;
-
-        let planet_id = ModelKey::new_uuid_v7(PLANET_STREAM);
-
-        planet_repository
-            .add_command(
-                &planet_id,
-                PlanetCommand::Create { account_id: owner },
-                Some(&metadata),
-            )
-            .await
-            .context("cannot create planet")?;
+            planet_repository
+                .add_command(
+                    &planet_id,
+                    PlanetCommand::Create {
+                        account_id: event.stream_id().to_string(),
+                    },
+                    Some(&metadata),
+                )
+                .await
+                .context("cannot create planet")?;
+        }
 
         sub.ack(&rcv_event).await.context("cannot ack")?;
     }

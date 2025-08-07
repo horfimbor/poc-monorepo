@@ -2,7 +2,7 @@ use crate::web::account::{mono_command, stream_dto};
 use crate::web::base::load_base_routes;
 use crate::{AccountDtoCache, AccountDtoRepository, AccountRepository};
 use anyhow::{Context, Error};
-use common::account::{ACCOUNT_STREAM, UUID_V8_KIND};
+use common::account::{MONO_ACCOUNT_STREAM, UUID_V8_KIND};
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_jwt::Claims;
 use kurrentdb::Client;
@@ -129,7 +129,7 @@ impl<'r> FromRequest<'r> for AccountClaim {
             Some(token) => match get_jwt_claims(token) {
                 Ok(claims) => Outcome::Success(AccountClaim {
                     account_model_key: ModelKey::new_uuid_v8(
-                        ACCOUNT_STREAM,
+                        MONO_ACCOUNT_STREAM,
                         UUID_V8_KIND,
                         &claims.account().to_string(),
                     ),

@@ -33,8 +33,8 @@ impl Dto for PlanetState {
     fn play_event(&mut self, event: &Self::Event) {
         match event {
             PlanetEvent::Private(event) => match event {
-                PrvPlanetEvent::Pong => self.nb += 1,
-                PrvPlanetEvent::Created => self.nb = 100,
+                PrvPlanetEvent::Pong(_) => self.nb += 1,
+                PrvPlanetEvent::Created(_) => self.nb = 100,
             },
             PlanetEvent::Public(event) => match event {
                 PubPlanetEvent::NewOwner {
@@ -62,7 +62,7 @@ impl State for PlanetState {
                 }
 
                 Ok(vec![
-                    PlanetEvent::Private(PrvPlanetEvent::Created),
+                    PlanetEvent::Private(PrvPlanetEvent::Created(0)),
                     PlanetEvent::Public(PubPlanetEvent::NewOwner {
                         old_account_id: None,
                         account_id,
@@ -81,7 +81,7 @@ impl State for PlanetState {
                     account_id,
                 })])
             }
-            PlanetCommand::Ping => Ok(vec![PlanetEvent::Private(PrvPlanetEvent::Pong)]),
+            PlanetCommand::Ping => Ok(vec![PlanetEvent::Private(PrvPlanetEvent::Pong(0))]),
         }
     }
 }

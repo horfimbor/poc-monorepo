@@ -1,5 +1,5 @@
 pub const PUB_ACCOUNT_EVENT: &str = "PUB_MONO_ACCOUNT_EVENT";
-pub const ACCOUNT_STREAM: &str = "mono_account";
+pub const MONO_ACCOUNT_STREAM: &str = "mono_account";
 pub const UUID_V8_KIND: &str = "ACCOUNT";
 
 #[cfg(feature = "server")]

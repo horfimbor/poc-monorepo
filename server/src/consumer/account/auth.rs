@@ -1,7 +1,7 @@
 use crate::AccountRepository;
 use account_shared::command::AccountCommand;
 use anyhow::{Context, anyhow};
-use common::account::{ACCOUNT_STREAM, UUID_V8_KIND};
+use common::account::{MONO_ACCOUNT_STREAM, UUID_V8_KIND};
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
@@ -63,7 +63,7 @@ pub async fn handle_account_public_event(
         } = json
             && current_app_id == app_id.to_string()
         {
-            let key = ModelKey::new_uuid_v8(ACCOUNT_STREAM, UUID_V8_KIND, event.stream_id());
+            let key = ModelKey::new_uuid_v8(MONO_ACCOUNT_STREAM, UUID_V8_KIND, event.stream_id());
             repository
                 .add_command(
                     &key,
