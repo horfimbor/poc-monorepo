@@ -3,29 +3,6 @@
 version = 4
 
 [[package]]
-name = "account-shared"
-version = "0.1.0"
-dependencies = [
- "horfimbor-eventsource",
- "public-mono",
- "serde",
- "thiserror 2.0.12",
-]
-
-[[package]]
-name = "account-state"
-version = "0.1.0"
-dependencies = [
- "account-shared",
- "anyhow",
- "cucumber",
- "horfimbor-eventsource",
- "public-mono",
- "serde",
- "tokio",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -481,6 +458,29 @@ dependencies = [
  "parse-zoneinfo",
  "phf",
  "phf_codegen",
+]
+
+[[package]]
+name = "civilisation-shared"
+version = "0.1.0"
+dependencies = [
+ "horfimbor-eventsource",
+ "public-mono",
+ "serde",
+ "thiserror 2.0.12",
+]
+
+[[package]]
+name = "civilisation-state"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "civilisation-shared",
+ "cucumber",
+ "horfimbor-eventsource",
+ "public-mono",
+ "serde",
+ "tokio",
 ]
 
 [[package]]
@@ -2450,11 +2450,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "mono-account-client"
+name = "mono-civilisation-client"
 version = "0.1.0"
 dependencies = [
- "account-shared",
  "bounce",
+ "civilisation-shared",
  "custom-elements",
  "futures",
  "gloo-net 0.6.0",
@@ -2469,14 +2469,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "mono-account-server"
+name = "mono-civilisation-server"
 version = "0.1.0"
 dependencies = [
- "account-shared",
- "account-state",
  "anyhow",
  "built",
  "chrono",
+ "civilisation-shared",
+ "civilisation-state",
  "clap",
  "dotenvy",
  "futures",

@@ -1,4 +1,5 @@
-use crate::{PlanetDtoCache, PlanetDtoRepository, PlanetRepository, built_info};
+use crate::web::base::load_base_routes;
+use crate::{AccountDtoCache, AccountDtoRepository, AccountRepository};
 use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_jwt::Claims;
@@ -9,34 +10,38 @@ use rocket::Request;
 use rocket::fs::{FileServer, relative};
 use rocket::http::{Method, Status};
 use rocket::request::{FromRequest, Outcome};
-use rocket::response::Redirect;
 use rocket::response::content::RawHtml;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
+use rocket_dyn_templates::Template;
 use std::env;
 
-pub mod planet;
+mod base;
+pub mod civilisation;
 
 pub async fn start_server(
     event_store_db: Client,
-    planet_repo_state: PlanetRepository,
-    planet_repo_dto: PlanetDtoRepository,
-    planet_dto_cache: PlanetDtoCache,
+    account_repo_state: AccountRepository,
+    account_repo_dto: AccountDtoRepository,
+    account_dto_cache: AccountDtoCache,
     dto_redis: RedisClient,
-    port: Option<u16>,
 ) -> Result<(), Error> {
-    let auth_port = if let Some(port) = port {
-        port
-    } else {
-        env::var("APP_PORT")
-            .context("APP_PORT is not defined")?
-            .parse::<u16>()
-            .context("APP_PORT cannot be parse in u16")?
-    };
+    let auth_port = env::var("APP_PORT")
+        .context("APP_PORT is not defined")?
+        .parse::<u16>()
+        .context("APP_PORT cannot be parse in u16")?;
     let app_host = env::var("APP_HOST").context("APP_HOST is not defined")?;
+    let app_key = env::var("APP_KEY").context("APP_KEY is not defined")?;
+    let auth_host = env::var("AUTH_HOST").context("APP_HOST is not defined")?;
+    let auth_callback_host =
+        env::var("AUTH_CALLBACK_HOST").context("AUTH_CALLBACK_HOST is not defined")?;
+    let auth_config = AuthConfig {
+        app_host: app_host.clone(),
+        app_key,
+        auth_host,
+        auth_callback_host,
+    };
 
     let allowed_origins = AllowedOrigins::some_exact(&[app_host]);
-
-    dbg!(&allowed_origins);
 
     let cors = rocket_cors::CorsOptions {
         allowed_origins,
@@ -53,17 +58,20 @@ pub async fn start_server(
 
     let figment = rocket::Config::figment()
         .merge(("port", auth_port))
-        .merge(("address", "0.0.0.0"));
+        .merge(("address", "0.0.0.0"))
+        .merge(("template_dir", "server/civilisation/templates"));
     let _rocket = rocket::custom(figment)
-        .manage(planet_repo_state)
-        .manage(planet_repo_dto)
-        .manage(planet_dto_cache)
+        .manage(account_repo_state)
+        .manage(account_repo_dto)
+        .manage(account_dto_cache)
+        .manage(auth_config)
         .manage(dto_redis)
         .manage(event_store_db)
-        .mount("/", routes![redirect_index_js])
-        .mount("/api/planet", planet::routes())
+        .mount("/", load_base_routes())
+        .mount("/api/civilisation", civilisation::routes())
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)
+        .attach(Template::fairing())
         .register("/", catchers![general_not_found])
         .launch()
         .await;
@@ -78,6 +86,14 @@ fn general_not_found() -> RawHtml<&'static str> {
         <p>Hmm... This is not the droïd you are looking for, oupsi</p>
     ",
     )
+}
+
+#[derive(Debug)]
+pub struct AuthConfig {
+    app_host: String,
+    app_key: String,
+    auth_host: String,
+    auth_callback_host: String,
 }
 
 fn get_jwt_claims(token: &str) -> Result<Claims, String> {
@@ -124,18 +140,5 @@ impl<'r> FromRequest<'r> for AuthAccountClaim {
                 }
             },
         }
-    }
-}
-
-#[get("/mono/index.js")]
-pub fn redirect_index_js() -> Redirect {
-    let wasm_tag: &'static str = env!("WASM_TAG");
-    if !wasm_tag.is_empty() {
-        Redirect::temporary(format!("/mono/index-{wasm_tag}.js"))
-    } else {
-        Redirect::temporary(format!(
-            "/mono/index-v{}.js",
-            built_info::PKG_VERSION.replace('.', "-")
-        ))
     }
 }
