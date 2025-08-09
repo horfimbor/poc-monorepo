@@ -3,7 +3,7 @@ use horfimbor_eventsource::Dto;
 
 use crate::Nation;
 use crate::event::{AccountEvent, PrvAccountEvent};
-use common::Component;
+use public_mono::Component;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Default)]

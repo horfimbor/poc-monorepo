@@ -12,6 +12,6 @@ target/
 # dev environment
 .idea/
 
-/server/web/
+/server/account/web/
 /client/dist/
 /.env

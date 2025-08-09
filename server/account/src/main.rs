@@ -4,7 +4,6 @@ mod web;
 #[macro_use]
 extern crate rocket;
 
-use crate::consumer::planet::account::handle_account_public_event_for_planet;
 use account_shared::dto::AccountDto;
 use account_state::AccountState;
 use anyhow::{Context, Result, anyhow, bail};
@@ -14,8 +13,6 @@ use consumer::account::planet::handle_planet_public_event;
 use horfimbor_eventsource::cache_db::redis::StateDb;
 use horfimbor_eventsource::repository::{DtoRepository, Repository, StateRepository};
 use kurrentdb::Client;
-use planet_shared::dto::PlanetDto;
-use planet_state::PlanetState;
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
 use signal_hook::consts::signal::*;
@@ -26,11 +23,6 @@ type AccountStateCache = StateDb<AccountState>;
 type AccountRepository = StateRepository<AccountState, AccountStateCache>;
 type AccountDtoCache = StateDb<AccountDto>;
 type AccountDtoRepository = DtoRepository<AccountDto, AccountDtoCache>;
-
-type PlanetStateCache = StateDb<PlanetState>;
-type PlanetRepository = StateRepository<PlanetState, PlanetStateCache>;
-type PlanetDtoCache = StateDb<PlanetDto>;
-type PlanetDtoRepository = DtoRepository<PlanetDto, PlanetDtoCache>;
 
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
 enum Service {
@@ -55,6 +47,9 @@ struct Args {
 
     #[clap(subcommand)]
     command: Command,
+
+    #[arg(short, long, default_value_t = 3000)]
+    port: u16,
 }
 
 #[derive(Debug, Subcommand)]
@@ -96,14 +91,6 @@ async fn main() -> Result<()> {
     let repo_account_dto =
         AccountDtoRepository::new(event_store_db.clone(), dto_account_redis.clone());
 
-    let repo_planet_state = PlanetRepository::new(
-        event_store_db.clone(),
-        PlanetStateCache::new(redis_client.clone()),
-    );
-    let dto_planet_redis = PlanetDtoCache::new(redis_client.clone());
-    let repo_planet_dto =
-        PlanetDtoRepository::new(event_store_db.clone(), dto_planet_redis.clone());
-
     match args.command {
         Command::Service { list } => {
             let mut services = Vec::new();
@@ -115,9 +102,6 @@ async fn main() -> Result<()> {
                         repo_account_state.clone(),
                         repo_account_dto,
                         dto_account_redis,
-                        repo_planet_state.clone(),
-                        repo_planet_dto,
-                        dto_planet_redis,
                         redis_client.clone(),
                     )
                     .boxed(),
@@ -133,12 +117,6 @@ async fn main() -> Result<()> {
             if list.is_empty() || list.contains(&Service::PlanetOwnerChange) {
                 services.push(
                     handle_planet_public_event(event_store_db.clone(), repo_account_state).boxed(),
-                );
-            }
-            if list.is_empty() || list.contains(&Service::AccountCreatedForPlanet) {
-                services.push(
-                    handle_account_public_event_for_planet(event_store_db, repo_planet_state)
-                        .boxed(),
                 );
             }
 

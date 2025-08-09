@@ -6,8 +6,8 @@ version = 4
 name = "account-shared"
 version = "0.1.0"
 dependencies = [
- "common",
  "horfimbor-eventsource",
+ "public-mono",
  "serde",
  "thiserror 2.0.12",
 ]
@@ -18,9 +18,9 @@ version = "0.1.0"
 dependencies = [
  "account-shared",
  "anyhow",
- "common",
  "cucumber",
  "horfimbor-eventsource",
+ "public-mono",
  "serde",
  "tokio",
 ]
@@ -562,14 +562,6 @@ dependencies = [
  "pin-project-lite",
  "tokio",
  "tokio-util",
-]
-
-[[package]]
-name = "common"
-version = "0.1.0"
-dependencies = [
- "horfimbor-eventsource",
- "serde",
 ]
 
 [[package]]
@@ -2458,10 +2450,59 @@ dependencies = [
 ]
 
 [[package]]
-name = "mono-client"
+name = "mono-account-client"
 version = "0.1.0"
 dependencies = [
  "account-shared",
+ "bounce",
+ "custom-elements",
+ "futures",
+ "gloo-net 0.6.0",
+ "horfimbor-client-derive",
+ "reqwasm",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "web-sys",
+ "weblog",
+ "yew",
+]
+
+[[package]]
+name = "mono-account-server"
+version = "0.1.0"
+dependencies = [
+ "account-shared",
+ "account-state",
+ "anyhow",
+ "built",
+ "chrono",
+ "clap",
+ "dotenvy",
+ "futures",
+ "horfimbor-eventsource",
+ "horfimbor-jwt",
+ "kurrentdb",
+ "public-account-event",
+ "public-mono",
+ "redis",
+ "reqwest",
+ "rocket",
+ "rocket_cors",
+ "rocket_dyn_templates",
+ "serde",
+ "serde_json",
+ "signal-hook",
+ "signal-hook-tokio",
+ "thiserror 2.0.12",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "mono-planet-client"
+version = "0.1.0"
+dependencies = [
  "bounce",
  "custom-elements",
  "futures",
@@ -2478,16 +2519,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "mono-server"
+name = "mono-planet-server"
 version = "0.1.0"
 dependencies = [
- "account-shared",
- "account-state",
  "anyhow",
  "built",
  "chrono",
  "clap",
- "common",
  "dotenvy",
  "futures",
  "horfimbor-eventsource",
@@ -2496,6 +2534,7 @@ dependencies = [
  "planet-shared",
  "planet-state",
  "public-account-event",
+ "public-mono",
  "redis",
  "reqwest",
  "rocket",
@@ -2908,8 +2947,8 @@ dependencies = [
 name = "planet-shared"
 version = "0.1.0"
 dependencies = [
- "common",
  "horfimbor-eventsource",
+ "public-mono",
  "serde",
  "thiserror 2.0.12",
 ]
@@ -2919,10 +2958,10 @@ name = "planet-state"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "common",
  "cucumber",
  "horfimbor-eventsource",
  "planet-shared",
+ "public-mono",
  "serde",
  "tokio",
 ]
@@ -3090,6 +3129,14 @@ dependencies = [
 name = "public-account-event"
 version = "0.1.0"
 source = "git+https://github.com/horfimbor/hfb-auth?branch=fixes-monorepo#a24ee3e4be65c9ecacc5a598f87d85f1983c228a"
+dependencies = [
+ "horfimbor-eventsource",
+ "serde",
+]
+
+[[package]]
+name = "public-mono"
+version = "0.1.0"
 dependencies = [
  "horfimbor-eventsource",
  "serde",

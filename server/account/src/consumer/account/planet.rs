@@ -1,12 +1,12 @@
 use crate::AccountRepository;
 use account_shared::command::AccountCommand;
 use anyhow::Context;
-use common::Component;
-use common::planet::PubPlanetEvent;
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::{Event, Stream};
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
+use public_mono::Component;
+use public_mono::planet::PubPlanetEvent;
 
 pub async fn handle_planet_public_event(
     event_store_db: Client,

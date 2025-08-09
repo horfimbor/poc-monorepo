@@ -6,8 +6,8 @@ use horfimbor_eventsource::horfimbor_eventsource_derive::Event;
 use horfimbor_eventsource::{Event, EventName};
 
 use crate::Nation;
-use common::Component;
-use common::account::PubAccountEvent;
+use public_mono::Component;
+use public_mono::account::PubAccountEvent;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "server", derive(Event))]

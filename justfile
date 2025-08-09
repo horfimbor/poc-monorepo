@@ -16,16 +16,16 @@ alias ff := open
 open:
     firefox $APP_HOST
 
-watch-client:
-    cargo watch -w client -w shared -w common -- \
-        wasm-pack build ./client \
+watch-client NAME:
+    cargo watch -w client/{{NAME}}/ -w shared/{{NAME}}/ -w public -- \
+        wasm-pack build ./client/{{NAME}} \
           --target web \
-          --out-dir ../server/web/mono \
+          --out-dir ../../server/{{NAME}}/web/mono \
           --out-name index-v0-1-0
 
-watch-server:
-    cargo watch -w server -w shared -w state -w common -i server/web/ -i server/templates \
-        -x "run -p mono-server service"
+watch-server NAME PORT:
+    cargo watch -w server/{{NAME}}/ -w shared/{{NAME}}/ -w state/{{NAME}}/ -w public -i server/{{NAME}}/web/ -i server/{{NAME}}/templates \
+        -x "run -p mono-{{NAME}}-server -- -p{{PORT}} service"
 
 precommit:
     cargo fmt

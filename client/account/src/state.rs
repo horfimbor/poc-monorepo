@@ -161,16 +161,26 @@ impl Component for MonoState {
                         }
                     };
 
+                    let script = r#"
+                        import init, { run } from 'http://mono.localhost:8001/mono/index.js';
+                        async function main() {
+                            await init();
+                            run();
+                        }
+                        main();
+
+                    "#;
+
                     let world_part = html!(<>{
                         dto.worlds().iter().map(|world|{
                             html!(
                                 <fieldset>
-                                    <horfimbor-planet-state
-                                        endpoint={ctx.props().endpoint.clone()}
+                                    <@{world.balise.clone()}
+                                        // endpoint={ctx.props().endpoint.clone()}
+                                        endpoint={"http://mono.localhost:8001"}
                                         jwt={ctx.props().jwt.clone()}
                                         id={world.id.clone()}
-                                    >
-                                    </horfimbor-planet-state>
+                                    />
                                 </fieldset>
                             )
                         }).collect::<Html>()
@@ -183,6 +193,7 @@ impl Component for MonoState {
                             <hr/>
                             {nation_part}
                             <hr/>
+                            <script type="module">{script}</script>
                             {world_part}
                         </>
                     }

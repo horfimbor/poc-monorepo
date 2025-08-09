@@ -2,11 +2,11 @@ use account_shared::command::AccountCommand;
 use account_shared::error::AccountError;
 use account_shared::event::{AccountEvent, PrvAccountEvent};
 use account_shared::{ACCOUNT_STATE_NAME, Nation};
-use common::Component;
-use common::account::PubAccountEvent;
 use horfimbor_eventsource::horfimbor_eventsource_derive::StateNamed;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
+use public_mono::Component;
+use public_mono::account::PubAccountEvent;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed, Default)]

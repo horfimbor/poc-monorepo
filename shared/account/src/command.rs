@@ -6,7 +6,7 @@ use horfimbor_eventsource::horfimbor_eventsource_derive::Command;
 use horfimbor_eventsource::{Command, CommandName};
 
 use crate::Nation;
-use common::Component;
+use public_mono::Component;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "server", derive(Command))]

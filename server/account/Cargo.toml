@@ -1,5 +1,5 @@
 [package]
-name = "mono-server"
+name = "mono-account-server"
 version = "0.1.0"
 edition = "2024"
 
@@ -14,11 +14,9 @@ serde.workspace = true
 kurrentdb.workspace = true
 uuid.workspace = true
 thiserror.workspace = true
-account-shared = { path = "../shared/account", features = ["server"] }
-account-state = { path = "../state/account" }
-planet-shared = { path = "../shared/planet", features = ["server"] }
-planet-state = { path = "../state/planet" }
-common = {path = "../common"}
+account-shared = { path = "../../shared/account", features = ["server"] }
+account-state = { path = "../../state/account" }
+public-mono = {path = "../../public" }
 redis= {  workspace = true }
 reqwest = { version = "0.12", features = ["rustls-tls-native-roots", "charset", "http2"], default-features = false }
 rocket = { workspace=true, features = ["json"] }

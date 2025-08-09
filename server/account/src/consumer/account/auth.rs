@@ -1,25 +1,29 @@
-use crate::PlanetRepository;
-use anyhow::Context;
-use common::account::PubAccountEvent;
-use common::planet::PLANET_STREAM;
+use crate::AccountRepository;
+use account_shared::command::AccountCommand;
+use anyhow::{Context, anyhow};
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Event, Stream};
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
-use planet_shared::command::PlanetCommand;
+use public_account_event::PubAccountEvent;
+use public_mono::account::{MONO_ACCOUNT_STREAM, UUID_V8_KIND};
+use std::env;
 
-pub async fn handle_account_public_event_for_planet(
+pub async fn handle_account_public_event(
     event_store_db: Client,
-    planet_repository: PlanetRepository,
+    repository: AccountRepository,
 ) -> anyhow::Result<()> {
-    let e = PubAccountEvent::Created {
+    let current_app_id = env::var("APP_ID").map_err(|_| anyhow!("APP_ID is missing"))?;
+
+    let e = PubAccountEvent::AccountCreated {
+        user_id: ModelKey::default(),
+        app_id: ModelKey::default(),
         name: "".to_string(),
-        owner: "".to_string(),
     };
 
     let stream = Stream::Event(e.event_name());
-    let group_name = "mono_planet_new_account";
+    let group_name = "mono_account_event";
 
     create_subscription(&event_store_db, &stream, group_name)
         .await
@@ -48,21 +52,32 @@ pub async fn handle_account_public_event_for_planet(
 
         let event = rcv_event.event.as_ref().context("cannot extract event")?;
 
-        for _ in 0..3 {
-            let planet_id = ModelKey::new_uuid_v7(PLANET_STREAM);
+        let json = event
+            .as_json::<PubAccountEvent>()
+            .context("cannot extract json")?;
 
-            planet_repository
+        if let PubAccountEvent::AccountCreated {
+            user_id,
+            app_id,
+            name,
+        } = json
+            && current_app_id == app_id.to_string()
+        {
+            let key = ModelKey::new_uuid_v8(MONO_ACCOUNT_STREAM, UUID_V8_KIND, event.stream_id());
+            repository
                 .add_command(
-                    &planet_id,
-                    PlanetCommand::Create {
-                        account_id: event.stream_id().to_string(),
+                    &key,
+                    AccountCommand::Create {
+                        name,
+                        owner: user_id.to_string(),
                     },
                     Some(&metadata),
                 )
                 .await
-                .context("cannot create planet")?;
-        }
+                .context("cannot create account")?;
+        };
 
+        // todo!("check app id and then create the account");
         sub.ack(&rcv_event).await.context("cannot ack")?;
     }
 }

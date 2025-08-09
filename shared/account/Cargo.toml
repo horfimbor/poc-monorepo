@@ -9,10 +9,10 @@ edition = "2024"
 horfimbor-eventsource = { workspace = true, optional = true }
 serde.workspace = true
 thiserror.workspace = true
-common = {path = "../../common"}
+public-mono = {path = "../../public"}
 
 [features]
-server = ["horfimbor-eventsource", "common/server"]
+server = ["horfimbor-eventsource", "public-mono/server"]
 
 
 [lints]

@@ -1,4 +1,3 @@
-use common::planet::PubPlanetEvent;
 use horfimbor_eventsource::horfimbor_eventsource_derive::StateNamed;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
@@ -6,6 +5,7 @@ use planet_shared::PLANET_STATE_NAME;
 use planet_shared::command::PlanetCommand;
 use planet_shared::error::PlanetError;
 use planet_shared::event::{PlanetEvent, PrvPlanetEvent};
+use public_mono::planet::PubPlanetEvent;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed, Default)]

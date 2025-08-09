@@ -9,7 +9,7 @@ edition = "2024"
 horfimbor-eventsource.workspace = true
 serde.workspace = true
 planet-shared = { path = "../../shared/planet", features = ["server"] }
-common = {path = "../../common", features = ["server"]}
+public-mono = {path = "../../public", features = ["server"]}
 
 [dev-dependencies]
 tokio = { version = "1.21", features = ["rt", "rt-multi-thread", "macros"] }
