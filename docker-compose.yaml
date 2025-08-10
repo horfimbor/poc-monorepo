@@ -1,61 +1,49 @@
 services:
 
-  mono-web:
+  civilisation:
     build:
       args:
-        - WASM_TAG=v0.1.0
+        - WASM_TAG=v0-1-0
+        - APP_NAME=civilisation
+        - APP_PORT=8000
       target: final-server
       context: .
     restart: on-failure
     ports:
       - "8000:8000"
+    env_file:
+      - ".env"
+      - ".env.docker"
     environment:
       - APP_PORT=8000
       - APP_HOST=http://mono.localhost:8000
-      - EVENTSTORE_URI=esdb://admin:changeit@eventstore:2113?tls=false&tlsVerifyCert=false
-      - REDIS_URI=redis://redis:6379/
-    command: mono-server --real-env service --list web
+    command: mono-civilisation-server --real-env service
+    networks:
+      - common_net
 
-  mono-consumer:
+  planet:
     build:
       args:
-        - WASM_TAG=v0.1.0
+        - WASM_TAG=v0-1-0
+        - APP_NAME=planet
+        - APP_PORT=8001
       target: final-server
       context: .
     restart: on-failure
-    environment:
-      - APP_PORT=8000
-      - APP_HOST=http://mono.localhost:8000
-      - EVENTSTORE_URI=esdb://admin:changeit@eventstore:2113?tls=false&tlsVerifyCert=false
-      - REDIS_URI=redis://redis:6379/
-    command: mono-server --real-env service --list delay  --list state  --list dto
-
-  eventstore:
-    image: eventstore/eventstore:24.2.0-bookworm-slim
-    environment:
-      - EVENTSTORE_CLUSTER_SIZE=1
-      - EVENTSTORE_RUN_PROJECTIONS=All
-      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
-      - EVENTSTORE_HTTP_PORT=2113
-      - EVENTSTORE_INSECURE=true
-      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
-      - EVENTSTORE_EXT_IP=0.0.0.0
     ports:
-      - "2113:2113"
-    volumes:
-      - type: volume
-        source: eventstore-volume-data
-        target: /var/lib/eventstore
-      - type: volume
-        source: eventstore-volume-logs
-        target: /var/log/eventstore
-
-  redis:
-    image: redis:7.2.4-bookworm
-    ports:
-      - "6379:6379"
+      - "8001:8001"
+    env_file:
+      - ".env"
+      - ".env.docker"
+    environment:
+      - APP_PORT=8001
+      - APP_HOST=http://mono.localhost:8001
+    command: mono-planet-server --real-env service
+    networks:
+      - common_net
 
 
-volumes:
-  eventstore-volume-data:
-  eventstore-volume-logs:
+networks:
+  common_net:
+    external: true
+    name: common_network

@@ -72,14 +72,14 @@ pub async fn auth(token: &str, host: &State<AuthConfig>) -> Result<Template, Str
     ))
 }
 
-#[get("/mono/index.js")]
+#[get("/client/index.js")]
 pub fn redirect_index_js() -> Redirect {
     let wasm_tag: &'static str = env!("WASM_TAG");
     if !wasm_tag.is_empty() {
-        Redirect::temporary(format!("/mono/index-{wasm_tag}.js"))
+        Redirect::temporary(format!("/client/index-{wasm_tag}.js"))
     } else {
         Redirect::temporary(format!(
-            "/mono/index-v{}.js",
+            "/client/index-v{}.js",
             built_info::PKG_VERSION.replace('.', "-")
         ))
     }

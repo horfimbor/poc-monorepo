@@ -162,7 +162,7 @@ impl Component for MonoState {
                     };
 
                     let script = r#"
-                        import init, { run } from 'http://mono.localhost:8001/mono/index.js';
+                        import init, { run } from 'http://mono.localhost:8001/client/index.js';
                         async function main() {
                             await init();
                             run();

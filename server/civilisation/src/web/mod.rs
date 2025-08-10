@@ -82,9 +82,10 @@ pub async fn start_server(
 #[catch(404)]
 fn general_not_found() -> RawHtml<&'static str> {
     RawHtml(
-        r"
-        <p>Hmm... This is not the droïd you are looking for, oupsi</p>
-    ",
+        r#"<body style="background-color: darkgray;">
+            <p>Hmm... This is not the droïd you are looking for, oupsi</p>
+            </body>
+        "#,
     )
 }
 

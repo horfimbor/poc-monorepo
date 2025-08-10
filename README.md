@@ -11,6 +11,11 @@ install [Rust](https://rustup.rs/)
 if you don't have the db installed :
 install [Docker](https://www.docker.com/)
 
+you should also create a networks: 
+```shell
+docker network create common_network
+```
+
 install necessary toolchain : 
 ```shell
 rustup toolchain install beta

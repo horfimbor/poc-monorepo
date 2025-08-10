@@ -1,11 +1,15 @@
 set shell := ["bash", "-uc"]
 set dotenv-load
 
+
+alias dc-up := dc-start
 dc-start *SRV:
     docker compose up -d --build --force-recreate {{SRV}}
+    docker compose logs --follow {{SRV}}
 
+alias dc-down := dc-stop
 dc-stop:
-    docker compose down
+    docker compose down --remove-orphans
 
 dc-reset:
     docker compose down -v
@@ -20,7 +24,7 @@ watch-client NAME:
     cargo watch -w client/{{NAME}}/ -w shared/{{NAME}}/ -w public -- \
         wasm-pack build ./client/{{NAME}} \
           --target web \
-          --out-dir ../../server/{{NAME}}/web/mono \
+          --out-dir ../../server/{{NAME}}/web/client \
           --out-name index-v0-1-0
 
 watch-server NAME PORT:

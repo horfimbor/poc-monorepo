@@ -12,6 +12,7 @@ target/
 # dev environment
 .idea/
 
-/server/civilisation/web/
 /client/dist/
 /.env
+/mutants.out*/
+/server/civilisation/web/
