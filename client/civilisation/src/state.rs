@@ -1,9 +1,12 @@
 use futures::StreamExt;
 use gloo_net::eventsource::futures::EventSource;
 use horfimbor_client_derive::WebComponent;
+use rand::Rng;
 use serde::Deserialize;
 use serde_json::Error;
 use std::time::Duration;
+use url::Url;
+use weblog::{console_info, console_warn};
 use yew::platform::spawn_local;
 use yew::platform::time::sleep;
 use yew::prelude::*;
@@ -41,8 +44,32 @@ impl MonoState {
         }
         self.dto = Ok(CivilisationDto::default());
 
-        let endpoint = ctx.props().endpoint.clone();
         let jwt = ctx.props().jwt.clone();
+
+        let mut rng = rand::rng();
+        let Ok(mut url) = Url::parse(&ctx.props().endpoint) else {
+            console_warn!(ctx.props().endpoint.clone());
+            console_warn!("cannot parse endpoint");
+            return;
+        };
+
+        let Some(host) = url.host() else {
+            console_warn!("no host");
+            return;
+        };
+
+        let new_host = format!("sse{:06}.{host}", rng.random_range(1..1_000_000));
+        match url.set_host(Some(&new_host)) {
+            Ok(_) => {}
+            Err(e) => {
+                console_warn!("cannot set host : ");
+                console_warn!(new_host);
+                console_warn!(e.to_string());
+                return;
+            }
+        }
+        let endpoint = url.to_string();
+        console_info!(endpoint.clone());
 
         let mut es = match EventSource::new(format!("{endpoint}/api/civilisation/{jwt}").as_str()) {
             Ok(es) => es,
