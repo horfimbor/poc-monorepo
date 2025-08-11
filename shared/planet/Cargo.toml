@@ -1,0 +1,19 @@
+[package]
+name = "planet-shared"
+version = "0.1.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+horfimbor-eventsource = { workspace = true, optional = true }
+serde.workspace = true
+thiserror.workspace = true
+public-mono = {path = "../../public"}
+
+[features]
+server = ["horfimbor-eventsource", "public-mono/server"]
+
+
+[lints]
+workspace = true

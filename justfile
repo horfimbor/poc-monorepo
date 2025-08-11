@@ -1,11 +1,15 @@
 set shell := ["bash", "-uc"]
 set dotenv-load
 
+
+alias dc-up := dc-start
 dc-start *SRV:
     docker compose up -d --build --force-recreate {{SRV}}
+    docker compose logs --follow {{SRV}}
 
+alias dc-down := dc-stop
 dc-stop:
-    docker compose down
+    docker compose down --remove-orphans
 
 dc-reset:
     docker compose down -v
@@ -16,16 +20,16 @@ alias ff := open
 open:
     firefox $APP_HOST
 
-watch-client:
-    cargo watch -w client -w shared -- \
-        wasm-pack build ./client \
+watch-client NAME:
+    cargo watch -w client/{{NAME}}/ -w shared/{{NAME}}/ -w public -- \
+        wasm-pack build ./client/{{NAME}} \
           --target web \
-          --out-dir ../server/web/mono \
+          --out-dir ../../server/{{NAME}}/web/client \
           --out-name index-v0-1-0
 
-watch-server:
-    cargo watch -w server -w shared -w state -i server/web/ -i server/templates \
-        -x "run -p mono-server service"
+watch-server NAME PORT:
+    cargo watch -w server/{{NAME}}/ -w shared/{{NAME}}/ -w state/{{NAME}}/ -w public -i server/{{NAME}}/web/ -i server/{{NAME}}/templates \
+        -x "run -p mono-{{NAME}}-server -- -p{{PORT}} service"
 
 precommit:
     cargo fmt
