@@ -31,6 +31,7 @@ pub async fn mono_command(
 
     dbg!(model.state().owner());
     dbg!(claim.claims.user());
+    dbg!(claim.account_model_key);
 
     // if model.state().owner() != claim.claims.user() {
     //     return Err("not your planet".to_string());
