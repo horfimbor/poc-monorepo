@@ -1,5 +1,5 @@
 [package]
-name = "mono-planet-client"
+name = "horfimbor-client"
 version = "0.1.0"
 edition = "2024"
 
@@ -7,13 +7,10 @@ edition = "2024"
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-#horfimbor-client-derive = "0.1"
-horfimbor-client-derive = { path = "../../../horfimbor-engine/horfimbor-client-derive" }
-horfimbor-client= {path = "../horfimbor-client"}
-bounce = "0.9"
+horfimbor-client-derive = "0.1"
+#horfimbor-client-derive = { path = "../../horfimbor-engine/horfimbor-client-derive" }
+
 yew = { version= "0.21", features=["csr"] }
-custom-elements = "0.2"
-planet-shared = { path = "../../shared/planet" }
 gloo-net = "0.6"
 reqwasm = "0.5"
 weblog = "0.3"
@@ -25,10 +22,6 @@ rand = "0.9.2"
 url = "2.5.4"
 # getrandom is used even by rand in wasm so it's marked as unused
 getrandom = { version = "0.3", features = ["wasm_js"] }
-
-[dependencies.web-sys]
-features = ["HtmlInputElement", "InputEvent"]
-version = "0.3"
 
 [lints]
 workspace = true

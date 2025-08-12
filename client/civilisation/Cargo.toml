@@ -9,6 +9,7 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 horfimbor-client-derive = "0.1"
 #horfimbor-client-derive = { path = "../../horfimbor-engine/horfimbor-client-derive" }
+horfimbor-client= {path = "../horfimbor-client"}
 
 bounce = "0.9"
 yew = { version= "0.21", features=["csr"] }

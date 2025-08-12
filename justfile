@@ -4,7 +4,7 @@ set dotenv-load
 
 alias dc-up := dc-start
 dc-start *SRV:
-    docker compose up -d --build --force-recreate {{SRV}}
+    docker compose up -d --build --force-recreate --remove-orphans {{SRV}}
     docker compose logs --follow {{SRV}}
 
 alias dc-down := dc-stop
@@ -21,7 +21,7 @@ open:
     firefox $APP_HOST
 
 watch-client NAME:
-    cargo watch -w client/{{NAME}}/ -w shared/{{NAME}}/ -w public -- \
+    cargo watch -w client/{{NAME}}/ -w shared/{{NAME}}/ -w public -w client/horfimbor-client -- \
         wasm-pack build ./client/{{NAME}} \
           --target web \
           --out-dir ../../server/{{NAME}}/web/client \
