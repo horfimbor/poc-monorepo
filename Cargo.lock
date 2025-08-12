@@ -1627,7 +1627,7 @@ dependencies = [
  "futures",
  "getrandom 0.3.3",
  "gloo-net 0.6.0",
- "horfimbor-client-derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "horfimbor-client-derive",
  "rand 0.9.2",
  "reqwasm",
  "serde",
@@ -1636,14 +1636,6 @@ dependencies = [
  "wasm-bindgen",
  "weblog",
  "yew",
-]
-
-[[package]]
-name = "horfimbor-client-derive"
-version = "0.1.1"
-dependencies = [
- "proc-macro2",
- "syn 2.0.104",
 ]
 
 [[package]]
@@ -2486,7 +2478,7 @@ dependencies = [
  "getrandom 0.3.3",
  "gloo-net 0.6.0",
  "horfimbor-client",
- "horfimbor-client-derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "horfimbor-client-derive",
  "rand 0.9.2",
  "reqwasm",
  "serde",
@@ -2539,7 +2531,7 @@ dependencies = [
  "getrandom 0.3.3",
  "gloo-net 0.6.0",
  "horfimbor-client",
- "horfimbor-client-derive 0.1.1",
+ "horfimbor-client-derive",
  "planet-shared",
  "rand 0.9.2",
  "reqwasm",
