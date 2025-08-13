@@ -1,6 +1,7 @@
 use civilisation_shared::dto::CivilisationDto;
 use civilisation_shared::event::CivilisationEvent;
-use horfimbor_client::{AddEvent, EventStoreProps, EventStoreState};
+use horfimbor_client::state::{AddEvent, EventStoreState};
+use horfimbor_client::{EventStoreProps, LoadExternalComponent};
 use horfimbor_client_derive::WebComponent;
 use serde::Deserialize;
 use yew::prelude::*;
@@ -57,27 +58,19 @@ impl AddEvent<CivilisationEvent, CivilisationStateProps> for CivilisationDto {
             }
         };
 
-        let script = r#"
-                        import init, { run } from 'http://mono.localhost:8001/client/index.js';
-                        async function main() {
-                            await init();
-                            run();
-                        }
-                        main();
-
-                    "#;
-
         let world_part = html!(<>{
                         self.worlds().iter().map(|world|{
-                            html!(
+                            html!(<>
                                 <fieldset>
-                                    <@{world.balise.to_owned()}
-                                        // endpoint={world.endpoint.to_owned()}
+                                    <LoadExternalComponent
                                         endpoint={"http://mono.localhost:8001"}
-                                        jwt={props.jwt().to_owned()}
-                                        id={world.id.to_owned()}
-                                    />
+                                    balise={world.balise.clone()}
+                                    jwt={props.jwt().to_owned()}
+                                    id={world.id.clone()}
+
+                                />
                                 </fieldset>
+                    </>
                             )
                         }).collect::<Html>()
 
@@ -91,7 +84,6 @@ impl AddEvent<CivilisationEvent, CivilisationStateProps> for CivilisationDto {
                 <hr/>
                 {nation_part}
                 <hr/>
-                <script type="module">{script}</script>
                 {world_part}
             </>
         }

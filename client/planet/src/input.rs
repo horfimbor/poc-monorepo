@@ -1,21 +1,40 @@
 use bounce::BounceRoot;
 use bounce::{Atom, use_atom};
+use horfimbor_client::EventStoreProps;
+use horfimbor_client::input::send_command;
 use horfimbor_client_derive::WebComponent;
-use reqwasm::http::{Request, Response};
+use planet_shared::command::PlanetCommand;
+use planet_shared::dto::PlanetDto;
+use serde::Deserialize;
 use weblog::console_info;
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
-use planet_shared::command::PlanetCommand;
-use planet_shared::dto::PlanetDto;
-
 #[derive(WebComponent)]
 #[component(MonoInput)]
-#[derive(Default, Properties, PartialEq)]
+#[derive(Default, Properties, PartialEq, Deserialize, Debug, Clone)]
 pub struct MonoInputProps {
     pub endpoint: String,
     pub jwt: String,
     pub id: String,
+}
+
+impl EventStoreProps for MonoInputProps {
+    fn endpoint(&self) -> &str {
+        self.endpoint.as_str()
+    }
+
+    fn path(&self) -> &str {
+        "api/planet"
+    }
+
+    fn jwt(&self) -> &str {
+        self.jwt.as_str()
+    }
+
+    fn id(&self) -> &str {
+        self.id.as_str()
+    }
 }
 
 #[derive(Eq, PartialEq, Atom, Default)]
@@ -44,21 +63,16 @@ fn error_display() -> Html {
 #[function_component(Sender)]
 fn sender(props: &MonoInputProps) -> Html {
     let err = use_atom::<LocalError>();
-    let endpoint = props.endpoint.clone();
-    let jwt = props.jwt.clone();
-    let id = props.id.clone();
+    let props = props.clone();
 
     let on_send_clicked = Callback::from(move |_| {
         let err = err.clone();
 
         let cmd = PlanetCommand::Ping;
+        let props = props.clone();
 
-        let endpoint = endpoint.clone();
-        let jwt = jwt.clone();
-        let id = id.clone();
         spawn_local(async move {
-            let endpoint = endpoint.clone();
-            match send_command(&cmd, endpoint, jwt, id).await {
+            match send_command(&cmd, props).await {
                 Ok(resp) => {
                     if resp.ok() {
                         console_info!("sent !");
@@ -72,21 +86,6 @@ fn sender(props: &MonoInputProps) -> Html {
     });
 
     html! { <button id="btn-send" onclick={on_send_clicked}>{"👍"}</button> }
-}
-
-async fn send_command(
-    cmd: &PlanetCommand,
-    endpoint: String,
-    jwt: String,
-    id: String,
-) -> Result<Response, String> {
-    Request::post(&format!("{endpoint}/api/planet/{id}"))
-        .body(serde_json::to_string(&cmd).map_err(|_| format!("cannot serialize cmd {:?}", &cmd))?)
-        .header("Content-Type", "application/json")
-        .header("Authorization", &jwt)
-        .send()
-        .await
-        .map_err(|_| "fail to send command".to_string())
 }
 
 #[allow(dead_code)]

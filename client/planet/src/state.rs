@@ -1,4 +1,5 @@
-use horfimbor_client::{AddEvent, EventStoreProps, EventStoreState};
+use horfimbor_client::EventStoreProps;
+use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client_derive::WebComponent;
 use planet_shared::dto::PlanetDto;
 use planet_shared::event::PlanetEvent;
