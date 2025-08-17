@@ -2,6 +2,7 @@ use civilisation_shared::command::CivilisationCommand;
 use civilisation_shared::error::CivilisationError;
 use civilisation_shared::event::{CivilisationEvent, PrvCivilisationEvent};
 use civilisation_shared::{CIVILISATION_STATE_NAME, Nation};
+use garde::Validate;
 use horfimbor_eventsource::horfimbor_eventsource_derive::StateNamed;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
@@ -87,8 +88,8 @@ impl State for CivilisationState {
                 })])
             }
             CivilisationCommand::UpdateNation(nation) => {
-                if nation.name.is_empty() {
-                    return Err(CivilisationError::NationNameCannotBeEmpty);
+                if let Err(e) = nation.validate() {
+                    return Err(CivilisationError::InvalidNation(e.to_string()));
                 }
                 Ok(vec![CivilisationEvent::Private(
                     PrvCivilisationEvent::NationUpdated(nation),

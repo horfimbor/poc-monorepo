@@ -7,7 +7,7 @@ pub enum CivilisationError {
     AlreadyCreated,
     InvalidOwner,
     AccountNameCannotBeEmpty,
-    NationNameCannotBeEmpty,
+    InvalidNation(String),
     WorldAlreadyAdded(String),
     WorldNotFound(String),
 }
@@ -24,8 +24,8 @@ impl Display for CivilisationError {
             Self::AccountNameCannotBeEmpty => {
                 write!(f, "account name cannot be empty")
             }
-            Self::NationNameCannotBeEmpty => {
-                write!(f, "nation name cannot be empty")
+            Self::InvalidNation(err) => {
+                write!(f, "nation is invalide: {err}")
             }
             Self::WorldAlreadyAdded(id) => {
                 write!(f, "cannot add again world {id}")
