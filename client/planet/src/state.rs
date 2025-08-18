@@ -2,11 +2,11 @@ use horfimbor_client::EventStoreProps;
 use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client_derive::WebComponent;
 use planet_shared::dto::PlanetDto;
-use planet_shared::event::PlanetEvent;
+use planet_shared::event::SharedPlanetEvent;
 use serde::Deserialize;
 use yew::prelude::*;
 
-type PlanetState = EventStoreState<PlanetDto, PlanetEvent, PlanetStateProps>;
+type PlanetState = EventStoreState<PlanetDto, SharedPlanetEvent, PlanetStateProps>;
 
 #[derive(WebComponent)]
 #[component(PlanetState)]
@@ -35,8 +35,8 @@ impl EventStoreProps for PlanetStateProps {
     }
 }
 
-impl AddEvent<PlanetEvent, PlanetStateProps> for PlanetDto {
-    fn play_event(&mut self, event: &PlanetEvent) {
+impl AddEvent<SharedPlanetEvent, PlanetStateProps> for PlanetDto {
+    fn play_event(&mut self, event: &SharedPlanetEvent) {
         self.play_event(event);
     }
 
