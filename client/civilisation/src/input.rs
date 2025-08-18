@@ -1,9 +1,10 @@
 use bounce::BounceRoot;
 use bounce::{Atom, use_atom};
+use garde::Validate;
 use horfimbor_client_derive::WebComponent;
 use reqwasm::http::{Request, Response};
 use web_sys::HtmlInputElement;
-use weblog::console_info;
+use weblog::{console_error, console_info};
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
@@ -97,14 +98,21 @@ fn sender(props: &MonoInputProps) -> Html {
     let endpoint = props.endpoint.clone();
     let jwt = props.jwt.clone();
 
-    let on_send_clicked = Callback::from(move |_| {
-        let data = data.clone();
-        let err = err.clone();
+    let nation = Nation {
+        name: data.name.clone(),
+        description: data.description.clone(),
+    };
 
-        let cmd = CivilisationCommand::UpdateNation(Nation {
-            name: data.name.clone(),
-            description: data.description.clone(),
-        });
+    if let Err(e) = nation.validate() {
+        let message = format!("invalid nation : {e}");
+        return html!( <div>{message}</div>);
+    }
+
+    let on_send_clicked = Callback::from(move |_| {
+        let err = err.clone();
+        let nation = nation.clone();
+
+        let cmd = CivilisationCommand::UpdateNation(nation);
 
         let endpoint = endpoint.clone();
         let jwt = jwt.clone();
@@ -114,6 +122,19 @@ fn sender(props: &MonoInputProps) -> Html {
                 Ok(resp) => {
                     if resp.ok() {
                         console_info!("sent !");
+                        let content = resp.text().await;
+                        match content {
+                            Ok(response) => {
+                                if !response.is_empty() {
+                                    err.set(LocalError {
+                                        err: Some(response),
+                                    });
+                                }
+                            }
+                            Err(e) => {
+                                console_error!(e.to_string())
+                            }
+                        }
                     }
                 }
                 Err(e) => {

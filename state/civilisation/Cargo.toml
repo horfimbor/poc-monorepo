@@ -10,6 +10,7 @@ horfimbor-eventsource.workspace = true
 serde.workspace = true
 civilisation-shared = { path = "../../shared/civilisation", features = ["server"] }
 public-mono = {path = "../../public", features = ["server"]}
+garde.workspace = true
 
 [dev-dependencies]
 tokio = { version = "1.21", features = ["rt", "rt-multi-thread", "macros"] }
