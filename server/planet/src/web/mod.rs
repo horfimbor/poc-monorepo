@@ -1,4 +1,4 @@
-use crate::{PlanetDtoCache, PlanetDtoRepository, PlanetRepository, built_info};
+use crate::{PlanetRepository, built_info};
 use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_jwt::Claims;
@@ -19,8 +19,6 @@ pub mod planet;
 pub async fn start_server(
     event_store_db: Client,
     planet_repo_state: PlanetRepository,
-    planet_repo_dto: PlanetDtoRepository,
-    planet_dto_cache: PlanetDtoCache,
     dto_redis: RedisClient,
     port: Option<u16>,
 ) -> Result<(), Error> {
@@ -58,8 +56,6 @@ pub async fn start_server(
         .merge(("address", "0.0.0.0"));
     let _rocket = rocket::custom(figment)
         .manage(planet_repo_state)
-        .manage(planet_repo_dto)
-        .manage(planet_dto_cache)
         .manage(dto_redis)
         .manage(event_store_db)
         .mount("/", routes![redirect_index_js])

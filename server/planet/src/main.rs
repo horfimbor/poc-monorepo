@@ -8,9 +8,8 @@ use crate::consumer::planet::account::handle_account_public_event_for_planet;
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Parser, Subcommand, ValueEnum};
 use horfimbor_eventsource::cache_db::redis::StateDb;
-use horfimbor_eventsource::repository::{DtoRepository, Repository, StateRepository};
+use horfimbor_eventsource::repository::{Repository, StateRepository};
 use kurrentdb::Client;
-use planet_shared::dto::PlanetDto;
 use planet_state::PlanetState;
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
@@ -20,8 +19,6 @@ use std::env;
 
 type PlanetStateCache = StateDb<PlanetState>;
 type PlanetRepository = StateRepository<PlanetState, PlanetStateCache>;
-type PlanetDtoCache = StateDb<PlanetDto>;
-type PlanetDtoRepository = DtoRepository<PlanetDto, PlanetDtoCache>;
 
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
 enum Service {
@@ -86,9 +83,6 @@ async fn main() -> Result<()> {
         event_store_db.clone(),
         PlanetStateCache::new(redis_client.clone()),
     );
-    let dto_planet_redis = PlanetDtoCache::new(redis_client.clone());
-    let repo_planet_dto =
-        PlanetDtoRepository::new(event_store_db.clone(), dto_planet_redis.clone());
 
     match args.command {
         Command::Service { list } => {
@@ -99,8 +93,6 @@ async fn main() -> Result<()> {
                     web::start_server(
                         event_store_db.clone(),
                         repo_planet_state.clone(),
-                        repo_planet_dto,
-                        dto_planet_redis,
                         redis_client.clone(),
                         args.port,
                     )

@@ -1,12 +1,12 @@
+use crate::PlanetRepository;
 use crate::web::{AuthAccountClaim, get_jwt_claims};
-use crate::{PlanetDtoRepository, PlanetRepository};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
 use planet_shared::command::PlanetCommand;
-use planet_shared::event::PlanetEvent;
+use planet_state::PlanetEvent;
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
@@ -47,7 +47,7 @@ pub async fn mono_command(
 
 #[get("/<model_id>/<jwt>")]
 pub async fn stream_dto(
-    dto_repository: &State<PlanetDtoRepository>,
+    dto_repository: &State<PlanetRepository>,
     model_id: &str,
     jwt: &str,
 ) -> Result<EventStream![], String> {
@@ -72,7 +72,7 @@ pub async fn stream_dto(
     .await;
 
     Ok(EventStream! {
-        yield Event::json(&dto.state());
+        yield Event::json(&dto.state().shared());
         loop {
             let event = if let Ok(event) = subscription.next().await{
                 event
@@ -89,10 +89,11 @@ pub async fn stream_dto(
             };
 
             if metadata.is_event(){
-
                 match original_event.as_json::<PlanetEvent>(){
                     Ok(event) =>{
-                        yield Event::json(&event);
+                        if let PlanetEvent::Shared(event) = event{
+                            yield Event::json(&event);
+                        }
                     },
                     Err(_) => {
                         yield Event::data("cannot get original event").event("error");

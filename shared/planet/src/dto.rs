@@ -1,34 +1,32 @@
 #[cfg(feature = "server")]
 use horfimbor_eventsource::Dto;
 
-use crate::event::{PlanetEvent, PrvPlanetEvent};
+use crate::event::SharedPlanetEvent;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Default, Eq)]
 pub struct PlanetDto {
-    nb: u32,
+    nb: usize,
 }
 
 impl PlanetDto {
-    pub fn play_event(&mut self, event: &PlanetEvent) {
+    pub fn play_event(&mut self, event: &SharedPlanetEvent) {
         match event {
-            PlanetEvent::Private(event) => match event {
-                PrvPlanetEvent::Pong(_) => self.nb += 1,
-                PrvPlanetEvent::Created(_) => self.nb = 100,
-            },
-            PlanetEvent::Public(_) => {}
+            SharedPlanetEvent::Pong(_) => self.nb += 1,
+            SharedPlanetEvent::Created(_) => self.nb = 100,
+            SharedPlanetEvent::Boom(nb) => self.nb = *nb,
         }
     }
 
     #[must_use]
-    pub fn nb(&self) -> u32 {
+    pub fn nb(&self) -> usize {
         self.nb
     }
 }
 
 #[cfg(feature = "server")]
 impl Dto for PlanetDto {
-    type Event = PlanetEvent;
+    type Event = SharedPlanetEvent;
 
     fn play_event(&mut self, event: &Self::Event) {
         self.play_event(event);
