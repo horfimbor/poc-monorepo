@@ -15,4 +15,6 @@ target/
 client/dist/
 .env
 /mutants.out*/
-server/*/web
+/*/server/web
+!/*/server/web/.gitkeep
+

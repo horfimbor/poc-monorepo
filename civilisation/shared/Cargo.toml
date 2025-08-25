@@ -9,7 +9,7 @@ edition = "2024"
 horfimbor-eventsource = { workspace = true, optional = true }
 serde.workspace = true
 thiserror.workspace = true
-public-mono = {path = "../../public"}
+public-mono = {path = "../../public" }
 garde.workspace = true
 
 [features]

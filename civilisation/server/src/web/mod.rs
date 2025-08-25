@@ -59,7 +59,7 @@ pub async fn start_server(
     let figment = rocket::Config::figment()
         .merge(("port", auth_port))
         .merge(("address", "0.0.0.0"))
-        .merge(("template_dir", "server/civilisation/templates"));
+        .merge(("template_dir", "civilisation/server/templates"));
     let _rocket = rocket::custom(figment)
         .manage(account_repo_state)
         .manage(account_repo_dto)

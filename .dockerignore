@@ -15,4 +15,4 @@ target/
 /client/dist/
 /.env
 /mutants.out*/
-/server/civilisation/web/
+/*/state/web/

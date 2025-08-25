@@ -31,10 +31,8 @@ ENV APP_NAME=${APP_NAME}
 # output directory before the cache mounted /app/target is unmounted.
 RUN --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
-    --mount=type=bind,source=client,target=client \
-    --mount=type=bind,source=server,target=server \
-    --mount=type=bind,source=shared,target=shared \
-    --mount=type=bind,source=state,target=state \
+    --mount=type=bind,source=civilisation,target=civilisation \
+    --mount=type=bind,source=planet,target=planet \
     --mount=type=bind,source=public,target=public \
     --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
@@ -47,7 +45,7 @@ cp ./target/release/mono-$APP_NAME-server /bin/mono-$APP_NAME-server
 
 WASM_TAG=${WASM_TAG//./-}
 
-wasm-pack build ./client/$APP_NAME/ --target web --out-dir /bin/webcomponent/ --out-name index-$WASM_TAG
+wasm-pack build ./$APP_NAME/client/ --target web --out-dir /bin/webcomponent/ --out-name index-$WASM_TAG
 
 EOF
 
@@ -89,8 +87,8 @@ ARG APP_NAME="NONE"
 
 # Copy the executable from the "build" stage.
 COPY --from=build /bin/mono-$APP_NAME-server /bin/
-COPY --from=build /bin/webcomponent/ /app/server/$APP_NAME/web/client/
-COPY server/$APP_NAME/templates /app/server/$APP_NAME/templates/
+COPY --from=build /bin/webcomponent/ /app/$APP_NAME/server/web/client/
+COPY $APP_NAME/server/templates /app/$APP_NAME/server/templates/
 
 ARG APP_PORT=8000
 
@@ -99,8 +97,3 @@ EXPOSE $APP_PORT
 
 WORKDIR /app
 
-# doenst work
-#ARG COMMAND="/bin/mono-$APP_NAME-server --real-env service"
-#
-## What the container should run when it is started.
-#CMD $COMMAND
