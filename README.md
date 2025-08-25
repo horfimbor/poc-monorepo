@@ -2,7 +2,9 @@
 
 this repository is a monorepo as a poc for the horfimbor game
 
-after the poc phase, this repo will be broken into pieces and archieved.
+after the poc phase, this repo will most likely be broken into pieces and archieved.
+
+you can find what this repo must be doing in [game-rules](doc/game-rules.md)
 
 ## development : 
 
