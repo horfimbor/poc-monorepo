@@ -9,11 +9,13 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 horfimbor-client-derive.workspace = true
 horfimbor-client.workspace = true
+horfimbor-jwt = { path = "../../../horfimbor-engine/horfimbor-jwt", features = ["client"] }
 
 bounce = "0.9"
 yew = { version= "0.21", features=["csr"] }
 custom-elements = "0.2"
 civilisation-shared = { path = "../shared" }
+civilisation-admin = { path = "../admin" }
 gloo-net = "0.6"
 reqwasm = "0.5"
 weblog = "0.3"

@@ -10,6 +10,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use horfimbor_eventsource::cache_db::redis::StateDb;
 use horfimbor_eventsource::repository::{Repository, StateRepository};
 use kurrentdb::Client;
+use planet_admin::PlanetAdminState;
 use planet_state::PlanetState;
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
@@ -19,6 +20,9 @@ use std::env;
 
 type PlanetStateCache = StateDb<PlanetState>;
 type PlanetRepository = StateRepository<PlanetState, PlanetStateCache>;
+
+type PlanetAdminStateCache = StateDb<PlanetAdminState>;
+type PlanetAdminRepository = StateRepository<PlanetAdminState, PlanetAdminStateCache>;
 
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
 enum Service {
@@ -84,6 +88,11 @@ async fn main() -> Result<()> {
         PlanetStateCache::new(redis_client.clone()),
     );
 
+    let repo_planet_admin = PlanetAdminRepository::new(
+        event_store_db.clone(),
+        PlanetAdminStateCache::new(redis_client.clone()),
+    );
+
     match args.command {
         Command::Service { list } => {
             let mut services = Vec::new();
@@ -93,6 +102,7 @@ async fn main() -> Result<()> {
                     web::start_server(
                         event_store_db.clone(),
                         repo_planet_state.clone(),
+                        repo_planet_admin.clone(),
                         redis_client.clone(),
                         args.port,
                     )

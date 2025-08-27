@@ -27,7 +27,8 @@ pub async fn mono_command(
         .await
         .map_err(|e| e.to_string())?;
 
-    if model.state().owner() != claim.claims.user() {
+    // TODO check why this to_string is needed :thinking:
+    if claim.claims.user().to_string() != model.state().owner().to_string() {
         return Err("not your account".to_string());
     }
 

@@ -7,7 +7,7 @@ edition = "2024"
 
 [dependencies]
 horfimbor-eventsource.workspace = true
-horfimbor-jwt.workspace = true
+horfimbor-jwt = {workspace = true, features = ["server"]}
 public-account-event.workspace = true
 clap.workspace = true
 serde.workspace = true

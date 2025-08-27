@@ -1,6 +1,9 @@
+use horfimbor_client::LoadExternalComponent;
 use horfimbor_client_derive::WebComponent;
-use weblog::{console_info, console_warn};
-use yew::{Component, Context, Html, Properties, html};
+use horfimbor_jwt::{Claims, Role};
+use std::ops::Not;
+use weblog::{console_error, console_info, console_warn};
+use yew::{Callback, Component, Context, Html, Properties, html};
 
 #[derive(WebComponent)]
 #[component(GalaxyAuth)]
@@ -14,20 +17,29 @@ pub struct AuthProps {
     account_name: Option<String>,
 }
 
-#[allow(dead_code)]
-pub struct GalaxyAuth {}
+pub struct GalaxyAuth {
+    admin_open: bool,
+}
+
+pub enum GalaxyEvent {
+    ToggleAdmin,
+}
 
 impl Component for GalaxyAuth {
-    type Message = ();
+    type Message = GalaxyEvent;
     type Properties = AuthProps;
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self {}
+        Self { admin_open: false }
     }
 
-    fn changed(&mut self, _ctx: &Context<Self>, _old_props: &Self::Properties) -> bool {
-        console_info!("CHANGE");
-        true
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+        match msg {
+            GalaxyEvent::ToggleAdmin => {
+                self.admin_open = self.admin_open.not();
+                true
+            }
+        }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
@@ -118,8 +130,48 @@ impl Component for GalaxyAuth {
             };
         };
 
+        let content = html! {
+                    <LoadExternalComponent
+                        endpoint={endpoint.clone()}
+                        balise={"horfimbor-civilisation-state"}
+                        jwt={jwt.clone()}
+                        id={""}
+                    />
+        };
+
+        let is_admin = match Claims::from_jwt_insecure(&jwt) {
+            Ok(data) => *data.roles() == Role::Admin,
+            Err(e) => {
+                console_error!(e.to_string());
+                false
+            }
+        };
+
+        if is_admin.not() {
+            return content;
+        }
+
+        let admin_content = if self.admin_open {
+            html! {
+                <LoadExternalComponent
+                    endpoint={endpoint.clone()}
+                    balise={"horfimbor-civilisation-admin"}
+                    jwt={jwt.clone()}
+                    id={""}
+                />
+            }
+        } else {
+            content
+        };
+
+        let link = ctx.link().clone();
+        let onclick = Callback::from(move |_| link.send_message(GalaxyEvent::ToggleAdmin));
+
         html! {
-            <horfimbor-civilisation-state endpoint={{endpoint.clone()}} jwt={{jwt.clone()}}></horfimbor-civilisation-state>
+            <>
+            <button {onclick}>{"toggle admin"}</button>
+            {admin_content}
+            </>
         }
     }
 }

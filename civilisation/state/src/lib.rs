@@ -7,16 +7,30 @@ use horfimbor_eventsource::horfimbor_eventsource_derive::StateNamed;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
 use public_mono::Component;
-use public_mono::civilisation::PubAccountEvent;
+use public_mono::civilisation::PubCivilisationEvent;
 use serde::{Deserialize, Serialize};
+use url::Host;
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed, Default)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed)]
 #[state(CIVILISATION_STATE_NAME)]
 pub struct CivilisationState {
     private_name: String,
     owner: ModelKey,
+    game_host: Host,
     nation: Option<Nation>,
     worlds: Vec<Component>,
+}
+
+impl Default for CivilisationState {
+    fn default() -> Self {
+        Self {
+            private_name: Default::default(),
+            owner: Default::default(),
+            game_host: Host::Domain("localhost".to_string()),
+            nation: None,
+            worlds: vec![],
+        }
+    }
 }
 
 impl CivilisationState {
@@ -54,7 +68,12 @@ impl Dto for CivilisationState {
                 PrvCivilisationEvent::WorldRemoved(id) => self.worlds.retain(|w| !w.id.eq(id)),
             },
             CivilisationEvent::Public(event) => match event {
-                PubAccountEvent::Created { name, owner } => {
+                PubCivilisationEvent::Created {
+                    game_host,
+                    name,
+                    owner,
+                } => {
+                    self.game_host = game_host.clone();
                     self.private_name = name.clone();
                     self.owner = owner.as_str().try_into().unwrap_or_default();
                 }
@@ -82,10 +101,13 @@ impl State for CivilisationState {
                 if name.is_empty() {
                     return Err(CivilisationError::AccountNameCannotBeEmpty);
                 }
-                Ok(vec![CivilisationEvent::Public(PubAccountEvent::Created {
-                    name,
-                    owner,
-                })])
+                Ok(vec![CivilisationEvent::Public(
+                    PubCivilisationEvent::Created {
+                        game_host: self.game_host.clone(),
+                        name,
+                        owner,
+                    },
+                )])
             }
             CivilisationCommand::UpdateNation(nation) => {
                 if let Err(e) = nation.validate() {

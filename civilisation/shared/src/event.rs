@@ -7,7 +7,7 @@ use horfimbor_eventsource::{Event, EventName};
 
 use crate::Nation;
 use public_mono::Component;
-use public_mono::civilisation::PubAccountEvent;
+use public_mono::civilisation::PubCivilisationEvent;
 use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "server", derive(Event))]
@@ -25,5 +25,5 @@ pub enum PrvCivilisationEvent {
 #[serde(untagged)]
 pub enum CivilisationEvent {
     Private(PrvCivilisationEvent),
-    Public(PubAccountEvent),
+    Public(PubCivilisationEvent),
 }

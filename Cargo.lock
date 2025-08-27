@@ -362,6 +362,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56ed6191a7e78c36abdb16ab65341eefd73d64d303fffccdbb00d51e4205967b"
 
 [[package]]
+name = "built"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4ad8f11f288f48ca24471bbd51ac257aaeaaa07adae295591266b792902ae64"
+
+[[package]]
 name = "bumpalo"
 version = "3.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -470,11 +476,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "civilisation-admin"
+version = "0.1.0"
+dependencies = [
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "horfimbor-time",
+ "public-mono",
+ "serde",
+ "thiserror 2.0.12",
+ "url",
+]
+
+[[package]]
 name = "civilisation-shared"
 version = "0.1.0"
 dependencies = [
  "garde",
- "horfimbor-eventsource",
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "public-mono",
  "serde",
  "thiserror 2.0.12",
@@ -488,10 +506,11 @@ dependencies = [
  "civilisation-shared",
  "cucumber",
  "garde",
- "horfimbor-eventsource",
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "public-mono",
  "serde",
  "tokio",
+ "url",
 ]
 
 [[package]]
@@ -972,9 +991,9 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "form_urlencoded"
-version = "1.2.1"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
+checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
 dependencies = [
  "percent-encoding",
 ]
@@ -1670,13 +1689,10 @@ dependencies = [
 [[package]]
 name = "horfimbor-client"
 version = "0.1.0"
-source = "git+https://github.com/horfimbor/horfimbor-engine?branch=add-client#7bd401ad11d5c522175a30aa06ee3fc0bc20abd9"
 dependencies = [
- "bounce",
  "futures",
  "getrandom 0.3.3",
  "gloo-net 0.6.0",
- "horfimbor-client-derive 0.1.1 (git+https://github.com/horfimbor/horfimbor-engine?branch=add-client)",
  "rand 0.9.2",
  "reqwasm",
  "serde",
@@ -1690,20 +1706,26 @@ dependencies = [
 [[package]]
 name = "horfimbor-client-derive"
 version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d9b51be14a0782ef4fe9c037b2a5d06853cf0f9e4ff85ad195251316facbcb0"
 dependencies = [
  "proc-macro2",
  "syn 2.0.104",
 ]
 
 [[package]]
-name = "horfimbor-client-derive"
-version = "0.1.1"
-source = "git+https://github.com/horfimbor/horfimbor-engine?branch=add-client#7bd401ad11d5c522175a30aa06ee3fc0bc20abd9"
+name = "horfimbor-eventsource"
+version = "0.3.5"
 dependencies = [
- "proc-macro2",
- "syn 2.0.104",
+ "async-trait",
+ "futures",
+ "horfimbor-eventsource-derive 0.1.8",
+ "kurrentdb",
+ "redis",
+ "serde",
+ "serde_json",
+ "sha1",
+ "thiserror 2.0.12",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -1714,7 +1736,7 @@ checksum = "f2229c96940b8d70e6c30b132b47535906389c0f0430f6f2645dfd7fa53e941f"
 dependencies = [
  "async-trait",
  "futures",
- "horfimbor-eventsource-derive",
+ "horfimbor-eventsource-derive 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "kurrentdb",
  "redis",
  "serde",
@@ -1723,6 +1745,16 @@ dependencies = [
  "thiserror 2.0.12",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "horfimbor-eventsource-derive"
+version = "0.1.8"
+dependencies = [
+ "convert_case",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
 ]
 
 [[package]]
@@ -1740,11 +1772,21 @@ dependencies = [
 [[package]]
 name = "horfimbor-jwt"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73fc42450b7bfeea5ab02516fed203fc4e18ae859dc8c1deefd3ac4eaa6b9465"
 dependencies = [
- "horfimbor-eventsource",
+ "base64",
+ "horfimbor-eventsource 0.3.5",
  "jsonwebtoken",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.12",
+ "uuid",
+]
+
+[[package]]
+name = "horfimbor-time"
+version = "0.2.2"
+dependencies = [
+ "chrono",
  "serde",
  "thiserror 2.0.12",
 ]
@@ -2045,9 +2087,9 @@ dependencies = [
 
 [[package]]
 name = "idna"
-version = "1.0.3"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "686f825264d630750a544639377bae737628043f20d38bbc029e8f29ea968a7e"
+checksum = "3b0875f23caa03898994f6ddc501886a45c7d3d62d04d2d90788d47be1b1e4de"
 dependencies = [
  "idna_adapter",
  "smallvec",
@@ -2530,6 +2572,7 @@ name = "mono-civilisation-client"
 version = "0.1.0"
 dependencies = [
  "bounce",
+ "civilisation-admin",
  "civilisation-shared",
  "custom-elements",
  "futures",
@@ -2537,7 +2580,8 @@ dependencies = [
  "getrandom 0.3.3",
  "gloo-net 0.6.0",
  "horfimbor-client",
- "horfimbor-client-derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "horfimbor-client-derive",
+ "horfimbor-jwt",
  "rand 0.9.2",
  "reqwasm",
  "serde",
@@ -2554,14 +2598,14 @@ name = "mono-civilisation-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "built",
+ "built 0.7.7",
  "chrono",
  "civilisation-shared",
  "civilisation-state",
  "clap",
  "dotenvy",
  "futures",
- "horfimbor-eventsource",
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "horfimbor-jwt",
  "kurrentdb",
  "public-account-event",
@@ -2590,13 +2634,12 @@ dependencies = [
  "getrandom 0.3.3",
  "gloo-net 0.6.0",
  "horfimbor-client",
- "horfimbor-client-derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "horfimbor-client-derive",
  "planet-shared",
  "rand 0.9.2",
  "reqwasm",
  "serde",
  "serde_json",
- "url",
  "wasm-bindgen",
  "web-sys",
  "weblog",
@@ -2608,14 +2651,15 @@ name = "mono-planet-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "built",
+ "built 0.8.0",
  "chrono",
  "clap",
  "dotenvy",
  "futures",
- "horfimbor-eventsource",
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "horfimbor-jwt",
  "kurrentdb",
+ "planet-admin",
  "planet-shared",
  "planet-state",
  "public-account-event",
@@ -2631,6 +2675,7 @@ dependencies = [
  "signal-hook-tokio",
  "thiserror 2.0.12",
  "tokio",
+ "url",
  "uuid",
 ]
 
@@ -2889,9 +2934,9 @@ dependencies = [
 
 [[package]]
 name = "percent-encoding"
-version = "2.3.1"
+version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
+checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
 name = "pest"
@@ -3029,10 +3074,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "planet-admin"
+version = "0.1.0"
+dependencies = [
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "horfimbor-time",
+ "serde",
+ "thiserror 2.0.12",
+ "url",
+]
+
+[[package]]
 name = "planet-shared"
 version = "0.1.0"
 dependencies = [
- "horfimbor-eventsource",
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "public-mono",
  "serde",
  "thiserror 2.0.12",
@@ -3044,7 +3100,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cucumber",
- "horfimbor-eventsource",
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "planet-shared",
  "public-mono",
  "serde",
@@ -3215,7 +3271,7 @@ name = "public-account-event"
 version = "0.1.0"
 source = "git+https://github.com/horfimbor/hfb-auth?branch=fixes-monorepo#f4a7608dd3ac07d0250fbc0429ef6eac03e49858"
 dependencies = [
- "horfimbor-eventsource",
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
 ]
 
@@ -3223,8 +3279,10 @@ dependencies = [
 name = "public-mono"
 version = "0.1.0"
 dependencies = [
- "horfimbor-eventsource",
+ "horfimbor-eventsource 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "horfimbor-time",
  "serde",
+ "url",
 ]
 
 [[package]]
@@ -4750,13 +4808,14 @@ checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
 
 [[package]]
 name = "url"
-version = "2.5.4"
+version = "2.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32f8b686cadd1473f4bd0117a5d28d36b1ade384ea9b5069a1c40aefed7fda60"
+checksum = "08bc136a29a3d1758e07a9cca267be308aeebf5cfd5a10f3f67ab2097683ef5b"
 dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]

@@ -6,14 +6,16 @@ use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Event, Stream};
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use planet_shared::command::PlanetCommand;
-use public_mono::civilisation::PubAccountEvent;
+use public_mono::civilisation::PubCivilisationEvent;
 use public_mono::planet::PLANET_STREAM;
+use url::Host;
 
 pub async fn handle_account_public_event_for_planet(
     event_store_db: Client,
     planet_repository: PlanetRepository,
 ) -> anyhow::Result<()> {
-    let e = PubAccountEvent::Created {
+    let e = PubCivilisationEvent::Created {
+        game_host: Host::Domain("localhost".to_string()),
         name: "".to_string(),
         owner: "".to_string(),
     };

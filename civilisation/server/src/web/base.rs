@@ -20,12 +20,22 @@ pub async fn index(host: &State<AuthConfig>) -> Template {
         context! {
             title: format!("Hello, world! {}",local.format("%x %T")),
             endpoint: format!("{}", host.app_host ),
+            key : get_wasm_key(host),
             auth_endpoint: format!("{}",  host.auth_host),
             jwt: "",
             account_name: ""
         },
     )
 }
+
+fn get_wasm_key(host: &State<AuthConfig>) -> String {
+    host.app_host
+        .clone()
+        .chars()
+        .filter(|&c| c.is_alphanumeric())
+        .collect()
+}
+
 #[get("/<account_name>")]
 pub async fn account(host: &State<AuthConfig>, account_name: &str) -> Template {
     Template::render(
@@ -33,6 +43,7 @@ pub async fn account(host: &State<AuthConfig>, account_name: &str) -> Template {
         context! {
             title: format!("Hi {account_name}"),
             endpoint: format!("{}", host.app_host ),
+            key : get_wasm_key(host),
             auth_endpoint: format!("{}",  host.auth_host),
             jwt: "",
             account_name: account_name,
@@ -65,6 +76,7 @@ pub async fn auth(token: &str, host: &State<AuthConfig>) -> Result<Template, Str
         context! {
             title: "Hello, connected user!",
             endpoint: format!("{}", host.app_host ),
+            key : get_wasm_key(host),
             auth_endpoint: format!("{}",  host.auth_host),
             jwt: response,
             account_name: claims.account_name()

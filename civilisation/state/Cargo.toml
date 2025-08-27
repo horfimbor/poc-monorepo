@@ -11,6 +11,7 @@ serde.workspace = true
 civilisation-shared = { path = "../shared", features = ["server"] }
 public-mono = {path = "../../public", features = ["server"]}
 garde.workspace = true
+url.workspace = true
 
 [dev-dependencies]
 tokio = { version = "1.21", features = ["rt", "rt-multi-thread", "macros"] }

@@ -1,0 +1,18 @@
+[package]
+name = "civilisation-admin"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde.workspace = true
+horfimbor-eventsource = {optional = true, workspace = true}
+horfimbor-time.workspace = true
+url.workspace = true
+thiserror.workspace = true
+public-mono= {path = "../../public"}
+
+[features]
+server = ["horfimbor-eventsource", "public-mono/server"]
+
+[lints]
+workspace = true
