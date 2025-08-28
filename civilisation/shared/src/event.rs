@@ -13,10 +13,17 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "server", derive(Event))]
 #[cfg_attr(feature = "server", state(CIVILISATION_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub enum PrvCivilisationEvent {
+pub enum SharedCivilisationEvent {
     NationUpdated(Nation),
     WorldAdded(Component),
     WorldRemoved(String),
+}
+
+#[cfg_attr(feature = "server", derive(Event))]
+#[cfg_attr(feature = "server", state(CIVILISATION_STATE_NAME))]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum PrvCivilisationEvent {
+    NothingYet,
 }
 
 #[cfg_attr(feature = "server", derive(Event))]
@@ -25,5 +32,6 @@ pub enum PrvCivilisationEvent {
 #[serde(untagged)]
 pub enum CivilisationEvent {
     Private(PrvCivilisationEvent),
+    Shared(SharedCivilisationEvent),
     Public(PubCivilisationEvent),
 }

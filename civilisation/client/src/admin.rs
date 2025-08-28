@@ -39,7 +39,7 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
         self.play_event(event);
     }
 
-    fn get_view(&self, props: CivilisationAdminProps) -> Html {
+    fn get_view(&self, _props: CivilisationAdminProps) -> Html {
         html!(<p>
             {self.host().clone().map(|h| h.to_string())}
             </p>)

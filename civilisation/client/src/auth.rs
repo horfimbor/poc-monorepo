@@ -2,7 +2,7 @@ use horfimbor_client::LoadExternalComponent;
 use horfimbor_client_derive::WebComponent;
 use horfimbor_jwt::{Claims, Role};
 use std::ops::Not;
-use weblog::{console_error, console_info, console_warn};
+use weblog::{console_error, console_warn};
 use yew::{Callback, Component, Context, Html, Properties, html};
 
 #[derive(WebComponent)]

@@ -2600,6 +2600,7 @@ dependencies = [
  "anyhow",
  "built 0.7.7",
  "chrono",
+ "civilisation-admin",
  "civilisation-shared",
  "civilisation-state",
  "clap",

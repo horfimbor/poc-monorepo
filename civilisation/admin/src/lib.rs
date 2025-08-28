@@ -82,14 +82,12 @@ impl CivilisationAdminState {
                     PubConfigCivEvent::AddService {
                         game_host: _game_host,
                         service_host,
+                        time : _time,
                     } => self.game_components.push(service_host.clone()),
                     PubConfigCivEvent::RemoveService {
                         game_host: _game_host,
                         service_host,
                     } => self.game_components.retain(|h| *h != *service_host),
-                    PubConfigCivEvent::SetTime(_) => {
-                        // timer cannot be change
-                    }
                 }
             }
         }
@@ -134,7 +132,7 @@ impl State for CivilisationAdminState {
                 )])
             }
             CivilisationAdminCommand::AddComponent(service_host) => {
-                let (Some(game_host), Some(timer)) = (self.host.clone(), self.time.clone()) else {
+                let (Some(game_host), Some(time)) = (self.host.clone(), self.time.clone()) else {
                     return Err(CivilisationAdminError::NotCreatedYet);
                 };
 
@@ -142,12 +140,12 @@ impl State for CivilisationAdminState {
                     CivilisationAdminEvent::Public(PubConfigCivEvent::AddService {
                         game_host,
                         service_host,
+                        time
                     }),
-                    CivilisationAdminEvent::Public(PubConfigCivEvent::SetTime(timer)),
                 ])
             }
             CivilisationAdminCommand::RemoveComponent(service_host) => {
-                let (Some(game_host), Some(timer)) = (self.host.clone(), self.time.clone()) else {
+                let Some(game_host) = self.host.clone() else {
                     return Err(CivilisationAdminError::NotCreatedYet);
                 };
 
@@ -156,7 +154,6 @@ impl State for CivilisationAdminState {
                         game_host,
                         service_host,
                     }),
-                    CivilisationAdminEvent::Public(PubConfigCivEvent::SetTime(timer)),
                 ])
             }
         }

@@ -1,4 +1,4 @@
-use crate::AccountRepository;
+use crate::CivilisationRepository;
 use anyhow::Context;
 use civilisation_shared::command::CivilisationCommand;
 use horfimbor_eventsource::helper::create_subscription;
@@ -10,7 +10,7 @@ use public_mono::planet::PubPlanetEvent;
 
 pub async fn handle_planet_public_event(
     event_store_db: Client,
-    account_repository: AccountRepository,
+    account_repository: CivilisationRepository,
 ) -> anyhow::Result<()> {
     let e = PubPlanetEvent::NewOwner {
         old_account_id: None,

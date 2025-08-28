@@ -1,4 +1,4 @@
-use crate::AccountRepository;
+use crate::CivilisationRepository;
 use anyhow::{Context, anyhow};
 use civilisation_shared::command::CivilisationCommand;
 use horfimbor_eventsource::helper::create_subscription;
@@ -12,7 +12,7 @@ use std::env;
 
 pub async fn handle_account_public_event(
     event_store_db: Client,
-    repository: AccountRepository,
+    repository: CivilisationRepository,
 ) -> anyhow::Result<()> {
     let current_app_id = env::var("APP_ID").map_err(|_| anyhow!("APP_ID is missing"))?;
 

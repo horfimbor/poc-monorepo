@@ -1,15 +1,15 @@
 use civilisation_shared::command::CivilisationCommand;
 use civilisation_shared::error::CivilisationError;
-use civilisation_shared::event::{CivilisationEvent, PrvCivilisationEvent};
-use civilisation_shared::{CIVILISATION_STATE_NAME, Nation};
+use civilisation_shared::event::{CivilisationEvent, SharedCivilisationEvent};
+use civilisation_shared::{CIVILISATION_STATE_NAME};
 use garde::Validate;
 use horfimbor_eventsource::horfimbor_eventsource_derive::StateNamed;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
-use public_mono::Component;
 use public_mono::civilisation::PubCivilisationEvent;
 use serde::{Deserialize, Serialize};
 use url::Host;
+use civilisation_shared::dto::CivilisationDto;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed)]
 #[state(CIVILISATION_STATE_NAME)]
@@ -17,8 +17,7 @@ pub struct CivilisationState {
     private_name: String,
     owner: ModelKey,
     game_host: Host,
-    nation: Option<Nation>,
-    worlds: Vec<Component>,
+    shared: CivilisationDto
 }
 
 impl Default for CivilisationState {
@@ -27,8 +26,7 @@ impl Default for CivilisationState {
             private_name: Default::default(),
             owner: Default::default(),
             game_host: Host::Domain("localhost".to_string()),
-            nation: None,
-            worlds: vec![],
+            shared: Default::default()
         }
     }
 }
@@ -45,13 +43,8 @@ impl CivilisationState {
     }
 
     #[must_use]
-    pub fn nation(&self) -> &Option<Nation> {
-        &self.nation
-    }
-
-    #[must_use]
-    pub fn worlds(&self) -> &Vec<Component> {
-        &self.worlds
+    pub fn shared(&self) -> &CivilisationDto {
+        &self.shared
     }
 }
 
@@ -60,12 +53,8 @@ impl Dto for CivilisationState {
 
     fn play_event(&mut self, event: &Self::Event) {
         match event {
-            CivilisationEvent::Private(event) => match event {
-                PrvCivilisationEvent::NationUpdated(nation) => {
-                    self.nation = Some(nation.clone());
-                }
-                PrvCivilisationEvent::WorldAdded(world) => self.worlds.push(world.clone()),
-                PrvCivilisationEvent::WorldRemoved(id) => self.worlds.retain(|w| !w.id.eq(id)),
+            CivilisationEvent::Shared(event) => {
+                self.shared.play_event(event);
             },
             CivilisationEvent::Public(event) => match event {
                 PubCivilisationEvent::Created {
@@ -78,6 +67,7 @@ impl Dto for CivilisationState {
                     self.owner = owner.as_str().try_into().unwrap_or_default();
                 }
             },
+            CivilisationEvent::Private(_) => {}
         }
     }
 }
@@ -113,26 +103,26 @@ impl State for CivilisationState {
                 if let Err(e) = nation.validate() {
                     return Err(CivilisationError::InvalidNation(e.to_string()));
                 }
-                Ok(vec![CivilisationEvent::Private(
-                    PrvCivilisationEvent::NationUpdated(nation),
+                Ok(vec![CivilisationEvent::Shared(
+                    SharedCivilisationEvent::NationUpdated(nation),
                 )])
             }
             CivilisationCommand::AddWorld(world) => {
-                if self.worlds.iter().any(|w| w.id.eq(&world.id)) {
+                if self.shared.worlds().iter().any(|w| w.id.eq(&world.id)) {
                     return Err(CivilisationError::WorldAlreadyAdded(world.id));
                 }
 
-                Ok(vec![CivilisationEvent::Private(
-                    PrvCivilisationEvent::WorldAdded(world),
+                Ok(vec![CivilisationEvent::Shared(
+                    SharedCivilisationEvent::WorldAdded(world),
                 )])
             }
             CivilisationCommand::RemoveWorld(world_id) => {
-                if !self.worlds.iter().any(|w| w.id.eq(&world_id)) {
+                if !self.shared.worlds().iter().any(|w| w.id.eq(&world_id)) {
                     return Err(CivilisationError::WorldNotFound(world_id));
                 }
 
-                Ok(vec![CivilisationEvent::Private(
-                    PrvCivilisationEvent::WorldRemoved(world_id),
+                Ok(vec![CivilisationEvent::Shared(
+                    SharedCivilisationEvent::WorldRemoved(world_id),
                 )])
             }
         }

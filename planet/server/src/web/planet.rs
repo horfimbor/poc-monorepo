@@ -47,7 +47,7 @@ pub async fn mono_command(
 
 #[get("/<model_id>/<jwt>")]
 pub async fn stream_dto(
-    dto_repository: &State<PlanetRepository>,
+    repository: &State<PlanetRepository>,
     model_id: &str,
     jwt: &str,
 ) -> Result<EventStream![], String> {
@@ -55,7 +55,7 @@ pub async fn stream_dto(
 
     let key = ModelKey::try_from(model_id).map_err(|_| "invalid id")?;
 
-    let dto = dto_repository
+    let dto = repository
         .get_model(&key)
         .await
         .map_err(|_| "cannot find the dto".to_string())?;
@@ -65,7 +65,7 @@ pub async fn stream_dto(
     }
 
     let mut subscription = get_subscription(
-        dto_repository.event_db(),
+        repository.event_db(),
         &Stream::Model(key),
         dto.position(),
     )

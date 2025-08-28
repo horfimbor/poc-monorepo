@@ -1,5 +1,5 @@
 use crate::web::base::load_base_routes;
-use crate::{AccountDtoCache, AccountDtoRepository, AccountRepository};
+use crate::{CivilisationRepository};
 use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_jwt::Claims;
@@ -17,12 +17,11 @@ use std::env;
 
 mod base;
 pub mod civilisation;
+pub mod admin;
 
 pub async fn start_server(
     event_store_db: Client,
-    account_repo_state: AccountRepository,
-    account_repo_dto: AccountDtoRepository,
-    account_dto_cache: AccountDtoCache,
+    account_repo_state: CivilisationRepository,
     dto_redis: RedisClient,
 ) -> Result<(), Error> {
     let auth_port = env::var("APP_PORT")
@@ -62,12 +61,11 @@ pub async fn start_server(
         .merge(("template_dir", "civilisation/server/templates"));
     let _rocket = rocket::custom(figment)
         .manage(account_repo_state)
-        .manage(account_repo_dto)
-        .manage(account_dto_cache)
         .manage(auth_config)
         .manage(dto_redis)
         .manage(event_store_db)
         .mount("/", load_base_routes())
+        .mount("/api/civilisation/admin/", admin::routes())
         .mount("/api/civilisation", civilisation::routes())
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)

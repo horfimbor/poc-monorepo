@@ -13,11 +13,11 @@ use rocket::serde::json::Json;
 use rocket::{Route, State};
 
 pub fn routes() -> Vec<Route> {
-    routes![mono_command, stream_dto]
+    routes![admin_command, stream_admin]
 }
 
 #[post("/", format = "json", data = "<command>")]
-pub async fn mono_command(
+pub async fn admin_command(
     state_repository: &State<CivilisationRepository>,
     command: Json<CivilisationCommand>,
     claim: AuthAccountClaim,
@@ -41,8 +41,8 @@ pub async fn mono_command(
 }
 
 #[get("/<jwt>")]
-pub async fn stream_dto(
-    repository: &State<CivilisationRepository>,
+pub async fn stream_admin(
+    dto_repository: &State<CivilisationRepository>,
     jwt: &str,
 ) -> Result<EventStream![], String> {
     let claims = get_jwt_claims(jwt)?;
@@ -53,7 +53,7 @@ pub async fn stream_dto(
         &claims.account().to_string(),
     );
 
-    let dto = repository
+    let dto = dto_repository
         .get_model(&key)
         .await
         .map_err(|_| "cannot find the dto".to_string())?;
@@ -63,14 +63,14 @@ pub async fn stream_dto(
     }
 
     let mut subscription = get_subscription(
-        repository.event_db(),
+        dto_repository.event_db(),
         &Stream::Model(key),
         dto.position(),
     )
     .await;
 
     Ok(EventStream! {
-        yield Event::json(&dto.state().shared());
+        yield Event::json(&dto.state());
         loop {
             let event = if let Ok(event) = subscription.next().await{
                 event
@@ -90,9 +90,7 @@ pub async fn stream_dto(
 
                 match original_event.as_json::<CivilisationEvent>(){
                     Ok(event) =>{
-                        if let CivilisationEvent::Shared(event) = event {
-                            yield Event::json(&event);
-                        }
+                        yield Event::json(&event);
                     },
                     Err(_) => {
                         yield Event::data("cannot get original event").event("error");

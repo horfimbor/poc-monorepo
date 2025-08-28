@@ -18,9 +18,8 @@ use url::Host;
 #[cfg_attr(feature = "server", state(PUB_CONFIG_CIVILISATION_EVENT))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PubConfigCivEvent {
-    AddService { game_host: Host, service_host: Host },
+    AddService { game_host: Host, service_host: Host, time: HfTimeConfiguration},
     RemoveService { game_host: Host, service_host: Host },
-    SetTime(HfTimeConfiguration),
 }
 
 #[cfg_attr(feature = "server", derive(Event))]
