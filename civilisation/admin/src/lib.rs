@@ -19,7 +19,8 @@ pub const CIVILISATION_CONFIG_STATE_NAME: &str = "CIVILISATION_CONFIG_STATE";
 #[cfg_attr(feature = "server", state(CIVILISATION_CONFIG_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum CivilisationAdminCommand {
-    CreateServer(Host, HfTimeConfiguration),
+    CreateServer(Host),
+    AddTime(HfTimeConfiguration),
     AddComponent(Host),
     RemoveComponent(Host),
 }
@@ -27,6 +28,7 @@ pub enum CivilisationAdminCommand {
 #[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum CivilisationAdminError {
     AlreadyCreated,
+    AlreadyHaveTime,
     NotCreatedYet,
 }
 
@@ -35,6 +37,9 @@ impl Display for CivilisationAdminError {
         match self {
             Self::AlreadyCreated => {
                 write!(f, "cannot recreate civilisation")
+            }
+            Self::AlreadyHaveTime => {
+                write!(f, "cannot change time")
             }
             Self::NotCreatedYet => {
                 write!(f, "cannot add component to not created config")
@@ -56,7 +61,8 @@ pub struct CivilisationAdminState {
 #[cfg_attr(feature = "server", state(CIVILISATION_CONFIG_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PrvCivilisationAdminEvent {
-    Created(Host, HfTimeConfiguration),
+    Created(Host),
+    TimeSet(HfTimeConfiguration),
 }
 
 #[cfg_attr(feature = "server", derive(Event))]
@@ -72,24 +78,24 @@ impl CivilisationAdminState {
     pub fn play_event(&mut self, event: &CivilisationAdminEvent) {
         match event {
             CivilisationAdminEvent::Private(event) => match event {
-                PrvCivilisationAdminEvent::Created(host, timer) => {
+                PrvCivilisationAdminEvent::Created(host) => {
                     self.host = Some(host.clone());
-                    self.time = Some(timer.clone());
+                }
+                PrvCivilisationAdminEvent::TimeSet(timer) => {
+                    self.time = Some(*timer);
                 }
             },
-            CivilisationAdminEvent::Public(event) => {
-                match event {
-                    PubConfigCivEvent::AddService {
-                        game_host: _game_host,
-                        service_host,
-                        time : _time,
-                    } => self.game_components.push(service_host.clone()),
-                    PubConfigCivEvent::RemoveService {
-                        game_host: _game_host,
-                        service_host,
-                    } => self.game_components.retain(|h| *h != *service_host),
-                }
-            }
+            CivilisationAdminEvent::Public(event) => match event {
+                PubConfigCivEvent::AddService {
+                    game_host: _game_host,
+                    service_host,
+                    time: _time,
+                } => self.game_components.push(service_host.clone()),
+                PubConfigCivEvent::RemoveService {
+                    game_host: _game_host,
+                    service_host,
+                } => self.game_components.retain(|h| *h != *service_host),
+            },
         }
     }
 
@@ -122,39 +128,48 @@ impl State for CivilisationAdminState {
 
     fn try_command(&self, command: Self::Command) -> Result<Vec<Self::Event>, Self::Error> {
         match command {
-            CivilisationAdminCommand::CreateServer(host, timer) => {
+            CivilisationAdminCommand::CreateServer(host) => {
                 if self.host.is_some() {
                     return Err(CivilisationAdminError::AlreadyCreated);
                 }
 
                 Ok(vec![CivilisationAdminEvent::Private(
-                    PrvCivilisationAdminEvent::Created(host, timer),
+                    PrvCivilisationAdminEvent::Created(host),
+                )])
+            }
+            CivilisationAdminCommand::AddTime(timer) => {
+                if self.time.is_some() {
+                    return Err(CivilisationAdminError::AlreadyHaveTime);
+                }
+
+                Ok(vec![CivilisationAdminEvent::Private(
+                    PrvCivilisationAdminEvent::TimeSet(timer),
                 )])
             }
             CivilisationAdminCommand::AddComponent(service_host) => {
-                let (Some(game_host), Some(time)) = (self.host.clone(), self.time.clone()) else {
+                let (Some(game_host), Some(time)) = (self.host.clone(), self.time) else {
                     return Err(CivilisationAdminError::NotCreatedYet);
                 };
 
-                Ok(vec![
-                    CivilisationAdminEvent::Public(PubConfigCivEvent::AddService {
+                Ok(vec![CivilisationAdminEvent::Public(
+                    PubConfigCivEvent::AddService {
                         game_host,
                         service_host,
-                        time
-                    }),
-                ])
+                        time,
+                    },
+                )])
             }
             CivilisationAdminCommand::RemoveComponent(service_host) => {
                 let Some(game_host) = self.host.clone() else {
                     return Err(CivilisationAdminError::NotCreatedYet);
                 };
 
-                Ok(vec![
-                    CivilisationAdminEvent::Public(PubConfigCivEvent::RemoveService {
+                Ok(vec![CivilisationAdminEvent::Public(
+                    PubConfigCivEvent::RemoveService {
                         game_host,
                         service_host,
-                    }),
-                ])
+                    },
+                )])
             }
         }
     }

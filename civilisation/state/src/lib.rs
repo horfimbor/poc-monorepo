@@ -1,7 +1,8 @@
+use civilisation_shared::CIVILISATION_STATE_NAME;
 use civilisation_shared::command::CivilisationCommand;
+use civilisation_shared::dto::CivilisationDto;
 use civilisation_shared::error::CivilisationError;
 use civilisation_shared::event::{CivilisationEvent, SharedCivilisationEvent};
-use civilisation_shared::{CIVILISATION_STATE_NAME};
 use garde::Validate;
 use horfimbor_eventsource::horfimbor_eventsource_derive::StateNamed;
 use horfimbor_eventsource::model_key::ModelKey;
@@ -9,7 +10,6 @@ use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
 use public_mono::civilisation::PubCivilisationEvent;
 use serde::{Deserialize, Serialize};
 use url::Host;
-use civilisation_shared::dto::CivilisationDto;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed)]
 #[state(CIVILISATION_STATE_NAME)]
@@ -17,7 +17,7 @@ pub struct CivilisationState {
     private_name: String,
     owner: ModelKey,
     game_host: Host,
-    shared: CivilisationDto
+    shared: CivilisationDto,
 }
 
 impl Default for CivilisationState {
@@ -26,7 +26,7 @@ impl Default for CivilisationState {
             private_name: Default::default(),
             owner: Default::default(),
             game_host: Host::Domain("localhost".to_string()),
-            shared: Default::default()
+            shared: Default::default(),
         }
     }
 }
@@ -55,7 +55,7 @@ impl Dto for CivilisationState {
         match event {
             CivilisationEvent::Shared(event) => {
                 self.shared.play_event(event);
-            },
+            }
             CivilisationEvent::Public(event) => match event {
                 PubCivilisationEvent::Created {
                     game_host,

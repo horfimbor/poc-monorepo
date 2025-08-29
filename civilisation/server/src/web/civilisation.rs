@@ -1,5 +1,5 @@
+use crate::CivilisationRepository;
 use crate::web::{AuthAccountClaim, get_jwt_claims};
-use crate::{CivilisationRepository};
 use civilisation_shared::command::CivilisationCommand;
 use civilisation_shared::event::CivilisationEvent;
 use horfimbor_eventsource::Stream;
@@ -62,12 +62,8 @@ pub async fn stream_dto(
         return Err("account not found".to_string());
     }
 
-    let mut subscription = get_subscription(
-        repository.event_db(),
-        &Stream::Model(key),
-        dto.position(),
-    )
-    .await;
+    let mut subscription =
+        get_subscription(repository.event_db(), &Stream::Model(key), dto.position()).await;
 
     Ok(EventStream! {
         yield Event::json(&dto.state().shared());

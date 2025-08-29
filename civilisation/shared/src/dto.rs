@@ -2,7 +2,7 @@
 use horfimbor_eventsource::Dto;
 
 use crate::Nation;
-use crate::event::{ SharedCivilisationEvent};
+use crate::event::SharedCivilisationEvent;
 use public_mono::Component;
 use serde::{Deserialize, Serialize};
 

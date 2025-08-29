@@ -56,7 +56,7 @@ impl Dto for PlanetAdminState {
     fn play_event(&mut self, event: &Self::Event) {
         match event {
             PlanetAdminEvent::SetTime(time) => {
-                self.time = Some(time.clone());
+                self.time = Some(*time);
             }
             PlanetAdminEvent::AddHost(host) => {
                 self.game_hosts.push(host.clone());

@@ -1,16 +1,15 @@
-use crate::web::{AuthAccountClaim, get_jwt_claims};
-use crate::{CivilisationRepository};
-use civilisation_shared::command::CivilisationCommand;
-use civilisation_shared::event::CivilisationEvent;
+use crate::CivilisationAdminRepository;
+use crate::web::{AuthAccountAdminClaim, get_jwt_claims};
+use civilisation_admin::CivilisationAdminCommand::CreateServer;
+use civilisation_admin::{CivilisationAdminCommand, CivilisationAdminEvent};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
-use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
-use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
+use url::Host;
 
 pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]
@@ -18,22 +17,12 @@ pub fn routes() -> Vec<Route> {
 
 #[post("/", format = "json", data = "<command>")]
 pub async fn admin_command(
-    state_repository: &State<CivilisationRepository>,
-    command: Json<CivilisationCommand>,
-    claim: AuthAccountClaim,
+    state_repository: &State<CivilisationAdminRepository>,
+    command: Json<CivilisationAdminCommand>,
+    claim: AuthAccountAdminClaim,
 ) -> Result<(), String> {
-    let model = state_repository
-        .get_model(&claim.account_model_key)
-        .await
-        .map_err(|e| e.to_string())?;
-
-    // TODO check why this to_string is needed :thinking:
-    if claim.claims.user().to_string() != model.state().owner().to_string() {
-        return Err("not your account".to_string());
-    }
-
     state_repository
-        .add_command(&claim.account_model_key, command.0, None)
+        .add_command(&claim.application_model_key, command.0, None)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -42,28 +31,31 @@ pub async fn admin_command(
 
 #[get("/<jwt>")]
 pub async fn stream_admin(
-    dto_repository: &State<CivilisationRepository>,
+    state_repository: &State<CivilisationAdminRepository>,
     jwt: &str,
 ) -> Result<EventStream![], String> {
     let claims = get_jwt_claims(jwt)?;
 
-    let key = ModelKey::new_uuid_v8(
-        MONO_CIVILISATION_STREAM,
-        UUID_V8_KIND,
-        &claims.account().to_string(),
-    );
+    let key = AuthAccountAdminClaim::get_application_model_key(&claims);
 
-    let dto = dto_repository
+    let dto = state_repository
         .get_model(&key)
         .await
         .map_err(|_| "cannot find the dto".to_string())?;
 
     if dto.position().is_none() {
-        return Err("account not found".to_string());
+        state_repository
+            .add_command(
+                &key,
+                CreateServer(Host::Domain(claims.audience().to_string())),
+                None,
+            )
+            .await
+            .map_err(|e| e.to_string())?;
     }
 
     let mut subscription = get_subscription(
-        dto_repository.event_db(),
+        state_repository.event_db(),
         &Stream::Model(key),
         dto.position(),
     )
@@ -88,7 +80,7 @@ pub async fn stream_admin(
 
             if metadata.is_event(){
 
-                match original_event.as_json::<CivilisationEvent>(){
+                match original_event.as_json::<CivilisationAdminEvent>(){
                     Ok(event) =>{
                         yield Event::json(&event);
                     },

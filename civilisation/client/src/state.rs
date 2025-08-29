@@ -1,5 +1,5 @@
 use civilisation_shared::dto::CivilisationDto;
-use civilisation_shared::event::{SharedCivilisationEvent};
+use civilisation_shared::event::SharedCivilisationEvent;
 use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client::{EventStoreProps, LoadExternalComponent};
 use horfimbor_client_derive::WebComponent;

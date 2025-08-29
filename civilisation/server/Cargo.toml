@@ -30,6 +30,7 @@ tokio = "1.43"
 signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"] }
 signal-hook = "0.3"
 futures = "0.3"
+url = "2.5.7"
 
 
 

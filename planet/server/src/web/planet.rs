@@ -64,12 +64,8 @@ pub async fn stream_dto(
         return Err("planet not found".to_string());
     }
 
-    let mut subscription = get_subscription(
-        repository.event_db(),
-        &Stream::Model(key),
-        dto.position(),
-    )
-    .await;
+    let mut subscription =
+        get_subscription(repository.event_db(), &Stream::Model(key), dto.position()).await;
 
     Ok(EventStream! {
         yield Event::json(&dto.state().shared());

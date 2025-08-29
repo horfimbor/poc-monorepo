@@ -1,10 +1,12 @@
 use crate::web::base::load_base_routes;
-use crate::{CivilisationRepository};
+use crate::{CivilisationAdminRepository, CivilisationRepository};
 use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
-use horfimbor_jwt::Claims;
+use horfimbor_jwt::{Claims, Role};
 use kurrentdb::Client;
-use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
+use public_mono::civilisation::{
+    MONO_CIVILISATION_ADMIN_STREAM, MONO_CIVILISATION_STREAM, UUID_V8_KIND,
+};
 use redis::Client as RedisClient;
 use rocket::Request;
 use rocket::fs::{FileServer, relative};
@@ -15,13 +17,14 @@ use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use rocket_dyn_templates::Template;
 use std::env;
 
+pub mod admin;
 mod base;
 pub mod civilisation;
-pub mod admin;
 
 pub async fn start_server(
     event_store_db: Client,
-    account_repo_state: CivilisationRepository,
+    civilisation_repo: CivilisationRepository,
+    civilisation_admin_repo: CivilisationAdminRepository,
     dto_redis: RedisClient,
 ) -> Result<(), Error> {
     let auth_port = env::var("APP_PORT")
@@ -60,7 +63,8 @@ pub async fn start_server(
         .merge(("address", "0.0.0.0"))
         .merge(("template_dir", "civilisation/server/templates"));
     let _rocket = rocket::custom(figment)
-        .manage(account_repo_state)
+        .manage(civilisation_repo)
+        .manage(civilisation_admin_repo)
         .manage(auth_config)
         .manage(dto_redis)
         .manage(event_store_db)
@@ -114,6 +118,7 @@ pub struct AuthAccountClaim {
 #[derive(Debug)]
 pub enum AccountClaimError {
     Claim,
+    PermissionDenied,
     Missing,
 }
 
@@ -139,5 +144,48 @@ impl<'r> FromRequest<'r> for AuthAccountClaim {
                 }
             },
         }
+    }
+}
+
+pub struct AuthAccountAdminClaim {
+    pub application_model_key: ModelKey,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for AuthAccountAdminClaim {
+    type Error = AccountClaimError;
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match req.headers().get_one("Authorization") {
+            None => Outcome::Error((Status::BadRequest, AccountClaimError::Missing)),
+            Some(token) => match get_jwt_claims(token) {
+                Ok(claims) => {
+                    if *claims.roles() != Role::Admin {
+                        return Outcome::Error((
+                            Status::Forbidden,
+                            AccountClaimError::PermissionDenied,
+                        ));
+                    }
+
+                    Outcome::Success(AuthAccountAdminClaim {
+                        application_model_key: Self::get_application_model_key(&claims),
+                    })
+                }
+                Err(e) => {
+                    dbg!(e);
+                    Outcome::Error((Status::BadRequest, AccountClaimError::Claim))
+                }
+            },
+        }
+    }
+}
+
+impl AuthAccountAdminClaim {
+    pub fn get_application_model_key(claims: &Claims) -> ModelKey {
+        ModelKey::new_uuid_v8(
+            MONO_CIVILISATION_ADMIN_STREAM,
+            UUID_V8_KIND,
+            claims.audience(),
+        )
     }
 }

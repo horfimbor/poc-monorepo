@@ -5,6 +5,7 @@ mod web;
 extern crate rocket;
 
 use anyhow::{Context, Result, anyhow, bail};
+use civilisation_admin::CivilisationAdminState;
 use civilisation_state::CivilisationState;
 use clap::{Parser, Subcommand, ValueEnum};
 use consumer::civilisation::auth::handle_account_public_event;
@@ -20,6 +21,10 @@ use std::env;
 
 type CivilisationStateCache = StateDb<CivilisationState>;
 type CivilisationRepository = StateRepository<CivilisationState, CivilisationStateCache>;
+
+type CivilisationAdminStateCache = StateDb<CivilisationAdminState>;
+type CivilisationAdminRepository =
+    StateRepository<CivilisationAdminState, CivilisationAdminStateCache>;
 
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
 enum Service {
@@ -85,6 +90,11 @@ async fn main() -> Result<()> {
         CivilisationStateCache::new(redis_client.clone()),
     );
 
+    let repo_civilisation_admin_state = CivilisationAdminRepository::new(
+        event_store_db.clone(),
+        CivilisationAdminStateCache::new(redis_client.clone()),
+    );
+
     match args.command {
         Command::Service { list } => {
             let mut services = Vec::new();
@@ -94,6 +104,7 @@ async fn main() -> Result<()> {
                     web::start_server(
                         event_store_db.clone(),
                         repo_civilisation_state.clone(),
+                        repo_civilisation_admin_state.clone(),
                         redis_client.clone(),
                     )
                     .boxed(),

@@ -1,5 +1,6 @@
 pub const PUB_MONO_CIVILISATION_EVENT: &str = "PUB_MONO_CIVILISATION_EVENT";
 pub const MONO_CIVILISATION_STREAM: &str = "mono_civilisation";
+pub const MONO_CIVILISATION_ADMIN_STREAM: &str = "admin_civilisation";
 pub const UUID_V8_KIND: &str = "ACCOUNT";
 
 pub const PUB_CONFIG_CIVILISATION_EVENT: &str = "PUB_CONFIG_CIVILISATION_EVENT";
@@ -18,8 +19,15 @@ use url::Host;
 #[cfg_attr(feature = "server", state(PUB_CONFIG_CIVILISATION_EVENT))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PubConfigCivEvent {
-    AddService { game_host: Host, service_host: Host, time: HfTimeConfiguration},
-    RemoveService { game_host: Host, service_host: Host },
+    AddService {
+        game_host: Host,
+        service_host: Host,
+        time: HfTimeConfiguration,
+    },
+    RemoveService {
+        game_host: Host,
+        service_host: Host,
+    },
 }
 
 #[cfg_attr(feature = "server", derive(Event))]
