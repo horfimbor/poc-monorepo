@@ -1,3 +1,6 @@
+mod timer;
+
+use crate::admin::timer::UpdateTimer;
 use civilisation_admin::{CivilisationAdminEvent, CivilisationAdminState};
 use horfimbor_client::EventStoreProps;
 use horfimbor_client::state::{AddEvent, EventStoreState};
@@ -39,9 +42,30 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
         self.play_event(event);
     }
 
-    fn get_view(&self, _props: CivilisationAdminProps) -> Html {
-        html!(<p>
-            {self.host().clone().map(|h| h.to_string())}
-            </p>)
+    fn get_view(&self, props: CivilisationAdminProps) -> Html {
+        let timer = match self.time() {
+            None => {
+                html!(<p>
+                    <UpdateTimer
+                        endpoint={props.endpoint().to_owned()}
+                        jwt={props.jwt().to_owned()} />
+                    </p>)
+            }
+            Some(timer) => {
+                html!(<p>
+                    {timer.start_time().unwrap_or_default().format("%+").to_string()}
+                    <br/>
+                    {timer.ig_length() / 60000} {" / "} {timer.irl_length() / 60000}
+                    </p>)
+            }
+        };
+
+        html!(
+            <>
+                <p>
+                {self.host().clone().map(|h| h.to_string())}
+                </p>
+                {timer}
+            </>)
     }
 }

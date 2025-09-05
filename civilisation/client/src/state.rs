@@ -1,3 +1,4 @@
+use crate::input::CivilisationInput;
 use civilisation_shared::dto::CivilisationDto;
 use civilisation_shared::event::SharedCivilisationEvent;
 use horfimbor_client::state::{AddEvent, EventStoreState};
@@ -78,7 +79,7 @@ impl AddEvent<SharedCivilisationEvent, CivilisationStateProps> for CivilisationD
 
         html! {
             <>
-                <horfimbor-account-input
+                <CivilisationInput
                     endpoint={props.endpoint().to_owned()}
                     jwt={props.jwt().to_owned()} />
                 <hr/>

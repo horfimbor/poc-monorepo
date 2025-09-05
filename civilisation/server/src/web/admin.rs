@@ -1,11 +1,13 @@
 use crate::CivilisationAdminRepository;
-use crate::web::{AuthAccountAdminClaim, get_jwt_claims};
+use crate::web::{AuthAccountAdminClaim, AuthConfig, get_jwt_claims};
 use civilisation_admin::CivilisationAdminCommand::CreateServer;
 use civilisation_admin::{CivilisationAdminCommand, CivilisationAdminEvent};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
+use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
+use public_mono::civilisation::{MONO_CIVILISATION_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
@@ -15,14 +17,24 @@ pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]
 }
 
+fn get_application_key(config: &AuthConfig) -> ModelKey {
+    ModelKey::new_uuid_v8(
+        MONO_CIVILISATION_ADMIN_STREAM,
+        UUID_ADMIN_V8_KIND,
+        &config.app_host,
+    )
+}
+
 #[post("/", format = "json", data = "<command>")]
 pub async fn admin_command(
     state_repository: &State<CivilisationAdminRepository>,
     command: Json<CivilisationAdminCommand>,
-    claim: AuthAccountAdminClaim,
+    _claim: AuthAccountAdminClaim,
+    auth_config: &State<AuthConfig>,
 ) -> Result<(), String> {
+    let key = get_application_key(auth_config);
     state_repository
-        .add_command(&claim.application_model_key, command.0, None)
+        .add_command(&key, command.0, None)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -33,10 +45,11 @@ pub async fn admin_command(
 pub async fn stream_admin(
     state_repository: &State<CivilisationAdminRepository>,
     jwt: &str,
+    auth_config: &State<AuthConfig>,
 ) -> Result<EventStream![], String> {
-    let claims = get_jwt_claims(jwt)?;
+    let _claims = get_jwt_claims(jwt)?;
 
-    let key = AuthAccountAdminClaim::get_application_model_key(&claims);
+    let key = get_application_key(auth_config);
 
     let dto = state_repository
         .get_model(&key)
@@ -47,7 +60,7 @@ pub async fn stream_admin(
         state_repository
             .add_command(
                 &key,
-                CreateServer(Host::Domain(claims.audience().to_string())),
+                CreateServer(Host::Domain(auth_config.app_host.clone())),
                 None,
             )
             .await

@@ -10,7 +10,8 @@ crate-type = ["rlib", "cdylib"]
 horfimbor-client-derive.workspace = true
 horfimbor-client.workspace = true
 horfimbor-jwt = { path = "../../../horfimbor-engine/horfimbor-jwt", features = ["client"] }
-
+horfimbor-time = { path = "../../../horfimbor-engine/horfimbor-time"}
+chrono = { version = "0.4", default-features = false }
 bounce = "0.9"
 yew = { version= "0.21", features=["csr"] }
 custom-elements = "0.2"

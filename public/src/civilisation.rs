@@ -1,7 +1,9 @@
 pub const PUB_MONO_CIVILISATION_EVENT: &str = "PUB_MONO_CIVILISATION_EVENT";
 pub const MONO_CIVILISATION_STREAM: &str = "mono_civilisation";
-pub const MONO_CIVILISATION_ADMIN_STREAM: &str = "admin_civilisation";
 pub const UUID_V8_KIND: &str = "ACCOUNT";
+
+pub const MONO_CIVILISATION_ADMIN_STREAM: &str = "admin_civilisation";
+pub const UUID_ADMIN_V8_KIND: &str = "ACCOUNT_ADMIN";
 
 pub const PUB_CONFIG_CIVILISATION_EVENT: &str = "PUB_CONFIG_CIVILISATION_EVENT";
 

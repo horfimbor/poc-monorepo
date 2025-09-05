@@ -1,7 +1,6 @@
 use bounce::BounceRoot;
 use bounce::{Atom, use_atom};
 use garde::Validate;
-use horfimbor_client_derive::WebComponent;
 use reqwasm::http::{Request, Response};
 use web_sys::HtmlInputElement;
 use weblog::{console_error, console_info};
@@ -10,12 +9,9 @@ use yew::prelude::*;
 
 use civilisation_shared::Nation;
 use civilisation_shared::command::CivilisationCommand;
-use civilisation_shared::dto::CivilisationDto;
 
-#[derive(WebComponent)]
-#[component(MonoInput)]
 #[derive(Default, Properties, PartialEq)]
-pub struct MonoInputProps {
+pub struct CivilisationInputProps {
     pub endpoint: String,
     pub jwt: String,
 }
@@ -32,7 +28,7 @@ struct LocalError {
 }
 
 #[function_component(ErrorDisplay)]
-fn error_display() -> Html {
+pub fn error_display() -> Html {
     let data = use_atom::<LocalError>();
 
     match data.err.clone() {
@@ -92,7 +88,7 @@ fn local_data_setter() -> Html {
 }
 
 #[function_component(Sender)]
-fn sender(props: &MonoInputProps) -> Html {
+fn sender(props: &CivilisationInputProps) -> Html {
     let data = use_atom::<LocalData>();
     let err = use_atom::<LocalError>();
     let endpoint = props.endpoint.clone();
@@ -121,7 +117,7 @@ fn sender(props: &MonoInputProps) -> Html {
             match send_command(&cmd, endpoint, jwt).await {
                 Ok(resp) => {
                     if resp.ok() {
-                        console_info!("sent !");
+                        console_info!("Sent !");
                         let content = resp.text().await;
                         match content {
                             Ok(response) => {
@@ -161,37 +157,19 @@ async fn send_command(
         .map_err(|_| "fail to send command".to_string())
 }
 
-#[allow(dead_code)]
-#[derive(PartialEq, Atom, Default)]
-struct State {
-    content: CivilisationDto,
-}
-
-#[allow(dead_code)]
-pub struct MonoInput {}
-
-impl Component for MonoInput {
-    type Message = ();
-
-    type Properties = MonoInputProps;
-
-    fn create(_ctx: &Context<Self>) -> Self {
-        Self {}
-    }
-
-    fn view(&self, ctx: &Context<Self>) -> Html {
-        let endpoint = ctx.props().endpoint.clone();
-        let jwt = ctx.props().jwt.clone();
-        html! {
-            <BounceRoot>
-                <div>
-                    <LocalDataSetter />
-                    <Sender endpoint={endpoint.clone()} jwt={jwt.clone()} />
-                </div>
-                <div>
-                    <ErrorDisplay />
-                </div>
-            </BounceRoot>
-        }
+#[function_component(CivilisationInput)]
+pub fn view(props: &CivilisationInputProps) -> Html {
+    let endpoint = props.endpoint.clone();
+    let jwt = props.jwt.clone();
+    html! {
+        <BounceRoot>
+            <div>
+                <LocalDataSetter />
+                <Sender endpoint={endpoint.clone()} jwt={jwt.clone()} />
+            </div>
+            <div>
+                <ErrorDisplay />
+            </div>
+        </BounceRoot>
     }
 }

@@ -10,7 +10,5 @@ use wasm_bindgen::prelude::*;
 pub fn run() {
     state::optional::ComponentWrapper::define("horfimbor-civilisation-state");
     admin::optional::ComponentWrapper::define("horfimbor-civilisation-admin");
-    input::optional::ComponentWrapper::define("horfimbor-account-input");
-
     auth::optional::ComponentWrapper::define("horfimbor-auth");
 }

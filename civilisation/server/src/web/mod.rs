@@ -4,9 +4,7 @@ use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_jwt::{Claims, Role};
 use kurrentdb::Client;
-use public_mono::civilisation::{
-    MONO_CIVILISATION_ADMIN_STREAM, MONO_CIVILISATION_STREAM, UUID_V8_KIND,
-};
+use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
 use redis::Client as RedisClient;
 use rocket::Request;
 use rocket::fs::{FileServer, relative};
@@ -148,7 +146,7 @@ impl<'r> FromRequest<'r> for AuthAccountClaim {
 }
 
 pub struct AuthAccountAdminClaim {
-    pub application_model_key: ModelKey,
+    pub claims: Claims,
 }
 
 #[rocket::async_trait]
@@ -166,10 +164,7 @@ impl<'r> FromRequest<'r> for AuthAccountAdminClaim {
                             AccountClaimError::PermissionDenied,
                         ));
                     }
-
-                    Outcome::Success(AuthAccountAdminClaim {
-                        application_model_key: Self::get_application_model_key(&claims),
-                    })
+                    Outcome::Success(AuthAccountAdminClaim { claims })
                 }
                 Err(e) => {
                     dbg!(e);
@@ -177,15 +172,5 @@ impl<'r> FromRequest<'r> for AuthAccountAdminClaim {
                 }
             },
         }
-    }
-}
-
-impl AuthAccountAdminClaim {
-    pub fn get_application_model_key(claims: &Claims) -> ModelKey {
-        ModelKey::new_uuid_v8(
-            MONO_CIVILISATION_ADMIN_STREAM,
-            UUID_V8_KIND,
-            claims.audience(),
-        )
     }
 }

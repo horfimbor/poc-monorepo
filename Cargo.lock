@@ -2572,6 +2572,7 @@ name = "mono-civilisation-client"
 version = "0.1.0"
 dependencies = [
  "bounce",
+ "chrono",
  "civilisation-admin",
  "civilisation-shared",
  "custom-elements",
@@ -2582,6 +2583,7 @@ dependencies = [
  "horfimbor-client",
  "horfimbor-client-derive",
  "horfimbor-jwt",
+ "horfimbor-time",
  "rand 0.9.2",
  "reqwasm",
  "serde",
