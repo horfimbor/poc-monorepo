@@ -11,7 +11,7 @@ use public_mono::civilisation::PubConfigCivEvent;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
-use url::Host;
+use url::Url;
 
 pub const CIVILISATION_CONFIG_STATE_NAME: &str = "CIVILISATION_CONFIG_STATE";
 
@@ -19,10 +19,10 @@ pub const CIVILISATION_CONFIG_STATE_NAME: &str = "CIVILISATION_CONFIG_STATE";
 #[cfg_attr(feature = "server", state(CIVILISATION_CONFIG_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum CivilisationAdminCommand {
-    CreateServer(Host),
+    CreateServer(Url),
     AddTime(HfTimeConfiguration),
-    AddComponent(Host),
-    RemoveComponent(Host),
+    AddComponent(Url),
+    RemoveComponent(Url),
 }
 
 #[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -30,6 +30,7 @@ pub enum CivilisationAdminError {
     AlreadyCreated,
     AlreadyHaveTime,
     NotCreatedYet,
+    ComponentAlreadyExists,
 }
 
 impl Display for CivilisationAdminError {
@@ -44,6 +45,9 @@ impl Display for CivilisationAdminError {
             Self::NotCreatedYet => {
                 write!(f, "cannot add component to not created config")
             }
+            Self::ComponentAlreadyExists => {
+                write!(f, "component already exists")
+            }
         }
     }
 }
@@ -52,16 +56,16 @@ impl Display for CivilisationAdminError {
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Default)]
 #[cfg_attr(feature = "server", state(CIVILISATION_CONFIG_STATE_NAME))]
 pub struct CivilisationAdminState {
-    host: Option<Host>,
+    host: Option<Url>,
     time: Option<HfTimeConfiguration>,
-    game_components: Vec<Host>,
+    game_components: Vec<Url>,
 }
 
 #[cfg_attr(feature = "server", derive(Event))]
 #[cfg_attr(feature = "server", state(CIVILISATION_CONFIG_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PrvCivilisationAdminEvent {
-    Created(Host),
+    Created(Url),
     TimeSet(HfTimeConfiguration),
 }
 
@@ -99,7 +103,7 @@ impl CivilisationAdminState {
         }
     }
 
-    pub fn host(&self) -> &Option<Host> {
+    pub fn host(&self) -> &Option<Url> {
         &self.host
     }
 
@@ -107,7 +111,7 @@ impl CivilisationAdminState {
         self.time
     }
 
-    pub fn game_components(&self) -> &Vec<Host> {
+    pub fn game_components(&self) -> &Vec<Url> {
         &self.game_components
     }
 }
@@ -149,6 +153,10 @@ impl State for CivilisationAdminState {
             CivilisationAdminCommand::AddComponent(service_host) => {
                 let (Some(game_host), Some(time)) = (self.host.clone(), self.time) else {
                     return Err(CivilisationAdminError::NotCreatedYet);
+                };
+
+                if self.game_components.contains(&service_host) {
+                    return Err(CivilisationAdminError::ComponentAlreadyExists);
                 };
 
                 Ok(vec![CivilisationAdminEvent::Public(

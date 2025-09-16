@@ -4,6 +4,7 @@ use thiserror::Error;
 
 #[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum CivilisationError {
+    NoHost,
     AlreadyCreated,
     InvalidOwner,
     AccountNameCannotBeEmpty,
@@ -15,6 +16,9 @@ pub enum CivilisationError {
 impl Display for CivilisationError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::NoHost => {
+                write!(f, "no host for civilisation")
+            }
             Self::AlreadyCreated => {
                 write!(f, "account already created")
             }

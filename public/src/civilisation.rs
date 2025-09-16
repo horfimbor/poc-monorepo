@@ -15,20 +15,20 @@ use horfimbor_eventsource::{Event, EventName};
 use horfimbor_time::HfTimeConfiguration;
 use serde::{Deserialize, Serialize};
 
-use url::Host;
+use url::Url;
 
 #[cfg_attr(feature = "server", derive(Event))]
 #[cfg_attr(feature = "server", state(PUB_CONFIG_CIVILISATION_EVENT))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PubConfigCivEvent {
     AddService {
-        game_host: Host,
-        service_host: Host,
+        game_host: Url,
+        service_host: Url,
         time: HfTimeConfiguration,
     },
     RemoveService {
-        game_host: Host,
-        service_host: Host,
+        game_host: Url,
+        service_host: Url,
     },
 }
 
@@ -37,7 +37,7 @@ pub enum PubConfigCivEvent {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PubCivilisationEvent {
     Created {
-        game_host: Host,
+        game_host: Url,
         name: String,
         owner: String,
     },

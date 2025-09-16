@@ -9,26 +9,15 @@ use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
 use public_mono::civilisation::PubCivilisationEvent;
 use serde::{Deserialize, Serialize};
-use url::Host;
+use url::Url;
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed, Default)]
 #[state(CIVILISATION_STATE_NAME)]
 pub struct CivilisationState {
     private_name: String,
     owner: ModelKey,
-    game_host: Host,
+    game_host: Option<Url>,
     shared: CivilisationDto,
-}
-
-impl Default for CivilisationState {
-    fn default() -> Self {
-        Self {
-            private_name: Default::default(),
-            owner: Default::default(),
-            game_host: Host::Domain("localhost".to_string()),
-            shared: Default::default(),
-        }
-    }
 }
 
 impl CivilisationState {
@@ -62,7 +51,7 @@ impl Dto for CivilisationState {
                     name,
                     owner,
                 } => {
-                    self.game_host = game_host.clone();
+                    self.game_host = Some(game_host.clone());
                     self.private_name = name.clone();
                     self.owner = owner.as_str().try_into().unwrap_or_default();
                 }
@@ -78,7 +67,11 @@ impl State for CivilisationState {
 
     fn try_command(&self, command: Self::Command) -> Result<Vec<Self::Event>, Self::Error> {
         match command {
-            CivilisationCommand::Create { name, owner } => {
+            CivilisationCommand::Create {
+                name,
+                owner,
+                game_host,
+            } => {
                 let model: Result<ModelKey, _> = owner.as_str().try_into();
 
                 if model.is_err() {
@@ -91,9 +84,10 @@ impl State for CivilisationState {
                 if name.is_empty() {
                     return Err(CivilisationError::AccountNameCannotBeEmpty);
                 }
+
                 Ok(vec![CivilisationEvent::Public(
                     PubCivilisationEvent::Created {
-                        game_host: self.game_host.clone(),
+                        game_host,
                         name,
                         owner,
                     },

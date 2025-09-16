@@ -140,7 +140,7 @@ fn sender(props: &CivilisationInputProps) -> Html {
         });
     });
 
-    html! { <button id="btn-send" onclick={on_send_clicked}>{"Send"}</button> }
+    html! { <button onclick={on_send_clicked}>{"Send"}</button> }
 }
 
 async fn send_command(

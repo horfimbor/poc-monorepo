@@ -9,12 +9,16 @@ use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use public_account_event::PubAccountEvent;
 use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
 use std::env;
+use url::Url;
 
 pub async fn handle_account_public_event(
     event_store_db: Client,
     repository: CivilisationRepository,
 ) -> anyhow::Result<()> {
     let current_app_id = env::var("APP_ID").map_err(|_| anyhow!("APP_ID is missing"))?;
+    let app_host = env::var("APP_HOST").map_err(|_| anyhow!("APP_HOST is missing"))?;
+    let game_host =
+        Url::parse(&app_host).map_err(|_| anyhow!("APP_HOST is not a valid game host"))?;
 
     let e = PubAccountEvent::AccountCreated {
         user_id: ModelKey::default(),
@@ -71,6 +75,7 @@ pub async fn handle_account_public_event(
                     CivilisationCommand::Create {
                         name,
                         owner: user_id.to_string(),
+                        game_host: game_host.clone(),
                     },
                     Some(&metadata),
                 )

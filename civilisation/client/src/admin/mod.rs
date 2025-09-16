@@ -1,5 +1,7 @@
+mod component;
 mod timer;
 
+use crate::admin::component::AddComponent;
 use crate::admin::timer::UpdateTimer;
 use civilisation_admin::{CivilisationAdminEvent, CivilisationAdminState};
 use horfimbor_client::EventStoreProps;
@@ -52,20 +54,40 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
                     </p>)
             }
             Some(timer) => {
-                html!(<p>
+                html!(<>
                     {timer.start_time().unwrap_or_default().format("%+").to_string()}
                     <br/>
                     {timer.ig_length() / 60000} {" / "} {timer.irl_length() / 60000}
-                    </p>)
+                    </>)
             }
         };
 
+        let components = html!(
+            <>
+                <ul>
+                {self.game_components().into_iter().map(|comp|{
+                    html!(
+                        <li key={comp.to_string()}>{comp.to_string()}</li>
+                    )
+
+                }).collect::<Html>()}
+                </ul>
+                <AddComponent
+                    endpoint={props.endpoint().to_owned()}
+                    jwt={props.jwt().to_owned()} />
+            </>
+        );
         html!(
             <>
                 <p>
-                {self.host().clone().map(|h| h.to_string())}
+                    {self.host().clone().map(|h| h.to_string())}
                 </p>
-                {timer}
+                <p>
+                    {timer}
+                </p>
+                <p>
+                    {components}
+                </p>
             </>)
     }
 }

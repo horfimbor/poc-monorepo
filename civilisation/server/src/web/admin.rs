@@ -11,7 +11,7 @@ use public_mono::civilisation::{MONO_CIVILISATION_ADMIN_STREAM, UUID_ADMIN_V8_KI
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
-use url::Host;
+use url::Url;
 
 pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]
@@ -54,15 +54,13 @@ pub async fn stream_admin(
     let dto = state_repository
         .get_model(&key)
         .await
-        .map_err(|_| "cannot find the dto".to_string())?;
+        .map_err(|_| "cannot find the admin dto".to_string())?;
+
+    let host = Url::parse(&auth_config.app_host).map_err(|_| "cannot parse app_host")?;
 
     if dto.position().is_none() {
         state_repository
-            .add_command(
-                &key,
-                CreateServer(Host::Domain(auth_config.app_host.clone())),
-                None,
-            )
+            .add_command(&key, CreateServer(host), None)
             .await
             .map_err(|e| e.to_string())?;
     }
