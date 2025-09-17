@@ -23,8 +23,8 @@ open:
 watch-client NAME:
     bacon watch-client-{{NAME}}
 
-watch-server NAME PORT:
-    bacon watch-server-{{NAME}} -- -- -p{{PORT}} service
+watch-server NAME:
+    bacon watch-server-{{NAME}}
 
 precommit:
     cargo fmt

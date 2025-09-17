@@ -1,1 +1,2 @@
-pub mod civilisation;
+pub mod auth;
+pub mod planet;

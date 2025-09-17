@@ -24,14 +24,11 @@ pub async fn start_server(
     civilisation_repo: CivilisationRepository,
     civilisation_admin_repo: CivilisationAdminRepository,
     dto_redis: RedisClient,
+    auth_port: Option<u16>,
 ) -> Result<(), Error> {
-    let auth_port = env::var("APP_PORT")
-        .context("APP_PORT is not defined")?
-        .parse::<u16>()
-        .context("APP_PORT cannot be parse in u16")?;
     let app_host = env::var("APP_HOST").context("APP_HOST is not defined")?;
     let app_key = env::var("APP_KEY").context("APP_KEY is not defined")?;
-    let auth_host = env::var("AUTH_HOST").context("APP_HOST is not defined")?;
+    let auth_host = env::var("AUTH_HOST").context("AUTH_HOST is not defined")?;
     let auth_callback_host =
         env::var("AUTH_CALLBACK_HOST").context("AUTH_CALLBACK_HOST is not defined")?;
     let auth_config = AuthConfig {

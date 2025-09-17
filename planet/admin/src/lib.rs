@@ -6,7 +6,7 @@ use horfimbor_time::HfTimeConfiguration;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
-use url::Host;
+use url::Url;
 
 pub const PLANET_CONFIG_STATE_NAME: &str = "PLANET_CONFIG_STATE";
 
@@ -14,9 +14,7 @@ pub const PLANET_CONFIG_STATE_NAME: &str = "PLANET_CONFIG_STATE";
 #[state(PLANET_CONFIG_STATE_NAME)]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PlanetAdminCommand {
-    SetTime(HfTimeConfiguration),
-    AddHost(Host),
-    RemoveHost(Host),
+    Setup(HfTimeConfiguration, Url),
 }
 
 #[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -38,16 +36,14 @@ impl Display for PlanetAdminError {
 #[state(PLANET_CONFIG_STATE_NAME)]
 pub struct PlanetAdminState {
     time: Option<HfTimeConfiguration>,
-    game_hosts: Vec<Host>,
+    game_hosts: Option<Url>,
 }
 
 #[derive(Event)]
 #[state(PLANET_CONFIG_STATE_NAME)]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PlanetAdminEvent {
-    SetTime(HfTimeConfiguration),
-    AddHost(Host),
-    RemoveHost(Host),
+    Setup(HfTimeConfiguration, Url),
 }
 
 impl Dto for PlanetAdminState {
@@ -55,14 +51,9 @@ impl Dto for PlanetAdminState {
 
     fn play_event(&mut self, event: &Self::Event) {
         match event {
-            PlanetAdminEvent::SetTime(time) => {
+            PlanetAdminEvent::Setup(time, host) => {
                 self.time = Some(*time);
-            }
-            PlanetAdminEvent::AddHost(host) => {
-                self.game_hosts.push(host.clone());
-            }
-            PlanetAdminEvent::RemoveHost(host) => {
-                self.game_hosts.retain(|h| *h != *host);
+                self.game_hosts = Some(host.clone());
             }
         }
     }
@@ -74,15 +65,7 @@ impl State for PlanetAdminState {
 
     fn try_command(&self, command: Self::Command) -> Result<Vec<Self::Event>, Self::Error> {
         match command {
-            PlanetAdminCommand::SetTime(time) => Ok(vec![PlanetAdminEvent::SetTime(time)]),
-            PlanetAdminCommand::AddHost(host) => {
-                // TODO check host not exist
-                Ok(vec![PlanetAdminEvent::AddHost(host)])
-            }
-            PlanetAdminCommand::RemoveHost(host) => {
-                // TODO check host exist
-                Ok(vec![PlanetAdminEvent::RemoveHost(host)])
-            }
+            PlanetAdminCommand::Setup(time, host) => Ok(vec![PlanetAdminEvent::Setup(time, host)]),
         }
     }
 }

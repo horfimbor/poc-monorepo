@@ -8,8 +8,8 @@ use anyhow::{Context, Result, anyhow, bail};
 use civilisation_admin::CivilisationAdminState;
 use civilisation_state::CivilisationState;
 use clap::{Parser, Subcommand, ValueEnum};
-use consumer::civilisation::auth::handle_account_public_event;
-use consumer::civilisation::planet::handle_planet_public_event;
+use consumer::auth::handle_account_public_event;
+use consumer::planet::handle_planet_public_event;
 use horfimbor_eventsource::cache_db::redis::StateDb;
 use horfimbor_eventsource::repository::{Repository, StateRepository};
 use kurrentdb::Client;
@@ -18,6 +18,7 @@ use rocket::futures::{FutureExt, StreamExt};
 use signal_hook::consts::signal::*;
 use signal_hook_tokio::Signals;
 use std::env;
+use url::Url;
 
 type CivilisationStateCache = StateDb<CivilisationState>;
 type CivilisationRepository = StateRepository<CivilisationState, CivilisationStateCache>;
@@ -49,9 +50,6 @@ struct Args {
 
     #[clap(subcommand)]
     command: Command,
-
-    #[arg(short, long, default_value_t = 3000)]
-    port: u16,
 }
 
 #[derive(Debug, Subcommand)]
@@ -73,6 +71,9 @@ async fn main() -> Result<()> {
     if !args.real_env {
         dotenvy::dotenv().context("cannot get env")?;
     }
+
+    let app_host = Url::parse(&env::var("APP_HOST").context("fail to get APP_HOST env var")?)
+        .context("cannot parse APP_HOST as url")?;
 
     let settings = env::var("EVENTSTORE_URI")
         .context("fail to get EVENTSTORE_URI env var")?
@@ -106,6 +107,7 @@ async fn main() -> Result<()> {
                         repo_civilisation_state.clone(),
                         repo_civilisation_admin_state.clone(),
                         redis_client.clone(),
+                        app_host.port(),
                     )
                     .boxed(),
                 );

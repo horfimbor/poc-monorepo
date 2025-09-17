@@ -65,7 +65,7 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
         let components = html!(
             <>
                 <ul>
-                {self.game_components().into_iter().map(|comp|{
+                {self.game_components().iter().map(|comp|{
                     html!(
                         <li key={comp.to_string()}>{comp.to_string()}</li>
                     )

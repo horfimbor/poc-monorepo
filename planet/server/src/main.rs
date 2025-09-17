@@ -4,9 +4,10 @@ mod web;
 #[macro_use]
 extern crate rocket;
 
-use crate::consumer::planet::account::handle_account_public_event_for_planet;
+use crate::consumer::civilisation_admin::handle_service_planet_added;
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Parser, Subcommand, ValueEnum};
+use consumer::civilisation::handle_account_public_event_for_planet;
 use horfimbor_eventsource::cache_db::redis::StateDb;
 use horfimbor_eventsource::repository::{Repository, StateRepository};
 use kurrentdb::Client;
@@ -17,6 +18,7 @@ use rocket::futures::{FutureExt, StreamExt};
 use signal_hook::consts::signal::*;
 use signal_hook_tokio::Signals;
 use std::env;
+use url::Url;
 
 type PlanetStateCache = StateDb<PlanetState>;
 type PlanetRepository = StateRepository<PlanetState, PlanetStateCache>;
@@ -33,6 +35,7 @@ enum Service {
     AccountCreated,
     PlanetOwnerChange,
     AccountCreatedForPlanet,
+    AdminServicePlanetAdded,
 }
 
 mod built_info {
@@ -47,9 +50,6 @@ struct Args {
 
     #[clap(subcommand)]
     command: Command,
-
-    #[arg(short, long)]
-    port: Option<u16>,
 }
 
 #[derive(Debug, Subcommand)]
@@ -70,7 +70,11 @@ async fn main() -> Result<()> {
 
     if !args.real_env {
         dotenvy::dotenv().context("cannot get env")?;
+        dotenvy::from_filename_override(".env.planet").context("cannot get env")?;
     }
+
+    let app_host = Url::parse(&env::var("APP_HOST").context("fail to get APP_HOST env var")?)
+        .context("cannot parse APP_HOST as url")?;
 
     let settings = env::var("EVENTSTORE_URI")
         .context("fail to get EVENTSTORE_URI env var")?
@@ -104,7 +108,7 @@ async fn main() -> Result<()> {
                         repo_planet_state.clone(),
                         repo_planet_admin.clone(),
                         redis_client.clone(),
-                        args.port,
+                        app_host.port(),
                     )
                     .boxed(),
                 );
@@ -112,7 +116,17 @@ async fn main() -> Result<()> {
 
             if list.is_empty() || list.contains(&Service::AccountCreatedForPlanet) {
                 services.push(
-                    handle_account_public_event_for_planet(event_store_db, repo_planet_state)
+                    handle_account_public_event_for_planet(
+                        event_store_db.clone(),
+                        repo_planet_state,
+                    )
+                    .boxed(),
+                );
+            }
+
+            if list.is_empty() || list.contains(&Service::AdminServicePlanetAdded) {
+                services.push(
+                    handle_service_planet_added(event_store_db, repo_planet_admin, app_host)
                         .boxed(),
                 );
             }
