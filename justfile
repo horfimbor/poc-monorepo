@@ -21,17 +21,10 @@ open:
     firefox $APP_HOST
 
 watch-client NAME:
-    reset
-    cargo watch -w {{NAME}}/client/ -w {{NAME}}/shared/ -w public -- \
-        wasm-pack build ./{{NAME}}/client \
-          --target web \
-          --out-dir ../../{{NAME}}/server/web/client \
-          --out-name index-v0-1-0
+    bacon watch-client-{{NAME}}
 
 watch-server NAME PORT:
-    reset
-    cargo watch -w {{NAME}}/server/ -w {{NAME}}/shared/ -w {{NAME}}/state/ -w public -i {{NAME}}/server/web/ -i {{NAME}}/server/templates \
-        -x "run -p mono-{{NAME}}-server -- -p{{PORT}} service"
+    bacon watch-server-{{NAME}} -- -- -p{{PORT}} service
 
 precommit:
     cargo fmt

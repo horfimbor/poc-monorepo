@@ -28,7 +28,7 @@ install tools :
 ```shell 
 cargo install just
 cargo install wasm-pack
-cargo install cargo-watch
+cargo install bacon
 cargo install cargo-mutants
 ```
 
