@@ -2,23 +2,22 @@
 services:
 
   eventstore:
-    image: eventstore/eventstore:24.2.0-bookworm-slim
+    image: kurrentplatform/kurrentdb:25.1
     environment:
-      - EVENTSTORE_CLUSTER_SIZE=1
-      - EVENTSTORE_RUN_PROJECTIONS=All
-      - EVENTSTORE_START_STANDARD_PROJECTIONS=true
-      - EVENTSTORE_HTTP_PORT=2113
-      - EVENTSTORE_INSECURE=true
-      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
-      - EVENTSTORE_EXT_IP=0.0.0.0
+      - KURRENTDB_CLUSTER_SIZE=1
+      - KURRENTDB_RUN_PROJECTIONS=All
+      - KURRENTDB_START_STANDARD_PROJECTIONS=true
+      - KURRENTDB_NODE_PORT=2113
+      - KURRENTDB_INSECURE=true
+      - KURRENTDB_ENABLE_ATOM_PUB_OVER_HTTP=true
     ports:
       - "2113:2113"
     volumes:
       - type: volume
-        source: eventstore-volume-data
+        source: kurrent-volume-data
         target: /var/lib/eventstore
       - type: volume
-        source: eventstore-volume-logs
+        source: kurrent-volume-logs
         target: /var/log/eventstore
     networks:
       - common_net
@@ -31,8 +30,8 @@ services:
       - common_net
 
 volumes:
-  eventstore-volume-data:
-  eventstore-volume-logs:
+  kurrent-volume-data:
+  kurrent-volume-logs:
 
 networks:
   common_net:
