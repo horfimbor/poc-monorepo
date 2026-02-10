@@ -2,13 +2,13 @@ set shell := ["bash", "-uc"]
 set dotenv-load
 
 
-alias dc-up := dc-start
-dc-start *SRV:
+alias dc-start := dc-up
+dc-up *SRV:
     docker compose up -d --build --force-recreate --remove-orphans {{SRV}}
     docker compose logs --follow {{SRV}}
 
-alias dc-down := dc-stop
-dc-stop:
+alias dc-stop := dc-down
+dc-down:
     docker compose down --remove-orphans
 
 dc-reset:
