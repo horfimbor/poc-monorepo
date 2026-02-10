@@ -1,5 +1,5 @@
+use crate::CivilisationRepository;
 use crate::web::{AuthAccountClaim, get_jwt_claims};
-use crate::{AccountDtoRepository, AccountRepository};
 use civilisation_shared::command::CivilisationCommand;
 use civilisation_shared::event::CivilisationEvent;
 use horfimbor_eventsource::Stream;
@@ -18,7 +18,7 @@ pub fn routes() -> Vec<Route> {
 
 #[post("/", format = "json", data = "<command>")]
 pub async fn mono_command(
-    state_repository: &State<AccountRepository>,
+    state_repository: &State<CivilisationRepository>,
     command: Json<CivilisationCommand>,
     claim: AuthAccountClaim,
 ) -> Result<(), String> {
@@ -27,7 +27,8 @@ pub async fn mono_command(
         .await
         .map_err(|e| e.to_string())?;
 
-    if model.state().owner() != claim.claims.user() {
+    // TODO check why this to_string is needed :thinking:
+    if claim.claims.user().to_string() != model.state().owner().to_string() {
         return Err("not your account".to_string());
     }
 
@@ -41,7 +42,7 @@ pub async fn mono_command(
 
 #[get("/<jwt>")]
 pub async fn stream_dto(
-    dto_repository: &State<AccountDtoRepository>,
+    repository: &State<CivilisationRepository>,
     jwt: &str,
 ) -> Result<EventStream![], String> {
     let claims = get_jwt_claims(jwt)?;
@@ -52,24 +53,20 @@ pub async fn stream_dto(
         &claims.account().to_string(),
     );
 
-    let dto = dto_repository
+    let dto = repository
         .get_model(&key)
         .await
-        .map_err(|_| "cannot find the dto".to_string())?;
+        .map_err(|err| format!("cannot find the dto {key} : {err}"))?;
 
     if dto.position().is_none() {
         return Err("account not found".to_string());
     }
 
-    let mut subscription = get_subscription(
-        dto_repository.event_db(),
-        &Stream::Model(key),
-        dto.position(),
-    )
-    .await;
+    let mut subscription =
+        get_subscription(repository.event_db(), &Stream::Model(key), dto.position()).await;
 
     Ok(EventStream! {
-        yield Event::json(&dto.state());
+        yield Event::json(&dto.state().shared());
         loop {
             let event = if let Ok(event) = subscription.next().await{
                 event
@@ -89,7 +86,9 @@ pub async fn stream_dto(
 
                 match original_event.as_json::<CivilisationEvent>(){
                     Ok(event) =>{
-                        yield Event::json(&event);
+                        if let CivilisationEvent::Shared(event) = event {
+                            yield Event::json(&event);
+                        }
                     },
                     Err(_) => {
                         yield Event::data("cannot get original event").event("error");

@@ -1,29 +1,24 @@
-use crate::AccountRepository;
-use anyhow::{Context, anyhow};
+use crate::CivilisationRepository;
+use anyhow::Context;
 use civilisation_shared::command::CivilisationCommand;
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::metadata::Metadata;
-use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Event, Stream};
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
-use public_account_event::PubAccountEvent;
-use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
-use std::env;
+use public_mono::Component;
+use public_mono::planet::PubPlanetEvent;
 
-pub async fn handle_account_public_event(
+pub async fn handle_planet_public_event(
     event_store_db: Client,
-    repository: AccountRepository,
+    account_repository: CivilisationRepository,
 ) -> anyhow::Result<()> {
-    let current_app_id = env::var("APP_ID").map_err(|_| anyhow!("APP_ID is missing"))?;
-
-    let e = PubAccountEvent::AccountCreated {
-        user_id: ModelKey::default(),
-        app_id: ModelKey::default(),
-        name: "".to_string(),
+    let e = PubPlanetEvent::NewOwner {
+        old_account_id: None,
+        account_id: "".to_string(),
     };
 
     let stream = Stream::Event(e.event_name());
-    let group_name = "mono_civilisation_event";
+    let group_name = "mono_civilisation_add_planet";
 
     create_subscription(&event_store_db, &stream, group_name)
         .await
@@ -53,32 +48,44 @@ pub async fn handle_account_public_event(
         let event = rcv_event.event.as_ref().context("cannot extract event")?;
 
         let json = event
-            .as_json::<PubAccountEvent>()
+            .as_json::<PubPlanetEvent>()
             .context("cannot extract json")?;
 
-        if let PubAccountEvent::AccountCreated {
-            user_id,
-            app_id,
-            name,
-        } = json
-            && current_app_id == app_id.to_string()
-        {
-            let key =
-                ModelKey::new_uuid_v8(MONO_CIVILISATION_STREAM, UUID_V8_KIND, event.stream_id());
-            repository
+        let PubPlanetEvent::NewOwner {
+            old_account_id,
+            account_id,
+        } = json;
+
+        if let Some(old_account_id) = old_account_id {
+            account_repository
                 .add_command(
-                    &key,
-                    CivilisationCommand::Create {
-                        name,
-                        owner: user_id.to_string(),
-                    },
+                    &old_account_id
+                        .as_str()
+                        .try_into()
+                        .context("cannot parse old_account_id")?,
+                    CivilisationCommand::RemoveWorld(event.stream_id().to_string()),
                     Some(&metadata),
                 )
                 .await
-                .context("cannot create account")?;
-        };
+                .context("cannot remove world")?;
+        }
 
-        // todo!("check app id and then create the account");
+        account_repository
+            .add_command(
+                &account_id
+                    .as_str()
+                    .try_into()
+                    .context("cannot parse account_id")?,
+                CivilisationCommand::AddWorld(Component {
+                    balise: "horfimbor-planet-state".to_string(),
+                    id: event.stream_id().to_string(),
+                }),
+                Some(&metadata),
+            )
+            .await
+            .context("cannot add planet to account")?;
+
+        // todo!("check app id and then create the planet");
         sub.ack(&rcv_event).await.context("cannot ack")?;
     }
 }

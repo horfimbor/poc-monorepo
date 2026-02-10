@@ -7,29 +7,32 @@ members = [
 ]
 
 [workspace.dependencies]
-#horfimbor-eventsource = {path = "../horfimbor-engine/horfimbor-eventsource"}
-#horfimbor-jwt = { path = "../horfimbor-engine/horfimbor-jwt" }
-#horfimbor-client-derive = { path = "../horfimbor-engine/horfimbor-client-derive" }
-#horfimbor-client = { path = "../horfimbor-engine/horfimbor-client" }
-#public-account-event  = { path = "../hfb-auth/public-account-event", features = ["server"] }
+horfimbor-eventsource = {path = "../horfimbor-engine/horfimbor-eventsource"}
+horfimbor-jwt = { path = "../horfimbor-engine/horfimbor-jwt", features = ["server"] }
+horfimbor-client-derive = { path = "../horfimbor-engine/horfimbor-client-derive" }
+horfimbor-client = { path = "../horfimbor-engine/horfimbor-client" }
+horfimbor-time = {path = "../horfimbor-engine/horfimbor-time"}
+public-account-event  = { path = "../hfb-auth/public-account-event", features = ["server"] }
 
-horfimbor-eventsource = "0.3.5"
-horfimbor-jwt = "0.1.2"
-horfimbor-client-derive = "0.1"
-horfimbor-client = {git = "https://github.com/horfimbor/horfimbor-engine", branch = "add-client" }
-public-account-event = { git = "https://github.com/horfimbor/hfb-auth", features = ["server"], branch = "fixes-monorepo" }
+#horfimbor-eventsource = "0.3.6"
+#horfimbor-jwt = {version = "0.1.2", features = ["server"]}
+#horfimbor-client-derive = "0.1"
+#horfimbor-client = {git = "https://github.com/horfimbor/horfimbor-engine", branch = "add-client" }
+#public-account-event = { git = "https://github.com/horfimbor/hfb-auth", features = ["server"], branch = "fixes-monorepo" }
 
 anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
-redis = { version = "0.32.0", features = ["tokio-rustls-comp"] }
+redis = { version = "1.0.0", features = ["tokio-rustls-comp"] }
 rocket = { version = "0.5", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
 thiserror = "2.0"
-kurrentdb = "1.0.0-alpha.4"
+kurrentdb = "1.0.0"
 uuid = { version = "1.1", features = ["v4", "serde"] }
 dotenvy = "0.15"
 garde = { version = "0.22.0", features = ["derive"] }
+url = { version = "2.5.7", features = ["serde"] }
+
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

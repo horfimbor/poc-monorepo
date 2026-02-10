@@ -1,8 +1,8 @@
 use crate::web::base::load_base_routes;
-use crate::{AccountDtoCache, AccountDtoRepository, AccountRepository};
+use crate::{CivilisationAdminRepository, CivilisationRepository};
 use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
-use horfimbor_jwt::Claims;
+use horfimbor_jwt::{Claims, Role};
 use kurrentdb::Client;
 use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
 use redis::Client as RedisClient;
@@ -15,23 +15,20 @@ use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use rocket_dyn_templates::Template;
 use std::env;
 
+pub mod admin;
 mod base;
 pub mod civilisation;
 
 pub async fn start_server(
     event_store_db: Client,
-    account_repo_state: AccountRepository,
-    account_repo_dto: AccountDtoRepository,
-    account_dto_cache: AccountDtoCache,
+    civilisation_repo: CivilisationRepository,
+    civilisation_admin_repo: CivilisationAdminRepository,
     dto_redis: RedisClient,
+    auth_port: Option<u16>,
 ) -> Result<(), Error> {
-    let auth_port = env::var("APP_PORT")
-        .context("APP_PORT is not defined")?
-        .parse::<u16>()
-        .context("APP_PORT cannot be parse in u16")?;
     let app_host = env::var("APP_HOST").context("APP_HOST is not defined")?;
     let app_key = env::var("APP_KEY").context("APP_KEY is not defined")?;
-    let auth_host = env::var("AUTH_HOST").context("APP_HOST is not defined")?;
+    let auth_host = env::var("AUTH_HOST").context("AUTH_HOST is not defined")?;
     let auth_callback_host =
         env::var("AUTH_CALLBACK_HOST").context("AUTH_CALLBACK_HOST is not defined")?;
     let auth_config = AuthConfig {
@@ -61,13 +58,13 @@ pub async fn start_server(
         .merge(("address", "0.0.0.0"))
         .merge(("template_dir", "civilisation/server/templates"));
     let _rocket = rocket::custom(figment)
-        .manage(account_repo_state)
-        .manage(account_repo_dto)
-        .manage(account_dto_cache)
+        .manage(civilisation_repo)
+        .manage(civilisation_admin_repo)
         .manage(auth_config)
         .manage(dto_redis)
         .manage(event_store_db)
         .mount("/", load_base_routes())
+        .mount("/api/civilisation/admin/", admin::routes())
         .mount("/api/civilisation", civilisation::routes())
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)
@@ -116,6 +113,7 @@ pub struct AuthAccountClaim {
 #[derive(Debug)]
 pub enum AccountClaimError {
     Claim,
+    PermissionDenied,
     Missing,
 }
 
@@ -135,6 +133,36 @@ impl<'r> FromRequest<'r> for AuthAccountClaim {
                     ),
                     claims,
                 }),
+                Err(e) => {
+                    dbg!(e);
+                    Outcome::Error((Status::BadRequest, AccountClaimError::Claim))
+                }
+            },
+        }
+    }
+}
+
+pub struct AuthAccountAdminClaim {
+    pub claims: Claims,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for AuthAccountAdminClaim {
+    type Error = AccountClaimError;
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match req.headers().get_one("Authorization") {
+            None => Outcome::Error((Status::BadRequest, AccountClaimError::Missing)),
+            Some(token) => match get_jwt_claims(token) {
+                Ok(claims) => {
+                    if *claims.roles() != Role::Admin {
+                        return Outcome::Error((
+                            Status::Forbidden,
+                            AccountClaimError::PermissionDenied,
+                        ));
+                    }
+                    Outcome::Success(AuthAccountAdminClaim { claims })
+                }
                 Err(e) => {
                     dbg!(e);
                     Outcome::Error((Status::BadRequest, AccountClaimError::Claim))

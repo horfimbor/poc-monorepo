@@ -7,7 +7,7 @@ edition = "2024"
 
 [dependencies]
 horfimbor-eventsource.workspace = true
-horfimbor-jwt.workspace = true
+horfimbor-jwt = {workspace = true, features = ["server"]}
 public-account-event.workspace = true
 clap.workspace = true
 serde.workspace = true
@@ -16,9 +16,10 @@ uuid.workspace = true
 thiserror.workspace = true
 civilisation-shared = { path = "../shared", features = ["server"] }
 civilisation-state = { path = "../state" }
+civilisation-admin = { path = "../admin", features = ["server"] }
 public-mono = {path = "../../public" }
 redis= {  workspace = true }
-reqwest = { version = "0.12", features = ["rustls-tls-native-roots", "charset", "http2"], default-features = false }
+reqwest = { version = "0.13", features = ["rustls", "charset", "http2", "form"], default-features = false }
 rocket = { workspace=true, features = ["json"] }
 rocket_cors = "0.6"
 serde_json.workspace = true
@@ -26,9 +27,10 @@ anyhow.workspace = true
 chrono = "0.4"
 dotenvy.workspace = true
 tokio = "1.43"
-signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"] }
-signal-hook = "0.3"
+signal-hook-tokio = { version = "0.4", features = ["futures-v0_3"] }
+signal-hook = "0.4"
 futures = "0.3"
+url = "2.5.7"
 
 
 
@@ -37,7 +39,7 @@ version = "0.2"
 features = ["tera"]
 
 [build-dependencies]
-built = "0.7"
+built = "0.8"
 
 [lints]
 workspace = true

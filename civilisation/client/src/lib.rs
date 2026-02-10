@@ -1,3 +1,4 @@
+mod admin;
 mod auth;
 mod input;
 mod state;
@@ -8,7 +9,6 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 pub fn run() {
     state::optional::ComponentWrapper::define("horfimbor-civilisation-state");
-    input::optional::ComponentWrapper::define("horfimbor-account-input");
-
+    admin::optional::ComponentWrapper::define("horfimbor-civilisation-admin");
     auth::optional::ComponentWrapper::define("horfimbor-auth");
 }

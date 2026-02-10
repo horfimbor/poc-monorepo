@@ -25,7 +25,7 @@ background = false
 
 [jobs.watch-server-planet]
 command = [
-    "cargo", "run" ,"-p", "mono-planet-server"
+    "cargo", "run" ,"-p", "mono-planet-server", "service"
 ]
 default_watch = false
 watch = ["planet/server/", "planet/shared/", "planet/state/",
@@ -45,7 +45,7 @@ background = false
 
 [jobs.watch-server-civilisation]
 command = [
-    "cargo", "run" ,"-p", "mono-civilisation-server"
+    "cargo", "run" ,"-p", "mono-civilisation-server", "service"
 ]
 default_watch = false
 watch = [

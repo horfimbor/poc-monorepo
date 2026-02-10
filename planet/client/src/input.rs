@@ -85,7 +85,7 @@ fn sender(props: &MonoInputProps) -> Html {
         });
     });
 
-    html! { <button id="btn-send" onclick={on_send_clicked}>{"👍"}</button> }
+    html! { <button onclick={on_send_clicked}>{"👍"}</button> }
 }
 
 #[allow(dead_code)]

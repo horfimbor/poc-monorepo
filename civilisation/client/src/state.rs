@@ -1,5 +1,6 @@
+use crate::input::CivilisationInput;
 use civilisation_shared::dto::CivilisationDto;
-use civilisation_shared::event::CivilisationEvent;
+use civilisation_shared::event::SharedCivilisationEvent;
 use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client::{EventStoreProps, LoadExternalComponent};
 use horfimbor_client_derive::WebComponent;
@@ -7,7 +8,7 @@ use serde::Deserialize;
 use yew::prelude::*;
 
 type CivilisationState =
-    EventStoreState<CivilisationDto, CivilisationEvent, CivilisationStateProps>;
+    EventStoreState<CivilisationDto, SharedCivilisationEvent, CivilisationStateProps>;
 
 #[derive(WebComponent)]
 #[component(CivilisationState)]
@@ -35,8 +36,8 @@ impl EventStoreProps for CivilisationStateProps {
     }
 }
 
-impl AddEvent<CivilisationEvent, CivilisationStateProps> for CivilisationDto {
-    fn play_event(&mut self, event: &CivilisationEvent) {
+impl AddEvent<SharedCivilisationEvent, CivilisationStateProps> for CivilisationDto {
+    fn play_event(&mut self, event: &SharedCivilisationEvent) {
         self.play_event(event);
     }
 
@@ -78,7 +79,7 @@ impl AddEvent<CivilisationEvent, CivilisationStateProps> for CivilisationDto {
 
         html! {
             <>
-                <horfimbor-account-input
+                <CivilisationInput
                     endpoint={props.endpoint().to_owned()}
                     jwt={props.jwt().to_owned()} />
                 <hr/>

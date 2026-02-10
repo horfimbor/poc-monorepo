@@ -14,6 +14,7 @@ target/
 
 client/dist/
 .env
+.env.planet
 /mutants.out*/
 /*/server/web
 !/*/server/web/.gitkeep

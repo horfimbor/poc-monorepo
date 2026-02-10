@@ -5,24 +5,27 @@ mod web;
 extern crate rocket;
 
 use anyhow::{Context, Result, anyhow, bail};
-use civilisation_shared::dto::CivilisationDto;
+use civilisation_admin::CivilisationAdminState;
 use civilisation_state::CivilisationState;
 use clap::{Parser, Subcommand, ValueEnum};
-use consumer::civilisation::auth::handle_account_public_event;
-use consumer::civilisation::planet::handle_planet_public_event;
+use consumer::auth::handle_account_public_event;
+use consumer::planet::handle_planet_public_event;
 use horfimbor_eventsource::cache_db::redis::StateDb;
-use horfimbor_eventsource::repository::{DtoRepository, Repository, StateRepository};
+use horfimbor_eventsource::repository::{Repository, StateRepository};
 use kurrentdb::Client;
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
 use signal_hook::consts::signal::*;
 use signal_hook_tokio::Signals;
 use std::env;
+use url::Url;
 
-type AccountStateCache = StateDb<CivilisationState>;
-type AccountRepository = StateRepository<CivilisationState, AccountStateCache>;
-type AccountDtoCache = StateDb<CivilisationDto>;
-type AccountDtoRepository = DtoRepository<CivilisationDto, AccountDtoCache>;
+type CivilisationStateCache = StateDb<CivilisationState>;
+type CivilisationRepository = StateRepository<CivilisationState, CivilisationStateCache>;
+
+type CivilisationAdminStateCache = StateDb<CivilisationAdminState>;
+type CivilisationAdminRepository =
+    StateRepository<CivilisationAdminState, CivilisationAdminStateCache>;
 
 #[derive(Debug, PartialEq, Clone, ValueEnum)]
 enum Service {
@@ -47,9 +50,6 @@ struct Args {
 
     #[clap(subcommand)]
     command: Command,
-
-    #[arg(short, long, default_value_t = 3000)]
-    port: u16,
 }
 
 #[derive(Debug, Subcommand)]
@@ -72,6 +72,9 @@ async fn main() -> Result<()> {
         dotenvy::dotenv().context("cannot get env")?;
     }
 
+    let app_host = Url::parse(&env::var("APP_HOST").context("fail to get APP_HOST env var")?)
+        .context("cannot parse APP_HOST as url")?;
+
     let settings = env::var("EVENTSTORE_URI")
         .context("fail to get EVENTSTORE_URI env var")?
         .parse()
@@ -83,13 +86,15 @@ async fn main() -> Result<()> {
     let event_store_db =
         Client::new(settings).map_err(|e| anyhow!(" cannot connect to eventstore : {e}"))?;
 
-    let repo_civilisation_state = AccountRepository::new(
+    let repo_civilisation_state = CivilisationRepository::new(
         event_store_db.clone(),
-        AccountStateCache::new(redis_client.clone()),
+        CivilisationStateCache::new(redis_client.clone()),
     );
-    let dto_account_redis = AccountDtoCache::new(redis_client.clone());
-    let repo_account_dto =
-        AccountDtoRepository::new(event_store_db.clone(), dto_account_redis.clone());
+
+    let repo_civilisation_admin_state = CivilisationAdminRepository::new(
+        event_store_db.clone(),
+        CivilisationAdminStateCache::new(redis_client.clone()),
+    );
 
     match args.command {
         Command::Service { list } => {
@@ -100,9 +105,9 @@ async fn main() -> Result<()> {
                     web::start_server(
                         event_store_db.clone(),
                         repo_civilisation_state.clone(),
-                        repo_account_dto,
-                        dto_account_redis,
+                        repo_civilisation_admin_state.clone(),
                         redis_client.clone(),
+                        app_host.port(),
                     )
                     .boxed(),
                 );

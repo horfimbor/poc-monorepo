@@ -4,12 +4,13 @@
 
 
     <script type="module">
-    import init, { run } from './client/index.js';
-    async function main() {
-        await init();
-        run();
-    }
-    main();
+        import init, { run } from './client/index.js';
+        async function main() {
+            await init();
+            run();
+        }
+        main();
+        window["{{key}}"] = 42;
     </script>
     <style>
         body {

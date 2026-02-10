@@ -1,16 +1,14 @@
 [package]
-name = "public-mono"
+name = "planet-admin"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 serde.workspace = true
-horfimbor-eventsource = { workspace = true, optional = true }
+horfimbor-eventsource.workspace = true
 horfimbor-time.workspace = true
 url.workspace = true
+thiserror.workspace = true
 
 [lints]
 workspace = true
-
-[features]
-server = ["horfimbor-eventsource"]

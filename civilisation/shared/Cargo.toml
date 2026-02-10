@@ -11,6 +11,7 @@ serde.workspace = true
 thiserror.workspace = true
 public-mono = {path = "../../public" }
 garde.workspace = true
+url.workspace = true
 
 [features]
 server = ["horfimbor-eventsource", "public-mono/server"]
