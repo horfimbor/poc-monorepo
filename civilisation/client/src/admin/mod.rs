@@ -80,7 +80,7 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
         html!(
             <>
                 <p>
-                    {self.host().clone().map(|h| h.to_string())}
+                    {self.host().clone().map(|h| h.to_string()).unwrap_or_default()}
                 </p>
                 <p>
                     {timer}

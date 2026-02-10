@@ -56,7 +56,7 @@ pub async fn stream_dto(
     let dto = repository
         .get_model(&key)
         .await
-        .map_err(|_| "cannot find the dto".to_string())?;
+        .map_err(|err| format!("cannot find the dto {key} : {err}"))?;
 
     if dto.position().is_none() {
         return Err("account not found".to_string());
