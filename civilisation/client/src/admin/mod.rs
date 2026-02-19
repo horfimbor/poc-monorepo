@@ -4,8 +4,8 @@ mod timer;
 use crate::admin::component::AddComponent;
 use crate::admin::timer::UpdateTimer;
 use civilisation_admin::{CivilisationAdminEvent, CivilisationAdminState};
-use horfimbor_client::EventStoreProps;
 use horfimbor_client::state::{AddEvent, EventStoreState};
+use horfimbor_client::{EventStoreProps, LoadExternalComponent};
 use horfimbor_client_derive::WebComponent;
 use serde::Deserialize;
 use yew::prelude::*;
@@ -65,9 +65,21 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
         let components = html!(
             <>
                 <ul>
-                {self.game_components().iter().map(|comp|{
+                {self.game_components().iter().map(|(name, comp)|{
                     html!(
-                        <li key={comp.to_string()}>{comp.to_string()}</li>
+                        <li key={name.as_str()}>
+                        {name}
+
+                        <fieldset>
+                                    <LoadExternalComponent
+                                        endpoint={comp.url.to_string()}
+                                    balise={comp.tag.to_string()}
+                                    jwt={props.jwt().to_owned()}
+                                    id={""}
+                                />
+                                </fieldset>
+
+                        </li>
                     )
 
                 }).collect::<Html>()}

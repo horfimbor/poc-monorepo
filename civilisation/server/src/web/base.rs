@@ -59,7 +59,7 @@ pub async fn auth(token: &str, host: &State<AuthConfig>) -> Result<Template, Str
             host.auth_callback_host.clone()
         ))
         .form(&[("token", token), ("app_key", &host.app_key)])
-        .timeout(Duration::from_millis(200))
+        .timeout(Duration::from_millis(500))
         .send()
         .await
         .map_err(|e| e.to_string())?

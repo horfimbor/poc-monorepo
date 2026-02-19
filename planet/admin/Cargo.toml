@@ -5,10 +5,14 @@ edition = "2024"
 
 [dependencies]
 serde.workspace = true
-horfimbor-eventsource.workspace = true
+horfimbor-eventsource = {optional = true, workspace = true}
 horfimbor-time.workspace = true
 url.workspace = true
 thiserror.workspace = true
+
+[features]
+server = ["horfimbor-eventsource"]
+
 
 [lints]
 workspace = true

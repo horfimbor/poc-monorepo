@@ -17,10 +17,12 @@ pub async fn handle_service_planet_added(
     planet_repository: PlanetAdminRepository,
     current_host: Url,
 ) -> anyhow::Result<()> {
-    let e = PubConfigCivEvent::AddService {
+    let e = PubConfigCivEvent::AddedService {
+        name: "dummy name".to_string(),
         game_host: Url::parse("http://localhost").context("cannot create localhost dummy event")?,
         service_host: Url::parse("http://localhost")
             .context("cannot create localhost dummy event")?,
+        tag: "horfimbor-comp-admin".to_string(),
         time: HfTimeConfiguration::new(Duration::minutes(1), Duration::seconds(1), Utc::now())
             .context("cannot create dummy time configuration")?,
     };
@@ -57,8 +59,10 @@ pub async fn handle_service_planet_added(
             .as_json::<PubConfigCivEvent>()
             .context("cannot extract json")?;
 
-        if let PubConfigCivEvent::AddService {
+        if let PubConfigCivEvent::AddedService {
+            name: _name,
             game_host,
+            tag: _tag,
             time,
             service_host,
         } = json

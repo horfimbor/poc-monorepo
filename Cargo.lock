@@ -2552,6 +2552,7 @@ dependencies = [
  "gloo-net 0.6.0",
  "horfimbor-client",
  "horfimbor-client-derive",
+ "planet-admin",
  "planet-shared",
  "rand 0.10.0",
  "reqwasm",

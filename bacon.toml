@@ -31,6 +31,9 @@ default_watch = false
 watch = ["planet/server/", "planet/shared/", "planet/state/",
     "public/", "planet/server/web", "planet/server/templates"]
 background = false
+need_stdout = true
+allow_warnings = true
+on_change_strategy = "kill_then_restart"
 
 [jobs.watch-client-civilisation]
 command = [
@@ -57,7 +60,10 @@ watch = [
     "public/",
     ".env"
 ]
+need_stdout = true
+allow_warnings = true
 background = false
+on_change_strategy = "kill_then_restart"
 
 # standard bacon action
 

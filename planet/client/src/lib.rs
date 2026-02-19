@@ -1,3 +1,4 @@
+mod admin;
 mod input;
 mod state;
 
@@ -6,6 +7,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn run() {
+    admin::optional::ComponentWrapper::define("horfimbor-planet-admin");
     state::optional::ComponentWrapper::define("horfimbor-planet-state");
     input::optional::ComponentWrapper::define("horfimbor-planet-input");
 }

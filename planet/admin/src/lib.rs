@@ -1,6 +1,10 @@
+#[cfg(feature = "server")]
 use horfimbor_eventsource::horfimbor_eventsource_derive::{Command, Event, StateNamed};
+#[cfg(feature = "server")]
 use horfimbor_eventsource::{Command, CommandName};
+#[cfg(feature = "server")]
 use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
+#[cfg(feature = "server")]
 use horfimbor_eventsource::{Event, EventName};
 use horfimbor_time::HfTimeConfiguration;
 use serde::{Deserialize, Serialize};
@@ -10,8 +14,8 @@ use url::Url;
 
 pub const PLANET_CONFIG_STATE_NAME: &str = "PLANET_CONFIG_STATE";
 
-#[derive(Command)]
-#[state(PLANET_CONFIG_STATE_NAME)]
+#[cfg_attr(feature = "server", derive(Command))]
+#[cfg_attr(feature = "server", state(PLANET_CONFIG_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PlanetAdminCommand {
     Setup(HfTimeConfiguration, Url),
@@ -32,24 +36,24 @@ impl Display for PlanetAdminError {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed, Default)]
-#[state(PLANET_CONFIG_STATE_NAME)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Default)]
+#[cfg_attr(feature = "server", derive( StateNamed))]
+#[cfg_attr(feature = "server", state(PLANET_CONFIG_STATE_NAME))]
 pub struct PlanetAdminState {
     time: Option<HfTimeConfiguration>,
     game_hosts: Option<Url>,
 }
 
-#[derive(Event)]
-#[state(PLANET_CONFIG_STATE_NAME)]
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub enum PlanetAdminEvent {
-    Setup(HfTimeConfiguration, Url),
-}
+impl PlanetAdminState {
+    pub fn time(&self) -> Option<HfTimeConfiguration> {
+        self.time
+    }
 
-impl Dto for PlanetAdminState {
-    type Event = PlanetAdminEvent;
+    pub fn game_hosts(&self) -> &Option<Url> {
+        &self.game_hosts
+    }
 
-    fn play_event(&mut self, event: &Self::Event) {
+    pub fn play_event(&mut self, event: &PlanetAdminEvent) {
         match event {
             PlanetAdminEvent::Setup(time, host) => {
                 self.time = Some(*time);
@@ -59,6 +63,23 @@ impl Dto for PlanetAdminState {
     }
 }
 
+#[cfg_attr(feature = "server", derive(Event))]
+#[cfg_attr(feature = "server", state(PLANET_CONFIG_STATE_NAME))]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum PlanetAdminEvent {
+    Setup(HfTimeConfiguration, Url),
+}
+
+#[cfg(feature = "server")]
+impl Dto for PlanetAdminState {
+    type Event = PlanetAdminEvent;
+
+    fn play_event(&mut self, event: &Self::Event) {
+        self.play_event(event);
+    }
+}
+
+#[cfg(feature = "server")]
 impl State for PlanetAdminState {
     type Command = PlanetAdminCommand;
     type Error = PlanetAdminError;

@@ -9,11 +9,18 @@ use horfimbor_eventsource::{Event, EventName};
 use horfimbor_time::HfTimeConfiguration;
 use public_mono::civilisation::PubConfigCivEvent;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
 use url::Url;
 
 pub const CIVILISATION_CONFIG_STATE_NAME: &str = "CIVILISATION_CONFIG_STATE";
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct Component {
+    pub url: Url,
+    pub tag: String,
+}
 
 #[cfg_attr(feature = "server", derive(Command))]
 #[cfg_attr(feature = "server", state(CIVILISATION_CONFIG_STATE_NAME))]
@@ -21,8 +28,8 @@ pub const CIVILISATION_CONFIG_STATE_NAME: &str = "CIVILISATION_CONFIG_STATE";
 pub enum CivilisationAdminCommand {
     CreateServer(Url),
     AddTime(HfTimeConfiguration),
-    AddComponent(Url),
-    RemoveComponent(Url),
+    AddComponent { name: String, comp: Component },
+    RemoveComponent(String),
 }
 
 #[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -31,6 +38,7 @@ pub enum CivilisationAdminError {
     AlreadyHaveTime,
     NotCreatedYet,
     ComponentAlreadyExists,
+    ComponentNameAlreadyExists,
 }
 
 impl Display for CivilisationAdminError {
@@ -48,6 +56,9 @@ impl Display for CivilisationAdminError {
             Self::ComponentAlreadyExists => {
                 write!(f, "component already exists")
             }
+            CivilisationAdminError::ComponentNameAlreadyExists => {
+                write!(f, "component name must be unique")
+            }
         }
     }
 }
@@ -58,7 +69,7 @@ impl Display for CivilisationAdminError {
 pub struct CivilisationAdminState {
     host: Option<Url>,
     time: Option<HfTimeConfiguration>,
-    game_components: Vec<Url>,
+    game_components: HashMap<String, Component>,
 }
 
 #[cfg_attr(feature = "server", derive(Event))]
@@ -90,15 +101,28 @@ impl CivilisationAdminState {
                 }
             },
             CivilisationAdminEvent::Public(event) => match event {
-                PubConfigCivEvent::AddService {
+                PubConfigCivEvent::AddedService {
+                    name,
                     game_host: _game_host,
                     service_host,
                     time: _time,
-                } => self.game_components.push(service_host.clone()),
-                PubConfigCivEvent::RemoveService {
+                    tag,
+                } => {
+                    self.game_components.insert(
+                        name.clone(),
+                        Component {
+                            url: service_host.clone(),
+                            tag: tag.clone(),
+                        },
+                    );
+                }
+                PubConfigCivEvent::RemovedService {
+                    name,
                     game_host: _game_host,
-                    service_host,
-                } => self.game_components.retain(|h| *h != *service_host),
+                    service_host: _service_sort,
+                } => {
+                    self.game_components.remove(name);
+                }
             },
         }
     }
@@ -111,7 +135,7 @@ impl CivilisationAdminState {
         self.time
     }
 
-    pub fn game_components(&self) -> &Vec<Url> {
+    pub fn game_components(&self) -> &HashMap<String, Component> {
         &self.game_components
     }
 }
@@ -150,34 +174,50 @@ impl State for CivilisationAdminState {
                     PrvCivilisationAdminEvent::TimeSet(timer),
                 )])
             }
-            CivilisationAdminCommand::AddComponent(service_host) => {
+            CivilisationAdminCommand::AddComponent { name, comp } => {
                 let (Some(game_host), Some(time)) = (self.host.clone(), self.time) else {
                     return Err(CivilisationAdminError::NotCreatedYet);
                 };
 
-                if self.game_components.contains(&service_host) {
+                if self.game_components.contains_key(&name) {
+                    return Err(CivilisationAdminError::ComponentNameAlreadyExists);
+                }
+
+                if self
+                    .game_components
+                    .values()
+                    .find(|gc| gc.url == comp.url)
+                    .is_some()
+                {
                     return Err(CivilisationAdminError::ComponentAlreadyExists);
                 };
 
                 Ok(vec![CivilisationAdminEvent::Public(
-                    PubConfigCivEvent::AddService {
+                    PubConfigCivEvent::AddedService {
+                        name,
                         game_host,
-                        service_host,
+                        service_host: comp.url,
+                        tag: comp.tag,
                         time,
                     },
                 )])
             }
-            CivilisationAdminCommand::RemoveComponent(service_host) => {
+            CivilisationAdminCommand::RemoveComponent(name) => {
                 let Some(game_host) = self.host.clone() else {
                     return Err(CivilisationAdminError::NotCreatedYet);
                 };
 
-                Ok(vec![CivilisationAdminEvent::Public(
-                    PubConfigCivEvent::RemoveService {
-                        game_host,
-                        service_host,
-                    },
-                )])
+                if let Some(comp) = self.game_components.get(&name) {
+                    Ok(vec![CivilisationAdminEvent::Public(
+                        PubConfigCivEvent::RemovedService {
+                            name,
+                            game_host,
+                            service_host: comp.url.clone(),
+                        },
+                    )])
+                } else {
+                    Err(CivilisationAdminError::ComponentAlreadyExists)
+                }
             }
         }
     }

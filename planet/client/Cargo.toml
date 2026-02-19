@@ -13,6 +13,8 @@ bounce = {git = "https://github.com/Aedius/bounce.git", branch = "update-yew-0-2
 yew = { version= "0.22", features=["csr"] }
 custom-elements = "0.2"
 planet-shared = { path = "../shared" }
+planet-admin = { path = "../admin" }
+
 gloo-net = "0.6"
 reqwasm = "0.5"
 weblog = "0.3"
