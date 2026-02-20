@@ -8,17 +8,17 @@ use serde::Deserialize;
 use yew::prelude::*;
 
 type CivilisationState =
-    EventStoreState<CivilisationDto, SharedCivilisationEvent, CivilisationStateProps>;
+    EventStoreState<CivilisationDto, SharedCivilisationEvent, CivilisationProps>;
 
 #[derive(WebComponent)]
 #[component(CivilisationState)]
 #[derive(Default, Properties, PartialEq, Deserialize, Clone)]
-pub struct CivilisationStateProps {
+pub struct CivilisationProps {
     pub endpoint: String,
     pub jwt: String,
 }
 
-impl EventStoreProps for CivilisationStateProps {
+impl EventStoreProps for CivilisationProps {
     fn endpoint(&self) -> &str {
         self.endpoint.as_str()
     }
@@ -36,12 +36,12 @@ impl EventStoreProps for CivilisationStateProps {
     }
 }
 
-impl AddEvent<SharedCivilisationEvent, CivilisationStateProps> for CivilisationDto {
+impl AddEvent<SharedCivilisationEvent, CivilisationProps> for CivilisationDto {
     fn play_event(&mut self, event: &SharedCivilisationEvent) {
         self.play_event(event);
     }
 
-    fn get_view(&self, props: CivilisationStateProps) -> Html {
+    fn get_view(&self, props: CivilisationProps) -> Html {
         let nation_part = match self.nation() {
             None => {
                 html! {

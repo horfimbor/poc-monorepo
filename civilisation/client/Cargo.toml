@@ -12,7 +12,6 @@ horfimbor-client.workspace = true
 horfimbor-jwt = { path = "../../../horfimbor-engine/horfimbor-jwt", features = ["client"] }
 horfimbor-time = { path = "../../../horfimbor-engine/horfimbor-time"}
 chrono = { version = "0.4", default-features = false }
-bounce = {git = "https://github.com/Aedius/bounce.git", branch = "update-yew-0-22" }
 yew = { version= "0.22", features=["csr"] }
 custom-elements = "0.2"
 civilisation-shared = { path = "../shared" }
@@ -27,7 +26,7 @@ garde.workspace = true
 futures = "0.3.28"
 rand = "0.10"
 url = "2.5.4"
-# getrandom is used even by rand in wasm so it's marked as unused
+# getrandom is used  by rand in wasm even if it's marked as unused
 getrandom = { version = "0.4", features = ["wasm_js"] }
 
 [dependencies.web-sys]

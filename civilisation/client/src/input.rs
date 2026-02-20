@@ -1,175 +1,172 @@
-use bounce::BounceRoot;
-use bounce::{Atom, use_atom};
+use crate::state::CivilisationProps;
+use civilisation_shared::Nation;
+use civilisation_shared::command::CivilisationCommand;
 use garde::Validate;
-use reqwasm::http::{Request, Response};
+use horfimbor_client::input::send_command;
+use std::rc::Rc;
 use web_sys::HtmlInputElement;
 use weblog::{console_error, console_info};
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
-use civilisation_shared::Nation;
-use civilisation_shared::command::CivilisationCommand;
-
-#[derive(Default, Properties, PartialEq)]
-pub struct CivilisationInputProps {
-    pub endpoint: String,
-    pub jwt: String,
-}
-
-#[derive(Eq, PartialEq, Atom, Default)]
+#[derive(Eq, PartialEq)]
 struct LocalData {
-    name: String,
-    description: String,
+    nation: Nation,
 }
 
-#[derive(Eq, PartialEq, Atom, Default)]
-struct LocalError {
-    err: Option<String>,
-}
-
-#[function_component(ErrorDisplay)]
-pub fn error_display() -> Html {
-    let data = use_atom::<LocalError>();
-
-    match data.err.clone() {
-        None => {
-            html! {}
-        }
-        Some(e) => {
-            html! {
-                <h2>
-                    {e}
-                </h2>
-            }
+impl LocalData {
+    fn get_command(&self) -> Option<CivilisationCommand> {
+        if self.nation.validate().is_ok() {
+            Some(CivilisationCommand::UpdateNation(self.nation.clone()))
+        } else {
+            None
         }
     }
 }
 
-#[function_component(LocalDataSetter)]
-fn local_data_setter() -> Html {
-    let data = use_atom::<LocalData>();
+enum ComponentAction {
+    Name(String),
+    Description(String),
+}
 
-    let on_name_input = {
-        let data = data.clone();
+impl Reducible for LocalData {
+    type Action = ComponentAction;
 
-        Callback::from(move |e: InputEvent| {
-            let input: HtmlInputElement = e.target_unchecked_into();
+    fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
+        match action {
+            ComponentAction::Name(name) => LocalData {
+                nation: Nation {
+                    name,
+                    description: self.nation.description.clone(),
+                },
+            }
+            .into(),
+            ComponentAction::Description(description) => LocalData {
+                nation: Nation {
+                    name: self.nation.name.clone(),
+                    description,
+                },
+            }
+            .into(),
+        }
+    }
+}
 
-            data.set(LocalData {
-                name: input.value(),
-                description: data.description.clone(),
-            });
-        })
-    };
+type CivilisationContext = UseReducerHandle<LocalData>;
 
-    let on_description_input = {
-        let data = data.clone();
+#[function_component(CivilisationInput)]
+pub fn view(props: &CivilisationProps) -> Html {
+    let endpoint = props.endpoint.clone();
+    let jwt = props.jwt.clone();
 
-        Callback::from(move |e: InputEvent| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-
-            data.set(LocalData {
-                name: data.name.clone(),
-                description: input.value(),
-            });
-        })
-    };
+    let msg = use_reducer(|| LocalData {
+        nation: Nation {
+            name: "".to_string(),
+            description: "".to_string(),
+        },
+    });
 
     html! {
-        <div>
+        <ContextProvider<CivilisationContext> context={msg}>
+            <div>
+                <SetName />
+                <SetDescription />
+                <Sender endpoint={endpoint.clone()} jwt={jwt.clone()} />
+            </div>
+            <ErrorDisplay />
+        </ContextProvider<CivilisationContext>>
+    }
+}
+
+#[function_component(ErrorDisplay)]
+fn error_display() -> Html {
+    let msg_ctx = use_context::<CivilisationContext>().unwrap();
+
+    if let Err(message) = msg_ctx.nation.validate() {
+        return html! {
+            <p>
+                    {message.to_string()}
+            </p>
+        };
+    }
+
+    html! {
+        <>
+        </>
+    }
+}
+
+#[function_component(SetName)]
+fn set_name() -> Html {
+    let msg_ctx = use_context::<CivilisationContext>().unwrap();
+
+    let value = msg_ctx.nation.name.clone();
+
+    let oninput = Callback::from(move |e: InputEvent| {
+        let input: HtmlInputElement = e.target_unchecked_into();
+        msg_ctx.dispatch(ComponentAction::Name(input.value()));
+    });
+
+    html! {
+        <>
             <label>{"Nation name"}
-                <input type="text" oninput={on_name_input} value={data.name.clone()} />
+                <input type="text"
+                {oninput} {value} />
             </label><br/>
+        </>
+    }
+}
+
+#[function_component(SetDescription)]
+fn set_description() -> Html {
+    let msg_ctx = use_context::<CivilisationContext>().unwrap();
+
+    let value = msg_ctx.nation.description.clone();
+
+    let oninput = Callback::from(move |e: InputEvent| {
+        let input: HtmlInputElement = e.target_unchecked_into();
+        msg_ctx.dispatch(ComponentAction::Description(input.value()));
+    });
+
+    html! {
+        <>
             <label>{"Nation description"}
-                <input type="text" oninput={on_description_input} value={data.description.clone()} />
+                <input type="text"{oninput} {value} />
             </label>
-        </div>
+        </>
     }
 }
 
 #[function_component(Sender)]
-fn sender(props: &CivilisationInputProps) -> Html {
-    let data = use_atom::<LocalData>();
-    let err = use_atom::<LocalError>();
-    let endpoint = props.endpoint.clone();
-    let jwt = props.jwt.clone();
+fn sender(props: &CivilisationProps) -> Html {
+    let msg_ctx = use_context::<CivilisationContext>().unwrap();
 
-    let nation = Nation {
-        name: data.name.clone(),
-        description: data.description.clone(),
-    };
-
-    if let Err(e) = nation.validate() {
-        let message = format!("invalid nation : {e}");
-        return html!( <div>{message}</div>);
-    }
-
-    let on_send_clicked = Callback::from(move |_| {
-        let err = err.clone();
-        let nation = nation.clone();
-
-        let cmd = CivilisationCommand::UpdateNation(nation);
-
-        let endpoint = endpoint.clone();
-        let jwt = jwt.clone();
-        spawn_local(async move {
-            let endpoint = endpoint.clone();
-            match send_command(&cmd, endpoint, jwt).await {
-                Ok(resp) => {
-                    if resp.ok() {
-                        console_info!("Sent !");
-                        let content = resp.text().await;
-                        match content {
-                            Ok(response) => {
-                                if !response.is_empty() {
-                                    err.set(LocalError {
-                                        err: Some(response),
-                                    });
-                                }
-                            }
-                            Err(e) => {
-                                console_error!(e.to_string())
-                            }
+    if let Some(cmd) = msg_ctx.get_command() {
+        let props = props.clone();
+        let cmd = cmd.clone();
+        let on_send_clicked = Callback::from(move |_| {
+            let props = props.clone();
+            let cmd = cmd.clone();
+            spawn_local(async move {
+                match send_command(&cmd, props).await {
+                    Ok(resp) => {
+                        if resp.ok() {
+                            console_info!("Sent !");
                         }
                     }
+                    Err(e) => {
+                        console_error!(e);
+                    }
                 }
-                Err(e) => {
-                    err.set(LocalError { err: Some(e) });
-                }
-            }
+            });
         });
-    });
 
-    html! { <button onclick={on_send_clicked}>{"Send"}</button> }
-}
-
-async fn send_command(
-    cmd: &CivilisationCommand,
-    endpoint: String,
-    jwt: String,
-) -> Result<Response, String> {
-    Request::post(&format!("{endpoint}/api/civilisation"))
-        .body(serde_json::to_string(&cmd).map_err(|_| format!("cannot serialize cmd {:?}", &cmd))?)
-        .header("Content-Type", "application/json")
-        .header("Authorization", &jwt)
-        .send()
-        .await
-        .map_err(|_| "fail to send command".to_string())
-}
-
-#[function_component(CivilisationInput)]
-pub fn view(props: &CivilisationInputProps) -> Html {
-    let endpoint = props.endpoint.clone();
-    let jwt = props.jwt.clone();
-    html! {
-        <BounceRoot>
-            <div>
-                <LocalDataSetter />
-                <Sender endpoint={endpoint.clone()} jwt={jwt.clone()} />
-            </div>
-            <div>
-                <ErrorDisplay />
-            </div>
-        </BounceRoot>
+        return html! {
+            <>
+                <button onclick={on_send_clicked}>{"update"}</button>
+            </>
+        };
     }
+
+    html! { <></> }
 }
