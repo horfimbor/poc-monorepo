@@ -27,6 +27,7 @@ watch-server NAME:
     bacon watch-server-{{NAME}}
 
 precommit:
+    reset
     cargo fmt
     cargo clippy -- -D clippy::expect_used -D clippy::panic  -D clippy::unwrap_used
     cargo test

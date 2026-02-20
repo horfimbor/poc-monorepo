@@ -88,7 +88,10 @@ pub fn update_timer(props: &CivilisationAdminProps) -> Html {
 
 #[function_component(ComponentName)]
 fn component_name() -> Html {
-    let msg_ctx = use_context::<AddComponentContext>().unwrap();
+    let Some(msg_ctx) = use_context::<AddComponentContext>() else {
+        console_error!("no context");
+        return html!(<></>);
+    };
 
     let value = msg_ctx.name.clone();
 
@@ -107,8 +110,10 @@ fn component_name() -> Html {
 }
 #[function_component(ComponenTag)]
 fn component_tag() -> Html {
-    let msg_ctx = use_context::<AddComponentContext>().unwrap();
-
+    let Some(msg_ctx) = use_context::<AddComponentContext>() else {
+        console_error!("no context");
+        return html!(<></>);
+    };
     let value = msg_ctx.tag.clone();
 
     let cb = Callback::from(move |e: InputEvent| {
@@ -126,8 +131,10 @@ fn component_tag() -> Html {
 }
 #[function_component(ComponenUrl)]
 fn component_url() -> Html {
-    let msg_ctx = use_context::<AddComponentContext>().unwrap();
-
+    let Some(msg_ctx) = use_context::<AddComponentContext>() else {
+        console_error!("no context");
+        return html!(<></>);
+    };
     let value = if let Some(host) = msg_ctx.host.clone() {
         host.to_string()
     } else {
@@ -152,8 +159,10 @@ fn component_url() -> Html {
 
 #[function_component(AddComponentSetter)]
 pub fn add_component(props: &CivilisationAdminProps) -> Html {
-    let msg_ctx = use_context::<AddComponentContext>().unwrap();
-
+    let Some(msg_ctx) = use_context::<AddComponentContext>() else {
+        console_error!("no context");
+        return html!(<></>);
+    };
     let add_button = if let Some(cmd) = msg_ctx.get_command() {
         let props = props.clone();
         let cmd = cmd.clone();

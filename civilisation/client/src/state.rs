@@ -1,4 +1,4 @@
-use crate::input::CivilisationInput;
+use crate::nation::NationDisplay;
 use civilisation_shared::dto::CivilisationDto;
 use civilisation_shared::event::SharedCivilisationEvent;
 use horfimbor_client::state::{AddEvent, EventStoreState};
@@ -42,48 +42,31 @@ impl AddEvent<SharedCivilisationEvent, CivilisationProps> for CivilisationDto {
     }
 
     fn get_view(&self, props: CivilisationProps) -> Html {
-        let nation_part = match self.nation() {
-            None => {
-                html! {
-                    <div>
-                        {"No nation name yet"}
-                    </div>
-                }
-            }
-            Some(nation) => {
-                html! {
-                    <div>
-                        <b>{&nation.name}</b><p>{&nation.description}</p>
-                    </div>
-                }
-            }
-        };
-
-        let world_part = html!(<>{
-                        self.worlds().iter().map(|world|{
-                            html!(<>
-                                <fieldset>
-                                    <LoadExternalComponent
-                                        endpoint={"http://mono.localhost:8001"}
-                                    balise={world.balise.clone()}
-                                    jwt={props.jwt().to_owned()}
-                                    id={world.id.clone()}
-
-                                />
-                                </fieldset>
+        let world_part = html!(
+            <>{
+                self.worlds().iter().map(|world|{
+                    html!(
+                    <>
+                        <fieldset>
+                            <LoadExternalComponent
+                                endpoint={"http://mono.localhost:8001"}
+                            balise={world.balise.clone()}
+                            jwt={props.jwt().to_owned()}
+                            id={world.id.clone()}
+                        />
+                        </fieldset>
                     </>
-                            )
-                        }).collect::<Html>()
+                    )
+                }).collect::<Html>()
 
-                    }</>);
+            }</>);
 
         html! {
             <>
-                <CivilisationInput
-                    endpoint={props.endpoint().to_owned()}
-                    jwt={props.jwt().to_owned()} />
-                <hr/>
-                {nation_part}
+                <NationDisplay
+                    endpoint={props.endpoint.clone()}
+                    jwt={props.jwt.clone()}
+                    nation={self.nation().clone()} />
                 <hr/>
                 {world_part}
             </>

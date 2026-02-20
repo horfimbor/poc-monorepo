@@ -102,7 +102,10 @@ impl TimerData {
 
 #[function_component(StartDate)]
 fn start_date() -> Html {
-    let msg_ctx = use_context::<TimerContext>().unwrap();
+    let Some(msg_ctx) = use_context::<TimerContext>() else {
+        console_error!("no context");
+        return html!(<></>);
+    };
 
     let value = msg_ctx.start_time.clone();
 
@@ -123,8 +126,10 @@ fn start_date() -> Html {
 
 #[function_component(IrlLength)]
 fn irl_length() -> Html {
-    let msg_ctx = use_context::<TimerContext>().unwrap();
-
+    let Some(msg_ctx) = use_context::<TimerContext>() else {
+        console_error!("no context");
+        return html!(<></>);
+    };
     let value = msg_ctx.irl_length;
 
     let cb = Callback::from(move |e: InputEvent| {
@@ -145,8 +150,10 @@ fn irl_length() -> Html {
 
 #[function_component(IgLength)]
 fn ig_length() -> Html {
-    let msg_ctx = use_context::<TimerContext>().unwrap();
-
+    let Some(msg_ctx) = use_context::<TimerContext>() else {
+        console_error!("no context");
+        return html!(<></>);
+    };
     let value = msg_ctx.ig_length;
 
     let cb = Callback::from(move |e: InputEvent| {
@@ -167,8 +174,10 @@ fn ig_length() -> Html {
 
 #[function_component(TimerDataSetter)]
 fn local_data_setter(props: &CivilisationAdminProps) -> Html {
-    let msg_ctx = use_context::<TimerContext>().unwrap();
-
+    let Some(msg_ctx) = use_context::<TimerContext>() else {
+        console_error!("no context");
+        return html!(<></>);
+    };
     let btn = if let Some(config) = msg_ctx.get_config() {
         let props = props.clone();
         let on_set_clicked = Callback::from(move |_| {

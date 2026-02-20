@@ -1,6 +1,6 @@
 mod admin;
 mod auth;
-mod input;
+mod nation;
 mod state;
 
 use custom_elements::CustomElement;
