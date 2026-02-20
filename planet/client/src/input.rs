@@ -1,12 +1,10 @@
-use bounce::BounceRoot;
-use bounce::{Atom, use_atom};
 use horfimbor_client::EventStoreProps;
 use horfimbor_client::input::send_command;
 use horfimbor_client_derive::WebComponent;
 use planet_shared::command::PlanetCommand;
 use planet_shared::dto::PlanetDto;
 use serde::Deserialize;
-use weblog::console_info;
+use weblog::{console_error, console_info};
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
@@ -37,37 +35,11 @@ impl EventStoreProps for MonoInputProps {
     }
 }
 
-#[derive(Eq, PartialEq, Atom, Default)]
-struct LocalError {
-    err: Option<String>,
-}
-
-#[function_component(ErrorDisplay)]
-fn error_display() -> Html {
-    let data = use_atom::<LocalError>();
-
-    match data.err.clone() {
-        None => {
-            html! {}
-        }
-        Some(e) => {
-            html! {
-                <h2>
-                    {e}
-                </h2>
-            }
-        }
-    }
-}
-
 #[function_component(Sender)]
 fn sender(props: &MonoInputProps) -> Html {
-    let err = use_atom::<LocalError>();
     let props = props.clone();
 
     let on_send_clicked = Callback::from(move |_| {
-        let err = err.clone();
-
         let cmd = PlanetCommand::Ping;
         let props = props.clone();
 
@@ -79,7 +51,7 @@ fn sender(props: &MonoInputProps) -> Html {
                     }
                 }
                 Err(e) => {
-                    err.set(LocalError { err: Some(e) });
+                    console_error!(e);
                 }
             }
         });
@@ -89,7 +61,7 @@ fn sender(props: &MonoInputProps) -> Html {
 }
 
 #[allow(dead_code)]
-#[derive(PartialEq, Atom, Default)]
+#[derive(PartialEq, Default)]
 struct State {
     content: PlanetDto,
 }
@@ -111,14 +83,9 @@ impl Component for MonoInput {
         let jwt = ctx.props().jwt.clone();
         let id = ctx.props().id.clone();
         html! {
-            <BounceRoot>
-                <div>
-                    <Sender endpoint={endpoint.clone()} jwt={jwt.clone()} id={id.clone()} />
-                </div>
-                <div>
-                    <ErrorDisplay />
-                </div>
-            </BounceRoot>
+            <div>
+                <Sender endpoint={endpoint.clone()} jwt={jwt.clone()} id={id.clone()} />
+            </div>
         }
     }
 }

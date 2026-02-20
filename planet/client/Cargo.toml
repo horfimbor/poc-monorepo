@@ -9,7 +9,6 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 horfimbor-client-derive.workspace = true
 horfimbor-client.workspace = true
-bounce = {git = "https://github.com/Aedius/bounce.git", branch = "update-yew-0-22" }
 yew = { version= "0.22", features=["csr"] }
 custom-elements = "0.2"
 planet-shared = { path = "../shared" }

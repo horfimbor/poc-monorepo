@@ -37,7 +37,7 @@ impl Display for PlanetAdminError {
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Default)]
-#[cfg_attr(feature = "server", derive( StateNamed))]
+#[cfg_attr(feature = "server", derive(StateNamed))]
 #[cfg_attr(feature = "server", state(PLANET_CONFIG_STATE_NAME))]
 pub struct PlanetAdminState {
     time: Option<HfTimeConfiguration>,

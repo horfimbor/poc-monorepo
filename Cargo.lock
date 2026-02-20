@@ -77,12 +77,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
-name = "anymap2"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d301b3b94cb4b2f23d7917810addbbaff90738e0ca2be692bd027e70d7e0330c"
-
-[[package]]
 name = "arcstr"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -265,32 +259,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
 dependencies = [
  "generic-array",
-]
-
-[[package]]
-name = "bounce"
-version = "0.9.0"
-source = "git+https://github.com/Aedius/bounce.git?branch=update-yew-0-22#8883f4d35c8970fdfea75cff46f8798ca88cc1b4"
-dependencies = [
- "anymap2",
- "bounce-macros",
- "futures",
- "once_cell",
- "serde",
- "tracing",
- "wasm-bindgen",
- "yew",
-]
-
-[[package]]
-name = "bounce-macros"
-version = "0.9.0"
-source = "git+https://github.com/Aedius/bounce.git?branch=update-yew-0-22#8883f4d35c8970fdfea75cff46f8798ca88cc1b4"
-dependencies = [
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn 2.0.117",
 ]
 
 [[package]]
@@ -2544,7 +2512,6 @@ dependencies = [
 name = "mono-planet-client"
 version = "0.1.0"
 dependencies = [
- "bounce",
  "custom-elements",
  "futures",
  "getrandom 0.4.1",
