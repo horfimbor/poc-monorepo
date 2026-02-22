@@ -24,7 +24,7 @@ rocket = { workspace=true, features = ["json"] }
 rocket_cors = "0.6"
 serde_json.workspace = true
 anyhow.workspace = true
-chrono = "0.4"
+chrono.workspace = true
 dotenvy.workspace = true
 tokio = "1.43"
 signal-hook-tokio = { version = "0.4", features = ["futures-v0_3"] }

@@ -10,6 +10,8 @@ horfimbor-eventsource = { workspace = true, optional = true }
 serde.workspace = true
 thiserror.workspace = true
 public-mono = {path = "../../public" }
+chrono.workspace = true
+uuid = { version = "1.21.0", features = ["v4", "js", "serde"] }
 
 [features]
 server = ["horfimbor-eventsource", "public-mono/server"]
