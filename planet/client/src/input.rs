@@ -1,7 +1,7 @@
 use horfimbor_client::EventStoreProps;
 use horfimbor_client::input::send_command;
 use horfimbor_client_derive::WebComponent;
-use planet_shared::command::PlanetCommand;
+use planet_shared::command::SharedPlanetCommand;
 use planet_shared::dto::PlanetDto;
 use serde::Deserialize;
 use weblog::{console_error, console_info};
@@ -40,21 +40,22 @@ fn sender(props: &MonoInputProps) -> Html {
     let props = props.clone();
 
     let on_send_clicked = Callback::from(move |_| {
-        let cmd = PlanetCommand::Ping;
-        let props = props.clone();
-
-        spawn_local(async move {
-            match send_command(&cmd, props).await {
-                Ok(resp) => {
-                    if resp.ok() {
-                        console_info!("sent !");
-                    }
-                }
-                Err(e) => {
-                    console_error!(e);
-                }
-            }
-        });
+        console_info!("clicked")
+        // let cmd = PlanetCommand::Ping;
+        // let props = props.clone();
+        //
+        // spawn_local(async move {
+        //     match send_command(&cmd, props).await {
+        //         Ok(resp) => {
+        //             if resp.ok() {
+        //                 console_info!("sent !");
+        //             }
+        //         }
+        //         Err(e) => {
+        //             console_error!(e);
+        //         }
+        //     }
+        // });
     });
 
     html! { <button onclick={on_send_clicked}>{"👍"}</button> }

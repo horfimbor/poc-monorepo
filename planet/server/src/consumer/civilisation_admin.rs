@@ -1,28 +1,28 @@
 use crate::PlanetAdminRepository;
+use crate::consumer::generate_admin_id;
 use anyhow::Context;
 use chrono::{Duration, Utc};
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::metadata::Metadata;
-use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Event, Stream};
 use horfimbor_time::HfTimeConfiguration;
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use planet_admin::PlanetAdminCommand;
-use public_mono::civilisation::PubConfigCivEvent;
-use public_mono::planet::{PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
+use public_mono::civilisation::PubCivilisationAdminEvent;
 use url::Url;
+// TODO handle planet removed
 
 pub async fn handle_service_planet_added(
     event_store_db: Client,
-    planet_repository: PlanetAdminRepository,
+    planet_admin_repository: PlanetAdminRepository,
     current_host: Url,
 ) -> anyhow::Result<()> {
-    let e = PubConfigCivEvent::AddedService {
+    let e = PubCivilisationAdminEvent::AddedService {
         name: "dummy name".to_string(),
         game_host: Url::parse("http://localhost").context("cannot create localhost dummy event")?,
         service_host: Url::parse("http://localhost")
             .context("cannot create localhost dummy event")?,
-        tag: "horfimbor-comp-admin".to_string(),
+        balise: "horfimbor-comp-admin".to_string(),
         time: HfTimeConfiguration::new(Duration::minutes(1), Duration::seconds(1), Utc::now())
             .context("cannot create dummy time configuration")?,
     };
@@ -56,25 +56,21 @@ pub async fn handle_service_planet_added(
         let event = rcv_event.event.as_ref().context("cannot extract event")?;
 
         let json = event
-            .as_json::<PubConfigCivEvent>()
+            .as_json::<PubCivilisationAdminEvent>()
             .context("cannot extract json")?;
 
-        if let PubConfigCivEvent::AddedService {
+        if let PubCivilisationAdminEvent::AddedService {
             name: _name,
             game_host,
-            tag: _tag,
+            balise: _tag,
             time,
             service_host,
         } = json
             && service_host == current_host
         {
-            let key = ModelKey::new_uuid_v8(
-                PLANET_ADMIN_STREAM,
-                UUID_ADMIN_V8_KIND,
-                current_host.as_str(),
-            );
+            let key = generate_admin_id(&game_host, &service_host);
 
-            planet_repository
+            planet_admin_repository
                 .add_command(
                     &key,
                     PlanetAdminCommand::Setup(time, game_host.clone()),

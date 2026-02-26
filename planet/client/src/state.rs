@@ -4,6 +4,7 @@ use horfimbor_client_derive::WebComponent;
 use planet_shared::dto::PlanetDto;
 use planet_shared::event::SharedPlanetEvent;
 use serde::Deserialize;
+use weblog::console_debug;
 use yew::prelude::*;
 
 type PlanetState = EventStoreState<PlanetDto, SharedPlanetEvent, PlanetStateProps>;
@@ -41,9 +42,12 @@ impl AddEvent<SharedPlanetEvent, PlanetStateProps> for PlanetDto {
     }
 
     fn get_view(&self, props: PlanetStateProps) -> Html {
+        let data = format!("{:?}", self);
+        console_debug!(data);
+
         html! {
             <div>
-                {self.nb()}
+                {"WIP"}
                 <horfimbor-planet-input
                         endpoint={props.endpoint().to_owned()}
                         jwt={props.jwt().to_owned()}

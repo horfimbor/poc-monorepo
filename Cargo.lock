@@ -3049,6 +3049,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "horfimbor-eventsource",
+ "horfimbor-time",
  "public-mono",
  "serde",
  "thiserror 2.0.18",
@@ -3060,6 +3061,7 @@ name = "planet-state"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "cucumber",
  "horfimbor-eventsource",
  "planet-shared",
@@ -3236,6 +3238,7 @@ dependencies = [
  "horfimbor-time",
  "serde",
  "url",
+ "uuid",
 ]
 
 [[package]]

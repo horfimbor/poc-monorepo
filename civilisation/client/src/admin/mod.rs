@@ -73,7 +73,7 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
                         <fieldset>
                                     <LoadExternalComponent
                                         endpoint={comp.url.to_string()}
-                                    balise={comp.tag.to_string()}
+                                    balise={comp.balise.to_string()}
                                     jwt={props.jwt().to_owned()}
                                     id={""}
                                 />

@@ -22,7 +22,10 @@ impl ComponentData {
         {
             Some(CivilisationAdminCommand::AddComponent {
                 name,
-                comp: Component { url: host, tag },
+                comp: Component {
+                    url: host,
+                    balise: tag,
+                },
             })
         } else {
             None

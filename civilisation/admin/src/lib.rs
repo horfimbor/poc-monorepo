@@ -7,7 +7,7 @@ use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
 #[cfg(feature = "server")]
 use horfimbor_eventsource::{Event, EventName};
 use horfimbor_time::HfTimeConfiguration;
-use public_mono::civilisation::PubConfigCivEvent;
+use public_mono::civilisation::PubCivilisationAdminEvent;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
@@ -19,7 +19,7 @@ pub const CIVILISATION_CONFIG_STATE_NAME: &str = "CIVILISATION_CONFIG_STATE";
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Component {
     pub url: Url,
-    pub tag: String,
+    pub balise: String,
 }
 
 #[cfg_attr(feature = "server", derive(Command))]
@@ -86,7 +86,7 @@ pub enum PrvCivilisationAdminEvent {
 #[serde(untagged)]
 pub enum CivilisationAdminEvent {
     Private(PrvCivilisationAdminEvent),
-    Public(PubConfigCivEvent),
+    Public(PubCivilisationAdminEvent),
 }
 
 impl CivilisationAdminState {
@@ -101,22 +101,22 @@ impl CivilisationAdminState {
                 }
             },
             CivilisationAdminEvent::Public(event) => match event {
-                PubConfigCivEvent::AddedService {
+                PubCivilisationAdminEvent::AddedService {
                     name,
                     game_host: _game_host,
                     service_host,
                     time: _time,
-                    tag,
+                    balise: tag,
                 } => {
                     self.game_components.insert(
                         name.clone(),
                         Component {
                             url: service_host.clone(),
-                            tag: tag.clone(),
+                            balise: tag.clone(),
                         },
                     );
                 }
-                PubConfigCivEvent::RemovedService {
+                PubCivilisationAdminEvent::RemovedService {
                     name,
                     game_host: _game_host,
                     service_host: _service_sort,
@@ -193,11 +193,11 @@ impl State for CivilisationAdminState {
                 };
 
                 Ok(vec![CivilisationAdminEvent::Public(
-                    PubConfigCivEvent::AddedService {
+                    PubCivilisationAdminEvent::AddedService {
                         name,
                         game_host,
                         service_host: comp.url,
-                        tag: comp.tag,
+                        balise: comp.balise,
                         time,
                     },
                 )])
@@ -209,7 +209,7 @@ impl State for CivilisationAdminState {
 
                 if let Some(comp) = self.game_components.get(&name) {
                     Ok(vec![CivilisationAdminEvent::Public(
-                        PubConfigCivEvent::RemovedService {
+                        PubCivilisationAdminEvent::RemovedService {
                             name,
                             game_host,
                             service_host: comp.url.clone(),

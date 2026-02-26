@@ -1,12 +1,12 @@
-use crate::PlanetRepository;
 use crate::web::{AuthAccountClaim, get_jwt_claims};
+use crate::{PlanetAdminRepository, PlanetRepository};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
-use planet_shared::command::PlanetCommand;
-use planet_state::PlanetEvent;
+use planet_shared::command::SharedPlanetCommand;
+use planet_state::{PlanetCommand, PlanetEvent};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
@@ -18,7 +18,8 @@ pub fn routes() -> Vec<Route> {
 #[post("/<model_id>", format = "json", data = "<command>")]
 pub async fn mono_command(
     state_repository: &State<PlanetRepository>,
-    command: Json<PlanetCommand>,
+    state_admin_repository: &State<PlanetAdminRepository>,
+    command: Json<SharedPlanetCommand>,
     claim: AuthAccountClaim,
     model_id: &str,
 ) -> Result<(), String> {
@@ -33,12 +34,45 @@ pub async fn mono_command(
     dbg!(claim.claims.user());
     dbg!(claim.account_model_key);
 
-    // if model.state().owner() != claim.claims.user() {
-    //     return Err("not your planet".to_string());
-    // }
+    if model.state().owner() != claim.claims.user() {
+        return Err("not your planet".to_string());
+    }
+
+    let admin = state_admin_repository
+        .get_model(model.state().planet_admin())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let command = match command.0 {
+        SharedPlanetCommand::StartConstruction { key, .. } => {
+            SharedPlanetCommand::StartConstruction {
+                key,
+                time_config: admin.state().time(),
+            }
+        }
+        SharedPlanetCommand::CancelConstruction { key, .. } => {
+            SharedPlanetCommand::CancelConstruction {
+                key,
+                time_config: admin.state().time(),
+            }
+        }
+        SharedPlanetCommand::FinnishConstruction { key, .. } => {
+            SharedPlanetCommand::FinnishConstruction {
+                key,
+                time_config: admin.state().time(),
+            }
+        }
+        SharedPlanetCommand::DestroyConstruction { key, .. } => {
+            SharedPlanetCommand::DestroyConstruction {
+                key,
+                time_config: admin.state().time(),
+            }
+        }
+        _ => command.0,
+    };
 
     state_repository
-        .add_command(&key, command.0, None)
+        .add_command(&key, PlanetCommand::Shared(command), None)
         .await
         .map_err(|e| e.to_string())?;
 

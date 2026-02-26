@@ -1,15 +1,17 @@
+use crate::dto::Resource;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use thiserror::Error;
-use crate::dto::Resource;
 
 #[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PlanetError {
     InvalidOwner,
+    InvalidCivilisation,
     AvailableIdNotExists,
     ConstructionIdNotExists,
     BuildingIdNotExists,
-    NotEnoughResources(Resource)
+    NoTimeConfig,
+    NotEnoughResources(Resource),
 }
 
 impl Display for PlanetError {
@@ -17,6 +19,9 @@ impl Display for PlanetError {
         match self {
             Self::InvalidOwner => {
                 write!(f, "owner id is not a modelkey")
+            }
+            Self::InvalidCivilisation => {
+                write!(f, "civilisation id is not a modelkey")
             }
             PlanetError::AvailableIdNotExists => {
                 write!(f, "id is not in available building to construct")
@@ -29,6 +34,9 @@ impl Display for PlanetError {
             }
             PlanetError::NotEnoughResources(r) => {
                 write!(f, "Not enough {:?} (as least)", r)
+            }
+            PlanetError::NoTimeConfig => {
+                write!(f, "Time config not loaded")
             }
         }
     }

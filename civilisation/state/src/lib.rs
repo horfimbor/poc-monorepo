@@ -50,6 +50,7 @@ impl Dto for CivilisationState {
                     game_host,
                     name,
                     owner,
+                    ..
                 } => {
                     self.game_host = Some(game_host.clone());
                     self.private_name = name.clone();

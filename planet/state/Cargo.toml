@@ -11,6 +11,8 @@ serde.workspace = true
 planet-shared = { path = "../shared", features = ["server"] }
 public-mono = {path = "../../public", features = ["server"]}
 uuid = { version = "1.21.0", features = ["v4", "js", "serde"] }
+chrono.workspace = true
+
 
 [dev-dependencies]
 tokio = { version = "1.21", features = ["rt", "rt-multi-thread", "macros"] }

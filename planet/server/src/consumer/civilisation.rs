@@ -1,18 +1,20 @@
-use crate::PlanetRepository;
+use crate::{PlanetRepository, consumer};
 use anyhow::Context;
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Event, Stream};
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
-use planet_shared::command::PlanetCommand;
-use public_mono::civilisation::PubCivilisationEvent;
+use planet_shared::command::SharedPlanetCommand;
+use planet_state::PlanetCommand;
+use public_mono::civilisation::{PubCivilisationAdminEvent, PubCivilisationEvent};
 use public_mono::planet::PLANET_STREAM;
 use url::Url;
 
 pub async fn handle_account_public_event_for_planet(
     event_store_db: Client,
     planet_repository: PlanetRepository,
+    current_host: Url,
 ) -> anyhow::Result<()> {
     let e = PubCivilisationEvent::Created {
         game_host: Url::parse("http://localhost").context("cannot create localhost dummy event")?,
@@ -50,19 +52,29 @@ pub async fn handle_account_public_event_for_planet(
 
         let event = rcv_event.event.as_ref().context("cannot extract event")?;
 
-        let planet_id = ModelKey::new_uuid_v7(PLANET_STREAM);
+        let json = event
+            .as_json::<PubCivilisationEvent>()
+            .context("cannot extract json")?;
 
-        planet_repository
-            .add_command(
-                &planet_id,
-                PlanetCommand::Create {
-                    account_id: event.stream_id().to_string(),
-                },
-                Some(&metadata),
-            )
-            .await
-            .context("cannot create planet")?;
+        match json {
+            PubCivilisationEvent::Created { game_host, .. } => {
+                let planet_id = ModelKey::new_uuid_v7(PLANET_STREAM);
 
+                let admin_id = consumer::generate_admin_id(&game_host, &current_host);
+
+                planet_repository
+                    .add_command(
+                        &planet_id,
+                        PlanetCommand::Shared(SharedPlanetCommand::Create {
+                            account_id: event.stream_id().to_string(),
+                            admin_id,
+                        }),
+                        Some(&metadata),
+                    )
+                    .await
+                    .context("cannot create planet")?;
+            }
+        }
 
         sub.ack(&rcv_event).await.context("cannot ack")?;
     }

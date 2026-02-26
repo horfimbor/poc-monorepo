@@ -5,37 +5,37 @@ use horfimbor_eventsource::horfimbor_eventsource_derive::Event;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::{Event, EventName};
 
+use crate::dto::{Building, Resource, ResourceCalc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::dto::{Building, Resource, ResourceCalc};
 
 #[cfg_attr(feature = "server", derive(Event))]
 #[cfg_attr(feature = "server", state(PLANET_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum SharedPlanetEvent {
-    UpdateResource{
+    UpdateResource {
         resource: Resource,
-        calc: ResourceCalc
+        calc: ResourceCalc,
     },
-    UpdateAvailableBuilding{
+    UpdateAvailableBuilding {
         key: Uuid,
-        building: Building
+        building: Building,
     },
-    RemoveAvailableBuilding{
-        key: Uuid,
-    },
-    UpdateConstruction{
-        key: Uuid,
-        building: Building
-    },
-    RemoveConstruction{
+    RemoveAvailableBuilding {
         key: Uuid,
     },
-    UpdateRunningBuilding{
+    UpdateConstruction {
         key: Uuid,
-        building: Building
+        building: Building,
     },
-    RemoveRunningBuilding{
+    RemoveConstruction {
         key: Uuid,
-    }
+    },
+    UpdateRunningBuilding {
+        key: Uuid,
+        building: Building,
+    },
+    RemoveRunningBuilding {
+        key: Uuid,
+    },
 }

@@ -20,12 +20,12 @@ use url::Url;
 #[cfg_attr(feature = "server", derive(Event))]
 #[cfg_attr(feature = "server", state(PUB_CONFIG_CIVILISATION_EVENT))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub enum PubConfigCivEvent {
+pub enum PubCivilisationAdminEvent {
     AddedService {
         name: String,
         game_host: Url,
         service_host: Url,
-        tag: String,
+        balise: String,
         time: HfTimeConfiguration,
     },
     RemovedService {

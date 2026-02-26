@@ -119,6 +119,7 @@ async fn main() -> Result<()> {
                     handle_account_public_event_for_planet(
                         event_store_db.clone(),
                         repo_planet_state,
+                        app_host.clone(),
                     )
                     .boxed(),
                 );

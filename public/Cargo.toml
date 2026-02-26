@@ -8,6 +8,7 @@ serde.workspace = true
 horfimbor-eventsource = { workspace = true, optional = true }
 horfimbor-time.workspace = true
 url.workspace = true
+uuid.workspace = true
 
 [lints]
 workspace = true
