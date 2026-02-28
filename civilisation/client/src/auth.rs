@@ -2,8 +2,9 @@ use horfimbor_client::LoadExternalComponent;
 use horfimbor_client_derive::WebComponent;
 use horfimbor_jwt::{Claims, Role};
 use std::ops::Not;
-use weblog::{console_error, console_warn};
-use yew::{Callback, Component, Context, Html, Properties, html, component};
+use chrono::Utc;
+use weblog::{console_warn};
+use yew::{Component, Context, Html, Properties, html};
 
 #[derive(WebComponent)]
 #[component(GalaxyAuth)]
@@ -17,29 +18,14 @@ pub struct AuthProps {
     account_name: Option<String>,
 }
 
-pub struct GalaxyAuth {
-    admin_open: bool,
-}
-
-pub enum GalaxyEvent {
-    ToggleAdmin,
-}
+pub struct GalaxyAuth {}
 
 impl Component for GalaxyAuth {
-    type Message = GalaxyEvent;
+    type Message = ();
     type Properties = AuthProps;
 
     fn create(_ctx: &Context<Self>) -> Self {
-        Self { admin_open: false }
-    }
-
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            GalaxyEvent::ToggleAdmin => {
-                self.admin_open = self.admin_open.not();
-                true
-            }
-        }
+        Self {}
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
@@ -49,12 +35,15 @@ impl Component for GalaxyAuth {
             ctx.props().endpoint
         );
 
+        let login_needed = html! {
+            <>
+                <a href={target.clone()}>{"login"}</a>
+            </>
+        };
+
         let Some(account_name) = ctx.props().account_name.clone() else {
-            return html! {
-                <>
-                    <a href={target}>{"login"}</a>
-                </>
-            };
+            console_warn!("no accound name");
+            return login_needed;
         };
 
         let Some(window) = web_sys::window() else {
@@ -98,8 +87,7 @@ impl Component for GalaxyAuth {
                     </>
                 };
             };
-            if pathname != format!("//{account_name}") {
-                // TODO fix those //
+            if pathname != format!("/{account_name}") {
 
                 match location.set_href(&account_name) {
                     Ok(_) => {}
@@ -113,22 +101,28 @@ impl Component for GalaxyAuth {
                     }
                 }
 
-                return html! {
-                    <>
-                        <p>{"redirecting"}</p>
-                    </>
-                };
+                return login_needed;
             }
         }
 
         let endpoint = ctx.props().endpoint.clone();
         let Ok(Some(jwt)) = local_storage.get_item(&account_name) else {
-            return html! {
-                <>
-                    <a href={target}>{"login"}</a>
-                </>
-            };
+
+            console_warn!("wrong jwt");
+            return login_needed;
         };
+
+        let Ok(claims) = Claims::from_jwt_insecure(&jwt)else{
+
+            console_warn!("invalid claims");
+            return login_needed;
+        };
+
+        if Utc::now().timestamp() > claims.expiration_at() as i64 {
+
+            console_warn!("token expired");
+            return login_needed;
+        }
 
         let content = html! {
                     <LoadExternalComponent
@@ -139,19 +133,13 @@ impl Component for GalaxyAuth {
                     />
         };
 
-        let is_admin = match Claims::from_jwt_insecure(&jwt) {
-            Ok(data) => *data.roles() == Role::Admin,
-            Err(e) => {
-                console_error!(e.to_string());
-                false
-            }
-        };
+        let is_admin = *claims.roles() == Role::Admin;
 
         if is_admin.not() {
             return content;
         }
 
-        let admin_content =   html! {
+        let admin_content = html! {
             <>
                 <LoadExternalComponent
                     endpoint={endpoint.clone()}
@@ -161,7 +149,6 @@ impl Component for GalaxyAuth {
                 />
             </>
         };
-          
 
         html! {
             <div>

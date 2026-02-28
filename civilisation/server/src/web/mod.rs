@@ -64,7 +64,7 @@ pub async fn start_server(
         .manage(dto_redis)
         .manage(event_store_db)
         .mount("/", load_base_routes())
-        .mount("/api/civilisation/admin/", admin::routes())
+        .mount("/api/civilisation-admin/", admin::routes())
         .mount("/api/civilisation", civilisation::routes())
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)

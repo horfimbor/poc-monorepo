@@ -8,9 +8,7 @@ use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client::{EventStoreProps, LoadExternalComponent};
 use horfimbor_client_derive::WebComponent;
 use serde::Deserialize;
-use weblog::console_warn;
 use yew::prelude::*;
-
 
 type CivilisationAdmin =
     EventStoreState<CivilisationAdminState, CivilisationAdminEvent, CivilisationAdminProps>;
@@ -29,7 +27,7 @@ impl EventStoreProps for CivilisationAdminProps {
     }
 
     fn path(&self) -> &str {
-        "api/civilisation/admin"
+        "api/civilisation-admin"
     }
 
     fn jwt(&self) -> &str {
@@ -92,27 +90,23 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
             </>
         );
 
-        // let link = ctx.link().clone();
-        let on_toggle = Callback::from(move |_|
-            {
-                console_warn!("TOGGLE");
-                // link.send_message(GalaxyEvent::ToggleAdmin)
-            });
-
 
         html!(
             <>
 
-               <ToggleAdmin {on_toggle} />
-                <p>
-                    {self.host().clone().map(|h| h.to_string()).unwrap_or_default()}
-                </p>
-                <p>
-                    {timer}
-                </p>
-                <p>
-                    {components}
-                </p>
+               <ToggleAdmin >
+                <>
+                    <p>
+                        {self.host().clone().map(|h| h.to_string()).unwrap_or_default()}
+                    </p>
+                    <p>
+                        {timer}
+                    </p>
+                    <p>
+                        {components}
+                    </p>
+                </>
+               </ToggleAdmin>
             </>)
     }
 }
@@ -120,20 +114,24 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
 
 #[derive(Properties, PartialEq)]
 pub struct ToggleAdminProps {
-    pub on_toggle: Callback<String>,
+    pub children: Html,
 }
 #[component]
 fn ToggleAdmin(props: &ToggleAdminProps) -> Html {
 
-    let on_click = props.on_toggle.clone();
-    let onclick = Callback::from(move |_| {
-        console_warn!("BOB");
-        on_click.emit(String::from("Bob"));
-    });
+    let admin_open = use_state(|| false);
+
+    let onclick = {
+        let admin_open = admin_open.clone();
+        Callback::from(move |_| admin_open.set(!*admin_open))
+    };
 
     html! {
         <fieldset>
-         <div ondblclick={onclick}>{"toggle admin"}</div>
+             <button onclick={onclick}>{"toggle admin"}</button>
+            if *admin_open {
+                  {props.children.clone()}
+            }
         </fieldset>
     }
 }
