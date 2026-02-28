@@ -23,7 +23,7 @@ pub async fn mono_command(
     claim: AuthAccountClaim,
     model_id: &str,
 ) -> Result<(), String> {
-    let key = ModelKey::try_from(model_id).map_err(|_| "invalid id")?;
+    let key = ModelKey::try_from(model_id).map_err(|_| "mono_command : invalid id")?;
 
     let model = state_repository
         .get_model(&key)
@@ -34,9 +34,10 @@ pub async fn mono_command(
     dbg!(claim.claims.user());
     dbg!(claim.account_model_key);
 
-    if model.state().owner() != claim.claims.user() {
-        return Err("not your planet".to_string());
-    }
+    // FIXME w00t
+    // if model.state().owner() != claim.claims.user() {
+    //     return Err("not your planet".to_string());
+    // }
 
     let admin = state_admin_repository
         .get_model(model.state().planet_admin())
@@ -87,7 +88,9 @@ pub async fn stream_dto(
 ) -> Result<EventStream![], String> {
     let _ = get_jwt_claims(jwt)?; // TODO move into FromRequest
 
-    let key = ModelKey::try_from(model_id).map_err(|_| "invalid id")?;
+    dbg!(model_id);
+
+    let key = ModelKey::try_from(model_id).map_err(|_| "stream_dto : invalid id")?;
 
     let dto = repository
         .get_model(&key)

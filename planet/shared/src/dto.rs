@@ -6,6 +6,7 @@ use horfimbor_time::HfTimeConfiguration;
 use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 use std::ops::{Add, Sub};
 use uuid::Uuid;
 
@@ -17,6 +18,22 @@ pub enum Resource {
     Population,
     #[serde(rename = "s")]
     Steal,
+}
+
+impl Display for Resource {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Resource::Electricity => {
+                write!(f, "Electricity")
+            }
+            Resource::Population => {
+                write!(f, "Population")
+            }
+            Resource::Steal => {
+                write!(f, "Steal")
+            }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Default, Eq)]

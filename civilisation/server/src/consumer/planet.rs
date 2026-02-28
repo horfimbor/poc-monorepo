@@ -13,6 +13,7 @@ pub async fn handle_planet_public_event(
     account_repository: CivilisationRepository,
 ) -> anyhow::Result<()> {
     let e = PubPlanetEvent::NewOwner {
+        endpoint: "".to_string(),
         old_account_id: None,
         account_id: "".to_string(),
     };
@@ -52,6 +53,7 @@ pub async fn handle_planet_public_event(
             .context("cannot extract json")?;
 
         let PubPlanetEvent::NewOwner {
+            endpoint,
             old_account_id,
             account_id,
         } = json;
@@ -77,6 +79,7 @@ pub async fn handle_planet_public_event(
                     .try_into()
                     .context("cannot parse account_id")?,
                 CivilisationCommand::AddWorld(Component {
+                    endpoint,
                     balise: "horfimbor-planet-state".to_string(),
                     id: event.stream_id().to_string(),
                 }),

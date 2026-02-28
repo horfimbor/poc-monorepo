@@ -3,7 +3,7 @@ use horfimbor_client_derive::WebComponent;
 use horfimbor_jwt::{Claims, Role};
 use std::ops::Not;
 use weblog::{console_error, console_warn};
-use yew::{Callback, Component, Context, Html, Properties, html};
+use yew::{Callback, Component, Context, Html, Properties, html, component};
 
 #[derive(WebComponent)]
 #[component(GalaxyAuth)]
@@ -151,27 +151,24 @@ impl Component for GalaxyAuth {
             return content;
         }
 
-        let admin_content = if self.admin_open {
-            html! {
+        let admin_content =   html! {
+            <>
                 <LoadExternalComponent
                     endpoint={endpoint.clone()}
                     balise={"horfimbor-civilisation-admin"}
                     jwt={jwt.clone()}
                     id={""}
                 />
-            }
-        } else {
-            content
+            </>
         };
-
-        let link = ctx.link().clone();
-        let onclick = Callback::from(move |_| link.send_message(GalaxyEvent::ToggleAdmin));
+          
 
         html! {
-            <>
-            <button {onclick}>{"toggle admin"}</button>
-            {admin_content}
-            </>
+            <div>
+                {admin_content}
+                <hr/>
+                {content}
+            </div>
         }
     }
 }

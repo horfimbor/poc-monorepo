@@ -21,7 +21,7 @@ impl EventStoreProps for PlanetAdminProps {
     }
 
     fn path(&self) -> &str {
-        "api/planet/admin"
+        "api/planet-admin"
     }
 
     fn jwt(&self) -> &str {

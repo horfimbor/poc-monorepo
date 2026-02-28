@@ -15,6 +15,7 @@ use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use std::env;
 
 pub mod planet;
+mod admin;
 
 pub async fn start_server(
     event_store_db: Client,
@@ -61,6 +62,7 @@ pub async fn start_server(
         .manage(dto_redis)
         .manage(event_store_db)
         .mount("/", routes![redirect_index_js])
+        .mount("/api/planet-admin/", admin::routes())
         .mount("/api/planet", planet::routes())
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)

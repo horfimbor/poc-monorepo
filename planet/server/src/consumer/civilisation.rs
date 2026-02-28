@@ -67,7 +67,7 @@ pub async fn handle_account_public_event_for_planet(
                         &planet_id,
                         PlanetCommand::Shared(SharedPlanetCommand::Create {
                             account_id: event.stream_id().to_string(),
-                            admin_id,
+                            admin_id: admin_id.to_string(),
                         }),
                         Some(&metadata),
                     )

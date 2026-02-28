@@ -8,7 +8,9 @@ use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client::{EventStoreProps, LoadExternalComponent};
 use horfimbor_client_derive::WebComponent;
 use serde::Deserialize;
+use weblog::console_warn;
 use yew::prelude::*;
+
 
 type CivilisationAdmin =
     EventStoreState<CivilisationAdminState, CivilisationAdminEvent, CivilisationAdminProps>;
@@ -89,8 +91,19 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
                     jwt={props.jwt().to_owned()} />
             </>
         );
+
+        // let link = ctx.link().clone();
+        let on_toggle = Callback::from(move |_|
+            {
+                console_warn!("TOGGLE");
+                // link.send_message(GalaxyEvent::ToggleAdmin)
+            });
+
+
         html!(
             <>
+
+               <ToggleAdmin {on_toggle} />
                 <p>
                     {self.host().clone().map(|h| h.to_string()).unwrap_or_default()}
                 </p>
@@ -101,5 +114,26 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
                     {components}
                 </p>
             </>)
+    }
+}
+
+
+#[derive(Properties, PartialEq)]
+pub struct ToggleAdminProps {
+    pub on_toggle: Callback<String>,
+}
+#[component]
+fn ToggleAdmin(props: &ToggleAdminProps) -> Html {
+
+    let on_click = props.on_toggle.clone();
+    let onclick = Callback::from(move |_| {
+        console_warn!("BOB");
+        on_click.emit(String::from("Bob"));
+    });
+
+    html! {
+        <fieldset>
+         <div ondblclick={onclick}>{"toggle admin"}</div>
+        </fieldset>
     }
 }

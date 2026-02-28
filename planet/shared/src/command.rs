@@ -2,7 +2,6 @@
 use crate::PLANET_STATE_NAME;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::horfimbor_eventsource_derive::Command;
-use horfimbor_eventsource::model_key::ModelKey;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::{Command, CommandName};
 use horfimbor_time::HfTimeConfiguration;
@@ -15,7 +14,7 @@ use uuid::Uuid;
 pub enum SharedPlanetCommand {
     Create {
         account_id: String,
-        admin_id: ModelKey,
+        admin_id: String,
     },
     ChangeOwner {
         account_id: String,

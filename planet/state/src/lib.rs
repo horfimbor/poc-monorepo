@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use horfimbor_eventsource::horfimbor_eventsource_derive::{Command, Event, StateNamed};
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Command, CommandName, Event, EventName};
@@ -14,6 +14,7 @@ use planet_shared::event::SharedPlanetEvent::*;
 use public_mono::planet::PubPlanetEvent;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
 use uuid::Uuid;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed, Default)]
@@ -98,6 +99,7 @@ impl Dto for PlanetState {
             },
             PlanetEvent::Public(event) => match event {
                 PubPlanetEvent::NewOwner {
+                    endpoint: _,
                     old_account_id: _,
                     account_id,
                 } => {
@@ -122,7 +124,13 @@ impl State for PlanetState {
                         if model.is_err() {
                             return Err(InvalidOwner);
                         }
+
+                        let Ok(app_host) = env::var("APP_HOST")else{
+                            return Err(NoAppHost);
+                        };
+
                         Ok(vec![PlanetEvent::Public(PubPlanetEvent::NewOwner {
+                            endpoint: app_host,
                             old_account_id: Some(self.owner.to_string()),
                             account_id,
                         })])
@@ -136,10 +144,18 @@ impl State for PlanetState {
                         if model.is_err() {
                             return Err(InvalidOwner);
                         }
+                        let Ok(admin_id) = admin_id.as_str().try_into() else {
+                            return Err(InvalidAdminId);
+                        };
+
+                        let Ok(app_host) = env::var("APP_HOST")else{
+                            return Err(NoAppHost);
+                        };
 
                         Ok(vec![
                             PlanetEvent::Private(PrvPlanetEvent::PlanetAdminSet(admin_id)),
                             PlanetEvent::Public(PubPlanetEvent::NewOwner {
+                                endpoint: app_host,
                                 old_account_id: None,
                                 account_id,
                             }),

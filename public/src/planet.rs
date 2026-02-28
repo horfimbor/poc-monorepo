@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PubPlanetEvent {
     NewOwner {
+        endpoint: String,
         old_account_id: Option<String>,
         account_id: String,
     },

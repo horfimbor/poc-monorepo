@@ -42,6 +42,7 @@ impl AddEvent<SharedCivilisationEvent, CivilisationProps> for CivilisationDto {
     }
 
     fn get_view(&self, props: CivilisationProps) -> Html {
+
         let world_part = html!(
             <>{
                 self.worlds().iter().map(|world|{
@@ -49,7 +50,7 @@ impl AddEvent<SharedCivilisationEvent, CivilisationProps> for CivilisationDto {
                     <>
                         <fieldset>
                             <LoadExternalComponent
-                                endpoint={"http://mono.localhost:8001"}
+                                endpoint={world.endpoint.clone()}
                             balise={world.balise.clone()}
                             jwt={props.jwt().to_owned()}
                             id={world.id.clone()}
@@ -64,7 +65,7 @@ impl AddEvent<SharedCivilisationEvent, CivilisationProps> for CivilisationDto {
         html! {
             <>
                 <NationDisplay
-                    endpoint={props.endpoint.clone()}
+                    endpoint={props.endpoint}
                     jwt={props.jwt.clone()}
                     nation={self.nation().clone()} />
                 <hr/>
