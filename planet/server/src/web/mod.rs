@@ -14,8 +14,8 @@ use rocket::response::content::RawHtml;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use std::env;
 
-pub mod planet;
 mod admin;
+pub mod planet;
 
 pub async fn start_server(
     event_store_db: Client,

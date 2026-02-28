@@ -42,7 +42,6 @@ impl AddEvent<SharedCivilisationEvent, CivilisationProps> for CivilisationDto {
     }
 
     fn get_view(&self, props: CivilisationProps) -> Html {
-
         let world_part = html!(
             <>{
                 self.worlds().iter().map(|world|{

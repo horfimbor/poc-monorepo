@@ -27,10 +27,6 @@ pub enum SharedPlanetCommand {
         key: Uuid,
         time_config: Option<HfTimeConfiguration>,
     },
-    FinnishConstruction {
-        key: Uuid,
-        time_config: Option<HfTimeConfiguration>,
-    },
     DestroyConstruction {
         key: Uuid,
         time_config: Option<HfTimeConfiguration>,

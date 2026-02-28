@@ -57,12 +57,6 @@ pub async fn mono_command(
                 time_config: admin.state().time(),
             }
         }
-        SharedPlanetCommand::FinnishConstruction { key, .. } => {
-            SharedPlanetCommand::FinnishConstruction {
-                key,
-                time_config: admin.state().time(),
-            }
-        }
         SharedPlanetCommand::DestroyConstruction { key, .. } => {
             SharedPlanetCommand::DestroyConstruction {
                 key,

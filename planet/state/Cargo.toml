@@ -7,6 +7,7 @@ edition = "2024"
 
 [dependencies]
 horfimbor-eventsource.workspace = true
+horfimbor-time.workspace = true
 serde.workspace = true
 planet-shared = { path = "../shared", features = ["server"] }
 public-mono = {path = "../../public", features = ["server"]}

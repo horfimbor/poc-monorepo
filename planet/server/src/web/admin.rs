@@ -1,17 +1,16 @@
-
+use crate::PlanetAdminRepository;
+use crate::web::get_jwt_claims;
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
-use public_mono::planet::{ UUID_ADMIN_V8_KIND, PLANET_ADMIN_STREAM};
+use planet_admin::{PlanetAdminCommand, PlanetAdminEvent};
+use public_mono::planet::{PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
 use url::Url;
-use planet_admin::{PlanetAdminCommand, PlanetAdminEvent};
-use crate::PlanetAdminRepository;
-use crate::web::{get_jwt_claims};
 
 pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]
@@ -40,7 +39,7 @@ pub async fn admin_command(
 
     todo!("add security before enabling this");
 
-        Ok(())
+    Ok(())
 }
 #[get("/<jwt>")]
 pub async fn stream_admin(
@@ -51,11 +50,7 @@ pub async fn stream_admin(
     let _claims = get_jwt_claims(jwt)?;
 
     // FIXME
-    let key = ModelKey::new_uuid_v8(
-            PLANET_ADMIN_STREAM,
-            UUID_ADMIN_V8_KIND,
-            "localhost",
-        );
+    let key = ModelKey::new_uuid_v8(PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND, "localhost");
 
     let dto = state_repository
         .get_model(&key)

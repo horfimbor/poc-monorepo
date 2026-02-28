@@ -8,6 +8,9 @@ you can find what this repo must be doing in [game-rules](doc/game-rules.md)
 
 ## development : 
 
+
+**TODO replace String props by AttrValue !!**
+
 install [Rust](https://rustup.rs/)
 
 if you don't have the db installed :

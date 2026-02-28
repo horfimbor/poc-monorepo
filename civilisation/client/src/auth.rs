@@ -1,9 +1,9 @@
+use chrono::Utc;
 use horfimbor_client::LoadExternalComponent;
 use horfimbor_client_derive::WebComponent;
 use horfimbor_jwt::{Claims, Role};
 use std::ops::Not;
-use chrono::Utc;
-use weblog::{console_warn};
+use weblog::console_warn;
 use yew::{Component, Context, Html, Properties, html};
 
 #[derive(WebComponent)]
@@ -88,7 +88,6 @@ impl Component for GalaxyAuth {
                 };
             };
             if pathname != format!("/{account_name}") {
-
                 match location.set_href(&account_name) {
                     Ok(_) => {}
                     Err(e) => {
@@ -107,19 +106,16 @@ impl Component for GalaxyAuth {
 
         let endpoint = ctx.props().endpoint.clone();
         let Ok(Some(jwt)) = local_storage.get_item(&account_name) else {
-
             console_warn!("wrong jwt");
             return login_needed;
         };
 
-        let Ok(claims) = Claims::from_jwt_insecure(&jwt)else{
-
+        let Ok(claims) = Claims::from_jwt_insecure(&jwt) else {
             console_warn!("invalid claims");
             return login_needed;
         };
 
         if Utc::now().timestamp() > claims.expiration_at() as i64 {
-
             console_warn!("token expired");
             return login_needed;
         }

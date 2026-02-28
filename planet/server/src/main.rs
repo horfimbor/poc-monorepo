@@ -5,6 +5,7 @@ mod web;
 extern crate rocket;
 
 use crate::consumer::civilisation_admin::handle_service_planet_added;
+use crate::consumer::planet::handle_planet_start_building;
 use anyhow::{Context, Result, anyhow, bail};
 use clap::{Parser, Subcommand, ValueEnum};
 use consumer::civilisation::handle_account_public_event_for_planet;
@@ -36,6 +37,7 @@ enum Service {
     PlanetOwnerChange,
     AccountCreatedForPlanet,
     AdminServicePlanetAdded,
+    PlanetStartConstruction,
 }
 
 mod built_info {
@@ -118,7 +120,7 @@ async fn main() -> Result<()> {
                 services.push(
                     handle_account_public_event_for_planet(
                         event_store_db.clone(),
-                        repo_planet_state,
+                        repo_planet_state.clone(),
                         app_host.clone(),
                     )
                     .boxed(),
@@ -127,8 +129,22 @@ async fn main() -> Result<()> {
 
             if list.is_empty() || list.contains(&Service::AdminServicePlanetAdded) {
                 services.push(
-                    handle_service_planet_added(event_store_db, repo_planet_admin, app_host)
-                        .boxed(),
+                    handle_service_planet_added(
+                        event_store_db.clone(),
+                        repo_planet_admin.clone(),
+                        app_host,
+                    )
+                    .boxed(),
+                );
+            }
+            if list.is_empty() || list.contains(&Service::PlanetStartConstruction) {
+                services.push(
+                    handle_planet_start_building(
+                        event_store_db,
+                        repo_planet_state,
+                        repo_planet_admin,
+                    )
+                    .boxed(),
                 );
             }
 

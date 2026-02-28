@@ -90,7 +90,6 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
             </>
         );
 
-
         html!(
             <>
 
@@ -111,14 +110,12 @@ impl AddEvent<CivilisationAdminEvent, CivilisationAdminProps> for CivilisationAd
     }
 }
 
-
 #[derive(Properties, PartialEq)]
 pub struct ToggleAdminProps {
     pub children: Html,
 }
 #[component]
 fn ToggleAdmin(props: &ToggleAdminProps) -> Html {
-
     let admin_open = use_state(|| false);
 
     let onclick = {
