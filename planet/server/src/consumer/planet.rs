@@ -62,55 +62,52 @@ pub async fn handle_planet_start_building(
         let model_key =
             ModelKey::try_from(event.stream_id()).context("cannot convert streamId to ModelKey")?;
 
-        match json {
-            SharedPlanetEvent::UpdateConstruction { key, .. } => {
-                let planet_repository = planet_repository.clone();
-                let state_admin_repository = state_admin_repository.clone();
+        if let SharedPlanetEvent::UpdateConstruction { key, .. } = json {
+            let planet_repository = planet_repository.clone();
+            let state_admin_repository = state_admin_repository.clone();
 
-                tokio::spawn(async move {
-                    let model = planet_repository
-                        .clone()
-                        .get_model(&model_key)
-                        .await
-                        .context("cannot get model")?;
+            tokio::spawn(async move {
+                let model = planet_repository
+                    .clone()
+                    .get_model(&model_key)
+                    .await
+                    .context("cannot get model")?;
 
-                    let admin_model = state_admin_repository
-                        .clone()
-                        .get_model(model.state().planet_admin())
-                        .await
-                        .context("cannot get admin model")?;
+                let admin_model = state_admin_repository
+                    .clone()
+                    .get_model(model.state().planet_admin())
+                    .await
+                    .context("cannot get admin model")?;
 
-                    let now = SystemTime::now();
-                    let epoch = now
-                        .duration_since(UNIX_EPOCH)
-                        .context("cannot get timestamp")?
-                        .as_secs();
+                let now = SystemTime::now();
+                let epoch = now
+                    .duration_since(UNIX_EPOCH)
+                    .context("cannot get timestamp")?
+                    .as_secs();
 
-                    let to_wait = 10;
-                    // TODO compute duration
-                    dbg!(to_wait);
-                    if to_wait > 0 {
-                        sleep(Duration::from_secs(1) * to_wait as u32).await;
-                    }
+                let to_wait = 10;
+                // TODO compute duration
+                dbg!(to_wait);
+                if to_wait > 0 {
+                    sleep(Duration::from_secs(1) * to_wait as u32).await;
+                }
 
-                    let s = planet_repository
-                        .add_command(
-                            &model_key,
-                            PlanetCommand::Private(FinnishConstruction {
-                                key,
-                                time_config: admin_model.state().time(),
-                            }),
-                            None,
-                        )
-                        .await
-                        .context("cannot add command")?;
+                let s = planet_repository
+                    .add_command(
+                        &model_key,
+                        PlanetCommand::Private(FinnishConstruction {
+                            key,
+                            time_config: admin_model.state().time(),
+                        }),
+                        None,
+                    )
+                    .await
+                    .context("cannot add command")?;
 
-                    dbg!(s);
+                dbg!(s);
 
-                    Ok::<(), Error>(())
-                });
-            }
-            _ => {}
+                Ok::<(), Error>(())
+            });
         }
 
         sub.ack(&rcv_event).await.context("cannot ack")?;

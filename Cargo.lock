@@ -2055,6 +2055,7 @@ checksum = "1689b939ee35e3a075b0834b5672efd43aec8a6e81a1c6002b76a5ca2f211ae0"
 dependencies = [
  "implicit-clone-derive",
  "indexmap",
+ "serde",
 ]
 
 [[package]]
@@ -2525,6 +2526,7 @@ dependencies = [
  "reqwasm",
  "serde",
  "serde_json",
+ "uuid",
  "wasm-bindgen",
  "web-sys",
  "weblog",

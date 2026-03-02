@@ -9,7 +9,7 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 horfimbor-client-derive.workspace = true
 horfimbor-client.workspace = true
-yew = { version= "0.22", features=["csr"] }
+yew = { version= "0.22", features=["csr", "serde"] }
 custom-elements = "0.2"
 planet-shared = { path = "../shared" }
 planet-admin = { path = "../admin" }
@@ -25,6 +25,7 @@ rand = "0.10"
 
 # getrandom is used even by rand in wasm so it's marked as unused
 getrandom = { version = "0.4", features = ["wasm_js"] }
+uuid = { version = "1.21.0", features = ["v4"] }
 
 [dependencies.web-sys]
 features = ["HtmlInputElement", "InputEvent"]

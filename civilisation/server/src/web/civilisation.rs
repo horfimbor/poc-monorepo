@@ -1,7 +1,6 @@
 use crate::CivilisationRepository;
 use crate::web::{AuthAccountClaim, get_jwt_claims};
 use civilisation_shared::command::CivilisationCommand;
-use civilisation_shared::event::CivilisationEvent;
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
@@ -11,6 +10,7 @@ use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
+use civilisation_state::CivilisationEvent;
 
 pub fn routes() -> Vec<Route> {
     routes![mono_command, stream_dto]

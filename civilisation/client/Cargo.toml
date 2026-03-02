@@ -12,7 +12,7 @@ horfimbor-client.workspace = true
 horfimbor-jwt = { path = "../../../horfimbor-engine/horfimbor-jwt", features = ["client"] }
 horfimbor-time = { path = "../../../horfimbor-engine/horfimbor-time"}
 chrono = { version = "0.4", default-features = false }
-yew = { version= "0.22", features=["csr"] }
+yew = { version= "0.22", features=["csr", "serde"] }
 custom-elements = "0.2"
 civilisation-shared = { path = "../shared" }
 civilisation-admin = { path = "../admin" }

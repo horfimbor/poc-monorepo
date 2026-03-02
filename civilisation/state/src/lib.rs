@@ -2,11 +2,11 @@ use civilisation_shared::CIVILISATION_STATE_NAME;
 use civilisation_shared::command::CivilisationCommand;
 use civilisation_shared::dto::CivilisationDto;
 use civilisation_shared::error::CivilisationError;
-use civilisation_shared::event::{CivilisationEvent, SharedCivilisationEvent};
+use civilisation_shared::event::{SharedCivilisationEvent};
 use garde::Validate;
-use horfimbor_eventsource::horfimbor_eventsource_derive::StateNamed;
+use horfimbor_eventsource::horfimbor_eventsource_derive::{Event, StateNamed};
 use horfimbor_eventsource::model_key::ModelKey;
-use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
+use horfimbor_eventsource::{Dto, State, StateName, StateNamed, Event, EventName};
 use public_mono::civilisation::PubCivilisationEvent;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -36,6 +36,25 @@ impl CivilisationState {
         &self.shared
     }
 }
+
+#[derive(Event)]
+#[state(CIVILISATION_STATE_NAME)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum PrvCivilisationEvent {
+    NothingYet,
+}
+
+
+#[derive(Event)]
+#[composite_state]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(untagged)]
+pub enum CivilisationEvent {
+    Private(PrvCivilisationEvent),
+    Shared(SharedCivilisationEvent),
+    Public(PubCivilisationEvent),
+}
+
 
 impl Dto for CivilisationState {
     type Event = CivilisationEvent;

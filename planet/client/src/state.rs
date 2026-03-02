@@ -6,9 +6,10 @@ use planet_shared::command::SharedPlanetCommand;
 use planet_shared::dto::PlanetDto;
 use planet_shared::event::SharedPlanetEvent;
 use serde::Deserialize;
+use uuid::Uuid;
 use wasm_bindgen::JsCast;
 use web_sys::{EventTarget, HtmlElement};
-use weblog::{console_debug, console_error, console_info, console_warn};
+use weblog::{console_debug, console_error, console_info};
 use yew::platform::spawn_local;
 use yew::prelude::*;
 
@@ -55,11 +56,14 @@ impl AddEvent<SharedPlanetEvent, PlanetStateProps> for PlanetDto {
             let target: Option<EventTarget> = e.target();
             let input = target.and_then(|t| t.dyn_into::<HtmlElement>().ok());
             if let Some(input) = input {
-                console_info!(input.id());
+                let Ok(key) = input.id().parse::<Uuid>() else {
+                    console_error!("cannot parse uuid");
+                    return;
+                };
                 let props = props.clone();
                 spawn_local(async move {
                     let cmd = SharedPlanetCommand::StartConstruction {
-                        key: input.id().parse().unwrap(),
+                        key,
                         time_config: None,
                     };
                     match send_command(&cmd, props.clone()).await {
