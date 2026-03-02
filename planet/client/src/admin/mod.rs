@@ -11,8 +11,8 @@ type PlanetAdmin = EventStoreState<PlanetAdminState, PlanetAdminEvent, PlanetAdm
 #[component(PlanetAdmin)]
 #[derive(Default, Properties, PartialEq, Deserialize, Clone)]
 pub struct PlanetAdminProps {
-    pub endpoint: String,
-    pub jwt: String,
+    pub endpoint: AttrValue,
+    pub jwt: AttrValue,
 }
 
 impl EventStoreProps for PlanetAdminProps {

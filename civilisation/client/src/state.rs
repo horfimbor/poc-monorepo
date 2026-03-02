@@ -14,8 +14,8 @@ type CivilisationState =
 #[component(CivilisationState)]
 #[derive(Default, Properties, PartialEq, Deserialize, Clone)]
 pub struct CivilisationProps {
-    pub endpoint: String,
-    pub jwt: String,
+    pub endpoint: AttrValue,
+    pub jwt: AttrValue,
 }
 
 impl EventStoreProps for CivilisationProps {

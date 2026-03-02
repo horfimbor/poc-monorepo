@@ -4,18 +4,18 @@ use horfimbor_client_derive::WebComponent;
 use horfimbor_jwt::{Claims, Role};
 use std::ops::Not;
 use weblog::console_warn;
-use yew::{Component, Context, Html, Properties, html};
+use yew::{Component, Context, Html, Properties, html, AttrValue};
 
 #[derive(WebComponent)]
 #[component(GalaxyAuth)]
 #[derive(Default, Properties, PartialEq)]
 pub struct AuthProps {
-    endpoint: String,
-    auth_endpoint: String,
+    endpoint: AttrValue,
+    auth_endpoint: AttrValue,
     #[optionnal]
-    jwt: Option<String>,
+    jwt: Option<AttrValue>,
     #[optionnal]
-    account_name: Option<String>,
+    account_name: Option<AttrValue>,
 }
 
 pub struct GalaxyAuth {}

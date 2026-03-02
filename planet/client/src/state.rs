@@ -19,9 +19,9 @@ type PlanetState = EventStoreState<PlanetDto, SharedPlanetEvent, PlanetStateProp
 #[component(PlanetState)]
 #[derive(Default, Properties, PartialEq, Deserialize, Clone)]
 pub struct PlanetStateProps {
-    pub endpoint: String,
-    pub jwt: String,
-    pub id: String,
+    pub endpoint: AttrValue,
+    pub jwt: AttrValue,
+    pub id: AttrValue,
 }
 
 impl EventStoreProps for PlanetStateProps {

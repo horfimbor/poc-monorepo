@@ -12,8 +12,8 @@ use yew::prelude::*;
 
 #[derive(Default, Properties, PartialEq, Deserialize, Clone)]
 pub struct NationProps {
-    pub endpoint: String,
-    pub jwt: String,
+    pub endpoint: AttrValue,
+    pub jwt: AttrValue,
     pub nation: Option<Nation>,
 }
 
@@ -51,8 +51,8 @@ pub fn display_nation(props: &NationProps) -> Html {
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct NationData {
-    pub endpoint: String,
-    pub jwt: String,
+    pub endpoint: AttrValue,
+    pub jwt: AttrValue,
     pub edit_mode: bool,
     pub edit_nation: Nation,
 }

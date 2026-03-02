@@ -17,8 +17,8 @@ type CivilisationAdmin =
 #[component(CivilisationAdmin)]
 #[derive(Default, Properties, PartialEq, Deserialize, Clone)]
 pub struct CivilisationAdminProps {
-    pub endpoint: String,
-    pub jwt: String,
+    pub endpoint: AttrValue,
+    pub jwt: AttrValue,
 }
 
 impl EventStoreProps for CivilisationAdminProps {
