@@ -17,13 +17,6 @@ pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]
 }
 
-fn get_application_key(config: &AuthConfig) -> ModelKey {
-    ModelKey::new_uuid_v8(
-        MONO_CIVILISATION_ADMIN_STREAM,
-        UUID_ADMIN_V8_KIND,
-        &config.app_host,
-    )
-}
 
 #[post("/", format = "json", data = "<command>")]
 pub async fn admin_command(
@@ -32,7 +25,7 @@ pub async fn admin_command(
     _claim: AuthAccountAdminClaim,
     auth_config: &State<AuthConfig>,
 ) -> Result<(), String> {
-    let key = get_application_key(auth_config);
+    let key = auth_config.get_application_key();
     state_repository
         .add_command(&key, command.0, None)
         .await
@@ -49,18 +42,16 @@ pub async fn stream_admin(
 ) -> Result<EventStream![], String> {
     let _claims = get_jwt_claims(jwt)?;
 
-    let key = get_application_key(auth_config);
+    let key = auth_config.get_application_key();
 
     let dto = state_repository
         .get_model(&key)
         .await
         .map_err(|_| "cannot find the admin dto".to_string())?;
 
-    let host = Url::parse(&auth_config.app_host).map_err(|_| "cannot parse app_host")?;
-
     if dto.position().is_none() {
         state_repository
-            .add_command(&key, CreateServer(host), None)
+            .add_command(&key, CreateServer(auth_config.app_host.clone()), None)
             .await
             .map_err(|e| e.to_string())?;
     }

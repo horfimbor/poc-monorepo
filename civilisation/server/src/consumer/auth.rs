@@ -1,4 +1,4 @@
-use crate::CivilisationRepository;
+use crate::{CivilisationAdminRepository, CivilisationRepository};
 use anyhow::{Context, anyhow};
 use civilisation_shared::command::CivilisationCommand;
 use horfimbor_eventsource::helper::create_subscription;
@@ -9,11 +9,15 @@ use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use public_account_event::PubAccountEvent;
 use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
 use std::env;
+use horfimbor_eventsource::repository::Repository;
 use url::Url;
+use crate::web::AuthConfig;
 
 pub async fn handle_account_public_event(
     event_store_db: Client,
     repository: CivilisationRepository,
+    admin_repository: CivilisationAdminRepository,
+    auth_config: AuthConfig,
 ) -> anyhow::Result<()> {
     let current_app_id = env::var("APP_ID").map_err(|_| anyhow!("APP_ID is missing"))?;
     let app_host = env::var("APP_HOST").map_err(|_| anyhow!("APP_HOST is missing"))?;
@@ -60,6 +64,8 @@ pub async fn handle_account_public_event(
             .as_json::<PubAccountEvent>()
             .context("cannot extract json")?;
 
+        let admin_id = auth_config.get_application_key();
+
         if let PubAccountEvent::AccountCreated {
             user_id,
             app_id,
@@ -67,23 +73,28 @@ pub async fn handle_account_public_event(
         } = json
             && current_app_id == app_id.to_string()
         {
-            let key =
-                ModelKey::new_uuid_v8(MONO_CIVILISATION_STREAM, UUID_V8_KIND, event.stream_id());
-            repository
-                .add_command(
-                    &key,
-                    CivilisationCommand::Create {
-                        name,
-                        owner: user_id.to_string(),
-                        game_host: game_host.clone(),
-                    },
-                    Some(&metadata),
-                )
-                .await
-                .context("cannot create account")?;
-        };
 
-        // todo!("check app id and then create the account");
+            let admin_model = admin_repository.get_model(&admin_id).await.context("cannot load admin model")?;
+
+            if let Some(time) = admin_model.state().time() {
+                let key =
+                    ModelKey::new_uuid_v8(MONO_CIVILISATION_STREAM, UUID_V8_KIND, event.stream_id());
+                repository
+                    .add_command(
+                        &key,
+                        CivilisationCommand::Create {
+                            name,
+                            owner: user_id.to_string(),
+                            game_host: game_host.clone(),
+                            time
+                        },
+                        Some(&metadata),
+                    )
+                    .await
+                    .context("cannot create account")?;
+            };
+        }
+
         sub.ack(&rcv_event).await.context("cannot ack")?;
     }
 }

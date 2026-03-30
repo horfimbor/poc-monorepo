@@ -9,23 +9,23 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 horfimbor-client-derive.workspace = true
 horfimbor-client.workspace = true
-yew = { version= "0.22", features=["csr", "serde"] }
+yew = { version= "0.23", features=["csr", "serde"] }
 custom-elements = "0.2"
 planet-shared = { path = "../shared" }
 planet-admin = { path = "../admin" }
 
-gloo-net = "0.6"
+gloo-net = "0.7"
 reqwasm = "0.5"
 weblog = "0.3"
 wasm-bindgen = "0.2"
 serde.workspace = true
 serde_json.workspace = true
-futures = "0.3.28"
+futures = "0.3"
 rand = "0.10"
 
 # getrandom is used even by rand in wasm so it's marked as unused
 getrandom = { version = "0.4", features = ["wasm_js"] }
-uuid = { version = "1.21.0", features = ["v4"] }
+uuid = { version = "1.23", features = ["v4"] }
 
 [dependencies.web-sys]
 features = ["HtmlInputElement", "InputEvent"]

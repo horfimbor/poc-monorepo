@@ -12,6 +12,7 @@ thiserror.workspace = true
 public-mono = {path = "../../public" }
 garde.workspace = true
 url.workspace = true
+horfimbor-time.workspace = true
 
 [features]
 server = ["horfimbor-eventsource", "public-mono/server"]

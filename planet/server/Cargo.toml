@@ -28,7 +28,7 @@ serde_json.workspace = true
 anyhow.workspace = true
 chrono.workspace = true
 dotenvy.workspace = true
-tokio = "1.43"
+tokio = "1.50"
 signal-hook-tokio = { version = "0.4", features = ["futures-v0_3"] }
 signal-hook = "0.4"
 futures = "0.3"

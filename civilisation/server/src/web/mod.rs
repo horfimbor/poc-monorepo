@@ -4,7 +4,7 @@ use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_jwt::{Claims, Role};
 use kurrentdb::Client;
-use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
+use public_mono::civilisation::{MONO_CIVILISATION_ADMIN_STREAM, MONO_CIVILISATION_STREAM, UUID_ADMIN_V8_KIND, UUID_V8_KIND};
 use redis::Client as RedisClient;
 use rocket::Request;
 use rocket::fs::{FileServer, relative};
@@ -14,6 +14,7 @@ use rocket::response::content::RawHtml;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use rocket_dyn_templates::Template;
 use std::env;
+use url::Url;
 
 pub mod admin;
 mod base;
@@ -24,21 +25,14 @@ pub async fn start_server(
     civilisation_repo: CivilisationRepository,
     civilisation_admin_repo: CivilisationAdminRepository,
     dto_redis: RedisClient,
-    auth_port: Option<u16>,
+    auth_config: AuthConfig
 ) -> Result<(), Error> {
-    let app_host = env::var("APP_HOST").context("APP_HOST is not defined")?;
-    let app_key = env::var("APP_KEY").context("APP_KEY is not defined")?;
-    let auth_host = env::var("AUTH_HOST").context("AUTH_HOST is not defined")?;
-    let auth_callback_host =
-        env::var("AUTH_CALLBACK_HOST").context("AUTH_CALLBACK_HOST is not defined")?;
-    let auth_config = AuthConfig {
-        app_host: app_host.clone(),
-        app_key,
-        auth_host,
-        auth_callback_host,
-    };
 
-    let allowed_origins = AllowedOrigins::some_exact(&[app_host]);
+    let app_port = auth_config.app_host.port();
+
+    dbg!(app_port);
+
+    let allowed_origins = AllowedOrigins::some_exact(&[auth_config.app_host.to_string()]);
 
     let cors = rocket_cors::CorsOptions {
         allowed_origins,
@@ -54,7 +48,7 @@ pub async fn start_server(
     .context("fail to create cors")?;
 
     let figment = rocket::Config::figment()
-        .merge(("port", auth_port))
+        .merge(("port", app_port))
         .merge(("address", "0.0.0.0"))
         .merge(("template_dir", "civilisation/server/templates"));
     let _rocket = rocket::custom(figment)
@@ -86,12 +80,22 @@ fn general_not_found() -> RawHtml<&'static str> {
     )
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AuthConfig {
-    app_host: String,
-    app_key: String,
-    auth_host: String,
-    auth_callback_host: String,
+    pub app_host: Url,
+    pub app_key: String,
+    pub auth_host: Url,
+    pub auth_callback_host: Url,
+}
+
+impl AuthConfig {
+    pub fn get_application_key(&self) -> ModelKey {
+        ModelKey::new_uuid_v8(
+            MONO_CIVILISATION_ADMIN_STREAM,
+            UUID_ADMIN_V8_KIND,
+            &self.app_host.to_string(),
+        )
+    }
 }
 
 fn get_jwt_claims(token: &str) -> Result<Claims, String> {

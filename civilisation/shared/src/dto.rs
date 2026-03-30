@@ -1,8 +1,8 @@
-#[cfg(feature = "server")]
-use horfimbor_eventsource::Dto;
-
 use crate::Nation;
 use crate::event::SharedCivilisationEvent;
+#[cfg(feature = "server")]
+use horfimbor_eventsource::Dto;
+use horfimbor_time::HfTimeConfiguration;
 use public_mono::Component;
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 pub struct CivilisationDto {
     nation: Option<Nation>,
     worlds: Vec<Component>,
+    time: Option<HfTimeConfiguration>,
 }
 
 impl CivilisationDto {
@@ -20,6 +21,9 @@ impl CivilisationDto {
             }
             SharedCivilisationEvent::WorldAdded(world) => self.worlds.push(world.clone()),
             SharedCivilisationEvent::WorldRemoved(id) => self.worlds.retain(|w| !w.id.eq(id)),
+            SharedCivilisationEvent::SetTime(config) => {
+                self.time = Some(*config)
+            }
         }
     }
 
@@ -31,6 +35,11 @@ impl CivilisationDto {
     #[must_use]
     pub fn worlds(&self) -> &Vec<Component> {
         &self.worlds
+    }
+
+    #[must_use]
+    pub fn time(&self) -> Option<HfTimeConfiguration> {
+        self.time
     }
 }
 

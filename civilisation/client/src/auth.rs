@@ -4,7 +4,7 @@ use horfimbor_client_derive::WebComponent;
 use horfimbor_jwt::{Claims, Role};
 use std::ops::Not;
 use weblog::console_warn;
-use yew::{Component, Context, Html, Properties, html, AttrValue};
+use yew::{AttrValue, Component, Context, Html, Properties, html};
 
 #[derive(WebComponent)]
 #[component(GalaxyAuth)]

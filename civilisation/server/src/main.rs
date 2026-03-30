@@ -19,6 +19,7 @@ use signal_hook::consts::signal::*;
 use signal_hook_tokio::Signals;
 use std::env;
 use url::Url;
+use crate::web::AuthConfig;
 
 type CivilisationStateCache = StateDb<CivilisationState>;
 type CivilisationRepository = StateRepository<CivilisationState, CivilisationStateCache>;
@@ -72,8 +73,7 @@ async fn main() -> Result<()> {
         dotenvy::dotenv().context("cannot get env")?;
     }
 
-    let app_host = Url::parse(&env::var("APP_HOST").context("fail to get APP_HOST env var")?)
-        .context("cannot parse APP_HOST as url")?;
+
 
     let settings = env::var("EVENTSTORE_URI")
         .context("fail to get EVENTSTORE_URI env var")?
@@ -96,6 +96,22 @@ async fn main() -> Result<()> {
         CivilisationAdminStateCache::new(redis_client.clone()),
     );
 
+    let app_host = Url::parse(&env::var("APP_HOST").context("fail to get APP_HOST env var")?)
+        .context("cannot parse APP_HOST as url")?;
+    let app_key = env::var("APP_KEY").context("APP_KEY is not defined")?;
+
+    let auth_host = Url::parse(&env::var("AUTH_HOST").context("AUTH_HOST is not defined")?).context("cannot parse AUTH_HOST as url")?;
+
+    let auth_callback_host =
+        Url::parse(&env::var("AUTH_CALLBACK_HOST").context("AUTH_CALLBACK_HOST is not defined")?).context("cannot parse AUTH_CALLBACK_HOST as url")?;
+
+    let auth_config = AuthConfig {
+        app_host: app_host.clone(),
+        app_key,
+        auth_host,
+        auth_callback_host,
+    };
+
     match args.command {
         Command::Service { list } => {
             let mut services = Vec::new();
@@ -107,7 +123,7 @@ async fn main() -> Result<()> {
                         repo_civilisation_state.clone(),
                         repo_civilisation_admin_state.clone(),
                         redis_client.clone(),
-                        app_host.port(),
+                        auth_config.clone(),
                     )
                     .boxed(),
                 );
@@ -118,6 +134,8 @@ async fn main() -> Result<()> {
                     handle_account_public_event(
                         event_store_db.clone(),
                         repo_civilisation_state.clone(),
+                        repo_civilisation_admin_state.clone(),
+                        auth_config
                     )
                     .boxed(),
                 );

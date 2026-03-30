@@ -2,11 +2,11 @@ use civilisation_shared::CIVILISATION_STATE_NAME;
 use civilisation_shared::command::CivilisationCommand;
 use civilisation_shared::dto::CivilisationDto;
 use civilisation_shared::error::CivilisationError;
-use civilisation_shared::event::{SharedCivilisationEvent};
+use civilisation_shared::event::SharedCivilisationEvent;
 use garde::Validate;
 use horfimbor_eventsource::horfimbor_eventsource_derive::{Event, StateNamed};
 use horfimbor_eventsource::model_key::ModelKey;
-use horfimbor_eventsource::{Dto, State, StateName, StateNamed, Event, EventName};
+use horfimbor_eventsource::{Dto, Event, EventName, State, StateName, StateNamed};
 use public_mono::civilisation::PubCivilisationEvent;
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -44,7 +44,6 @@ pub enum PrvCivilisationEvent {
     NothingYet,
 }
 
-
 #[derive(Event)]
 #[composite_state]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -54,7 +53,6 @@ pub enum CivilisationEvent {
     Shared(SharedCivilisationEvent),
     Public(PubCivilisationEvent),
 }
-
 
 impl Dto for CivilisationState {
     type Event = CivilisationEvent;
@@ -91,6 +89,7 @@ impl State for CivilisationState {
                 name,
                 owner,
                 game_host,
+                time
             } => {
                 let model: Result<ModelKey, _> = owner.as_str().try_into();
 
@@ -110,8 +109,9 @@ impl State for CivilisationState {
                         game_host,
                         name,
                         owner,
-                    },
-                )])
+                    }
+                ),
+                CivilisationEvent::Shared(SharedCivilisationEvent::SetTime(time))])
             }
             CivilisationCommand::UpdateNation(nation) => {
                 if let Err(e) = nation.validate() {

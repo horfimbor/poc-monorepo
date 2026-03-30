@@ -31,6 +31,7 @@ pub async fn index(host: &State<AuthConfig>) -> Template {
 fn get_wasm_key(host: &State<AuthConfig>) -> String {
     host.app_host
         .clone()
+        .to_string()
         .chars()
         .filter(|&c| c.is_alphanumeric())
         .collect()

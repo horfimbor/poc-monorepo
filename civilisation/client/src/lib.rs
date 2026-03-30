@@ -1,5 +1,6 @@
 mod admin;
 mod auth;
+mod clock;
 mod nation;
 mod state;
 

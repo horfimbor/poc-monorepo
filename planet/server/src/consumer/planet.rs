@@ -38,7 +38,7 @@ pub async fn handle_planet_start_building(
         .context("cannot subscribe")?;
 
     let planet_repository = planet_repository.clone();
-    let state_admin_repository = state_admin_repository.clone();
+    let planet_admin_repository = state_admin_repository.clone();
     loop {
         let rcv_event = sub.next().await.context("cannot get next event")?;
 
@@ -64,7 +64,7 @@ pub async fn handle_planet_start_building(
 
         if let SharedPlanetEvent::UpdateConstruction { key, .. } = json {
             let planet_repository = planet_repository.clone();
-            let state_admin_repository = state_admin_repository.clone();
+            let planet_admin_repository = planet_admin_repository.clone();
 
             tokio::spawn(async move {
                 let model = planet_repository
@@ -73,7 +73,7 @@ pub async fn handle_planet_start_building(
                     .await
                     .context("cannot get model")?;
 
-                let admin_model = state_admin_repository
+                let admin_model = planet_admin_repository
                     .clone()
                     .get_model(model.state().planet_admin())
                     .await

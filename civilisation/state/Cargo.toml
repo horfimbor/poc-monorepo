@@ -14,7 +14,7 @@ garde.workspace = true
 url.workspace = true
 
 [dev-dependencies]
-tokio = { version = "1.21", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.50", features = ["rt", "rt-multi-thread", "macros"] }
 cucumber = { version = "0.22" }
 anyhow.workspace = true
 

@@ -4,7 +4,7 @@ use crate::CIVILISATION_STATE_NAME;
 use horfimbor_eventsource::horfimbor_eventsource_derive::Command;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::{Command, CommandName};
-
+use horfimbor_time::HfTimeConfiguration;
 use crate::Nation;
 use public_mono::Component;
 use serde::{Deserialize, Serialize};
@@ -18,6 +18,7 @@ pub enum CivilisationCommand {
         name: String,
         owner: String,
         game_host: Url,
+        time: HfTimeConfiguration,
     },
     UpdateNation(Nation),
     AddWorld(Component),
