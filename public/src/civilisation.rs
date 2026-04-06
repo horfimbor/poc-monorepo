@@ -43,6 +43,7 @@ pub enum PubCivilisationEvent {
         game_host: Url,
         name: String,
         owner: String,
+        user_id: String,
         time: HfTimeConfiguration,
     },
 }

@@ -87,15 +87,23 @@ impl State for CivilisationState {
         match command {
             CivilisationCommand::Create {
                 name,
+                user_id,
                 owner,
                 game_host,
                 time,
             } => {
+
+                dbg!(&user_id);
+                dbg!(&owner);
+
+
+
                 let model: Result<ModelKey, _> = owner.as_str().try_into();
 
                 if model.is_err() {
                     return Err(CivilisationError::InvalidOwner);
                 }
+
 
                 if !self.private_name.is_empty() {
                     return Err(CivilisationError::AlreadyCreated);
@@ -109,6 +117,7 @@ impl State for CivilisationState {
                         game_host,
                         name,
                         owner,
+                        user_id,
                         time,
                     }),
                     CivilisationEvent::Shared(SharedCivilisationEvent::SetTime(time)),

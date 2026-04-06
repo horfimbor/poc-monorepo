@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 pub enum PubPlanetEvent {
     NewOwner {
         endpoint: String,
-        old_account_id: Option<String>,
-        account_id: String,
+        old_owner: Option<String>,
+        owner: String,
     },
 }

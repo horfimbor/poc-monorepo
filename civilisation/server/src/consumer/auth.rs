@@ -89,7 +89,8 @@ pub async fn handle_account_public_event(
                         &key,
                         CivilisationCommand::Create {
                             name,
-                            owner: user_id.to_string(),
+                            user_id: user_id.to_string(),
+                            owner: key.to_string(),
                             game_host: game_host.clone(),
                             time,
                         },

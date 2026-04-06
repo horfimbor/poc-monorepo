@@ -16,6 +16,7 @@ use url::Url;
 pub enum CivilisationCommand {
     Create {
         name: String,
+        user_id: String,
         owner: String,
         game_host: Url,
         time: HfTimeConfiguration,

@@ -67,7 +67,7 @@ pub async fn handle_planet_start_building(
                     sleep(Duration::from_secs(to_wait as u64)).await;
                 }
 
-                let s = planet_repository
+                let _s = planet_repository
                     .add_command(
                         &model_key,
                         PlanetCommand::Private(FinnishConstruction { key }),

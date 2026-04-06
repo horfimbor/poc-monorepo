@@ -23,6 +23,7 @@ use uuid::Uuid;
 pub struct PlanetState {
     shared: PlanetDto,
     owner: ModelKey,
+    user_id: ModelKey,
     planet_admin: ModelKey,
     countdown: usize,
 }
@@ -32,6 +33,7 @@ pub struct PlanetState {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PrvPlanetEvent {
     PlanetAdminSet(ModelKey),
+    PlanetUserIdSet(ModelKey),
 }
 
 #[derive(Event)]
@@ -79,6 +81,10 @@ impl PlanetState {
     pub fn planet_admin(&self) -> &ModelKey {
         &self.planet_admin
     }
+
+    pub fn user_id(&self) -> &ModelKey {
+        &self.user_id
+    }
 }
 
 impl Dto for PlanetState {
@@ -91,14 +97,17 @@ impl Dto for PlanetState {
             }
             PlanetEvent::Private(event) => match event {
                 PrvPlanetEvent::PlanetAdminSet(model_key) => self.planet_admin = model_key.clone(),
+                PrvPlanetEvent::PlanetUserIdSet(user_id) => {
+                    self.user_id = user_id.clone()
+                }
             },
             PlanetEvent::Public(event) => match event {
                 PubPlanetEvent::NewOwner {
                     endpoint: _,
-                    old_account_id: _,
-                    account_id,
+                    old_owner: _,
+                    owner,
                 } => {
-                    self.owner = account_id.as_str().try_into().unwrap_or_default();
+                    self.owner = owner.as_str().try_into().unwrap_or_default();
                 }
             },
         }
@@ -113,7 +122,7 @@ impl State for PlanetState {
         match command {
             PlanetCommand::Shared(command) => {
                 match command {
-                    SharedPlanetCommand::ChangeOwner { account_id } => {
+                    SharedPlanetCommand::ChangeOwner { owner: account_id } => {
                         let model: Result<ModelKey, _> = account_id.as_str().try_into();
 
                         if model.is_err() {
@@ -126,12 +135,26 @@ impl State for PlanetState {
 
                         Ok(vec![PlanetEvent::Public(PubPlanetEvent::NewOwner {
                             endpoint: app_host,
-                            old_account_id: Some(self.owner.to_string()),
-                            account_id,
+                            old_owner: Some(self.owner.to_string()),
+                            owner: account_id,
                         })])
                     }
+
+                    SharedPlanetCommand::ChangeUserId { user_id } => {
+                        let model: Result<ModelKey, _> = user_id.as_str().try_into();
+
+                        if model.is_err() {
+                            return Err(InvalidOwner);
+                        }
+
+                        Ok(vec![PlanetEvent::Private(PrvPlanetEvent::PlanetUserIdSet(
+                            model.unwrap()
+                        ))])
+
+                    }
                     SharedPlanetCommand::Create {
-                        account_id,
+                        owner: account_id,
+                        user_id,
                         admin_id,
                         time,
                     } => {
@@ -140,7 +163,12 @@ impl State for PlanetState {
                         if model.is_err() {
                             return Err(InvalidOwner);
                         }
+
                         let Ok(admin_id) = admin_id.as_str().try_into() else {
+                            return Err(InvalidAdminId);
+                        };
+
+                        let Ok(user_id) = user_id.as_str().try_into() else {
                             return Err(InvalidAdminId);
                         };
 
@@ -150,11 +178,12 @@ impl State for PlanetState {
 
                         Ok(vec![
                             PlanetEvent::Private(PrvPlanetEvent::PlanetAdminSet(admin_id)),
+                            PlanetEvent::Private(PrvPlanetEvent::PlanetUserIdSet(user_id)),
                             PlanetEvent::Shared(SharedPlanetEvent::TimeSet(time)),
                             PlanetEvent::Public(PubPlanetEvent::NewOwner {
                                 endpoint: app_host,
-                                old_account_id: None,
-                                account_id,
+                                old_owner: None,
+                                owner: account_id,
                             }),
                             PlanetEvent::Shared(UpdateResource {
                                 resource: Resource::Population,

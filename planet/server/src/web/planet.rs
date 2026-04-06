@@ -1,4 +1,3 @@
-use std::net::ToSocketAddrs;
 use crate::web::{AuthAccountClaim, get_jwt_claims};
 use crate::{PlanetAdminRepository, PlanetRepository};
 use horfimbor_eventsource::{EventSourceStateError, Stream};
@@ -49,12 +48,11 @@ pub async fn mono_command(
         .await
         .map_err(|e| ServerError(e.to_string()))?;
 
-    dbg!(model.state().owner());
+    dbg!(model.state().user_id());
     dbg!(claim.claims.user());
-    dbg!(claim.account_model_key);
 
     // WIP
-    if model.state().owner() != claim.claims.user() {
+    if model.state().user_id() != claim.claims.user() {
         return Err(Forbidden("not your planet".to_string()));
     }
 

@@ -14,8 +14,8 @@ pub async fn handle_planet_public_event(
 ) -> anyhow::Result<()> {
     let e = PubPlanetEvent::NewOwner {
         endpoint: "".to_string(),
-        old_account_id: None,
-        account_id: "".to_string(),
+        old_owner: None,
+        owner: "".to_string(),
     };
 
     let stream = Stream::Event(e.event_name());
@@ -54,8 +54,8 @@ pub async fn handle_planet_public_event(
 
         let PubPlanetEvent::NewOwner {
             endpoint,
-            old_account_id,
-            account_id,
+            old_owner: old_account_id,
+            owner: account_id,
         } = json;
 
         if let Some(old_account_id) = old_account_id {
@@ -72,6 +72,7 @@ pub async fn handle_planet_public_event(
                 .context("cannot remove world")?;
         }
 
+
         account_repository
             .add_command(
                 &account_id
@@ -86,7 +87,7 @@ pub async fn handle_planet_public_event(
                 Some(&metadata),
             )
             .await
-            .context("cannot add planet to account")?;
+            .context(format!("cannot add planet to account '{}'", account_id))?;
 
         // todo!("check app id and then create the planet");
         sub.ack(&rcv_event).await.context("cannot ack")?;

@@ -13,12 +13,16 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum SharedPlanetCommand {
     Create {
-        account_id: String,
+        owner: String,
+        user_id: String,
         admin_id: String,
         time: HfTimeConfiguration,
     },
     ChangeOwner {
-        account_id: String,
+        owner: String,
+    },
+    ChangeUserId {
+        user_id: String,
     },
     StartConstruction {
         key: Uuid,

@@ -22,6 +22,7 @@ pub async fn handle_account_public_event_for_planet(
         game_host: Url::parse("http://localhost").context("cannot create localhost dummy event")?,
         name: "".to_string(),
         owner: "".to_string(),
+        user_id: "".to_string(),
         time: HfTimeConfiguration::new(Duration::minutes(2), Duration::minutes(1), Utc::now())?,
     };
 
@@ -64,6 +65,7 @@ pub async fn handle_account_public_event_for_planet(
                 game_host,
                 time,
                 owner,
+                user_id,
                 ..
             } => {
                 let planet_id = ModelKey::new_uuid_v7(PLANET_STREAM);
@@ -74,7 +76,8 @@ pub async fn handle_account_public_event_for_planet(
                     .add_command(
                         &planet_id,
                         PlanetCommand::Shared(SharedPlanetCommand::Create {
-                            account_id: event.stream_id().to_string(),
+                            owner,
+                            user_id,
                             admin_id: admin_id.to_string(),
                             time,
                         }),
