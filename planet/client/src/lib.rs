@@ -1,5 +1,6 @@
 mod admin;
 mod state;
+mod available_building;
 
 use custom_elements::CustomElement;
 use wasm_bindgen::prelude::*;

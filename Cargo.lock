@@ -2652,6 +2652,7 @@ dependencies = [
  "futures",
  "getrandom 0.4.2",
  "gloo-net 0.7.0",
+ "gloo-timers 0.4.0",
  "horfimbor-client",
  "horfimbor-client-derive",
  "planet-admin",

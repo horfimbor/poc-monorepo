@@ -21,9 +21,7 @@ impl CivilisationDto {
             }
             SharedCivilisationEvent::WorldAdded(world) => self.worlds.push(world.clone()),
             SharedCivilisationEvent::WorldRemoved(id) => self.worlds.retain(|w| !w.id.eq(id)),
-            SharedCivilisationEvent::SetTime(config) => {
-                self.time = Some(*config)
-            }
+            SharedCivilisationEvent::SetTime(config) => self.time = Some(*config),
         }
     }
 

@@ -4,6 +4,7 @@ mod web;
 #[macro_use]
 extern crate rocket;
 
+use crate::web::AuthConfig;
 use anyhow::{Context, Result, anyhow, bail};
 use civilisation_admin::CivilisationAdminState;
 use civilisation_state::CivilisationState;
@@ -19,7 +20,6 @@ use signal_hook::consts::signal::*;
 use signal_hook_tokio::Signals;
 use std::env;
 use url::Url;
-use crate::web::AuthConfig;
 
 type CivilisationStateCache = StateDb<CivilisationState>;
 type CivilisationRepository = StateRepository<CivilisationState, CivilisationStateCache>;
@@ -73,8 +73,6 @@ async fn main() -> Result<()> {
         dotenvy::dotenv().context("cannot get env")?;
     }
 
-
-
     let settings = env::var("EVENTSTORE_URI")
         .context("fail to get EVENTSTORE_URI env var")?
         .parse()
@@ -100,10 +98,12 @@ async fn main() -> Result<()> {
         .context("cannot parse APP_HOST as url")?;
     let app_key = env::var("APP_KEY").context("APP_KEY is not defined")?;
 
-    let auth_host = Url::parse(&env::var("AUTH_HOST").context("AUTH_HOST is not defined")?).context("cannot parse AUTH_HOST as url")?;
+    let auth_host = Url::parse(&env::var("AUTH_HOST").context("AUTH_HOST is not defined")?)
+        .context("cannot parse AUTH_HOST as url")?;
 
     let auth_callback_host =
-        Url::parse(&env::var("AUTH_CALLBACK_HOST").context("AUTH_CALLBACK_HOST is not defined")?).context("cannot parse AUTH_CALLBACK_HOST as url")?;
+        Url::parse(&env::var("AUTH_CALLBACK_HOST").context("AUTH_CALLBACK_HOST is not defined")?)
+            .context("cannot parse AUTH_CALLBACK_HOST as url")?;
 
     let auth_config = AuthConfig {
         app_host: app_host.clone(),
@@ -135,7 +135,7 @@ async fn main() -> Result<()> {
                         event_store_db.clone(),
                         repo_civilisation_state.clone(),
                         repo_civilisation_admin_state.clone(),
-                        auth_config
+                        auth_config,
                     )
                     .boxed(),
                 );

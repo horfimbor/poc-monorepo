@@ -10,7 +10,6 @@ use public_mono::planet::{PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
-use url::Url;
 
 pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]

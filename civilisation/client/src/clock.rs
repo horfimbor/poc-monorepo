@@ -1,5 +1,5 @@
-use chrono::Utc;
-use gloo_timers::callback::Interval;
+use chrono::{Utc};
+use gloo_timers::callback::Timeout;
 use horfimbor_time::{HfStatus, HfTime, HfTimeConfiguration};
 use yew::{Html, Properties, function_component, html, use_state};
 
@@ -10,15 +10,15 @@ pub struct ClockProps {
 
 #[function_component(Clock)]
 pub fn draw_clock(props: &ClockProps) -> Html {
-    let now = use_state(|| Utc::now());
+    let state = use_state(|| Utc::now());
 
-    let clock = now.clone();
-    let inter = Interval::new(500, move || {
-        clock.set(Utc::now());
+    let timer = state.clone();
+    let timeout = Timeout::new(500, move || {
+        timer.set(Utc::now());
     });
-    inter.forget();
+    timeout.forget();
 
-    let time = HfTime::new(*now, props.config);
+    let time = HfTime::new(*state, props.config);
 
     let (status, duration) = time.hf_status();
 

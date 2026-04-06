@@ -138,22 +138,14 @@ async fn main() -> Result<()> {
                 );
             }
             if list.is_empty() || list.contains(&Service::PlanetStartConstruction) {
-                services.push(
-                    handle_planet_start_building(
-                        event_store_db,
-                        repo_planet_state,
-                        repo_planet_admin,
-                    )
-                    .boxed(),
-                );
+                services
+                    .push(handle_planet_start_building(event_store_db, repo_planet_state).boxed());
             }
 
             let signals = Signals::new([SIGTERM, SIGINT, SIGQUIT])?;
 
             let signals_task = handle_signals(signals).boxed();
             services.push(signals_task);
-
-            dbg!(services.len());
 
             try_join_all(services)
                 .await

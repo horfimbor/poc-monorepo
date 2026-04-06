@@ -89,7 +89,7 @@ impl State for CivilisationState {
                 name,
                 owner,
                 game_host,
-                time
+                time,
             } => {
                 let model: Result<ModelKey, _> = owner.as_str().try_into();
 
@@ -104,14 +104,15 @@ impl State for CivilisationState {
                     return Err(CivilisationError::AccountNameCannotBeEmpty);
                 }
 
-                Ok(vec![CivilisationEvent::Public(
-                    PubCivilisationEvent::Created {
+                Ok(vec![
+                    CivilisationEvent::Public(PubCivilisationEvent::Created {
                         game_host,
                         name,
                         owner,
-                    }
-                ),
-                CivilisationEvent::Shared(SharedCivilisationEvent::SetTime(time))])
+                        time,
+                    }),
+                    CivilisationEvent::Shared(SharedCivilisationEvent::SetTime(time)),
+                ])
             }
             CivilisationCommand::UpdateNation(nation) => {
                 if let Err(e) = nation.validate() {

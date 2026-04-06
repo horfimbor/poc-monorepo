@@ -1,0 +1,11 @@
+
+sequenceDiagram
+    # see doc here : https://mermaid.js.org/syntax/sequenceDiagram.html
+    participant CA as civilisation Admin
+    participant C as civilisation
+    participant PA as planet Admin
+    participant P planet
+
+    CA ->> PA: Added Service
+    C ->> P: Civilisation Created
+    P ->> C: New Owner

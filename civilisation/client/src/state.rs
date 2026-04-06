@@ -1,12 +1,10 @@
 use crate::clock::Clock;
 use crate::nation::NationDisplay;
-use chrono::{Duration, NaiveDateTime};
 use civilisation_shared::dto::CivilisationDto;
 use civilisation_shared::event::SharedCivilisationEvent;
 use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client::{EventStoreProps, LoadExternalComponent};
 use horfimbor_client_derive::WebComponent;
-use horfimbor_time::HfTimeConfiguration;
 use serde::Deserialize;
 use yew::prelude::*;
 
@@ -64,11 +62,6 @@ impl AddEvent<SharedCivilisationEvent, CivilisationProps> for CivilisationDto {
 
             }</>);
 
-        let Ok(start) = NaiveDateTime::parse_from_str("2026-01-01T12:00", "%Y-%m-%dT%H:%M") else {
-            return html! {
-                <p>{"parse_error"}</p>
-            };
-        };
 
         html! {
             <>

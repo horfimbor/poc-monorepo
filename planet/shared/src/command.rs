@@ -15,20 +15,18 @@ pub enum SharedPlanetCommand {
     Create {
         account_id: String,
         admin_id: String,
+        time: HfTimeConfiguration,
     },
     ChangeOwner {
         account_id: String,
     },
     StartConstruction {
         key: Uuid,
-        time_config: Option<HfTimeConfiguration>,
     },
     CancelConstruction {
         key: Uuid,
-        time_config: Option<HfTimeConfiguration>,
     },
     DestroyConstruction {
         key: Uuid,
-        time_config: Option<HfTimeConfiguration>,
     },
 }

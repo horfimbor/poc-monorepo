@@ -5,18 +5,14 @@ use civilisation_admin::{CivilisationAdminCommand, CivilisationAdminEvent};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
-use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
-use public_mono::civilisation::{MONO_CIVILISATION_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
-use url::Url;
 
 pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]
 }
-
 
 #[post("/", format = "json", data = "<command>")]
 pub async fn admin_command(

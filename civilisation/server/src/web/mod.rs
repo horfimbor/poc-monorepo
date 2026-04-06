@@ -4,7 +4,9 @@ use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_jwt::{Claims, Role};
 use kurrentdb::Client;
-use public_mono::civilisation::{MONO_CIVILISATION_ADMIN_STREAM, MONO_CIVILISATION_STREAM, UUID_ADMIN_V8_KIND, UUID_V8_KIND};
+use public_mono::civilisation::{
+    MONO_CIVILISATION_ADMIN_STREAM, MONO_CIVILISATION_STREAM, UUID_ADMIN_V8_KIND, UUID_V8_KIND,
+};
 use redis::Client as RedisClient;
 use rocket::Request;
 use rocket::fs::{FileServer, relative};
@@ -25,9 +27,8 @@ pub async fn start_server(
     civilisation_repo: CivilisationRepository,
     civilisation_admin_repo: CivilisationAdminRepository,
     dto_redis: RedisClient,
-    auth_config: AuthConfig
+    auth_config: AuthConfig,
 ) -> Result<(), Error> {
-
     let app_port = auth_config.app_host.port();
 
     dbg!(app_port);

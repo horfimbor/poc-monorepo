@@ -1,6 +1,7 @@
+use std::net::ToSocketAddrs;
 use crate::web::{AuthAccountClaim, get_jwt_claims};
 use crate::{PlanetAdminRepository, PlanetRepository};
-use horfimbor_eventsource::Stream;
+use horfimbor_eventsource::{EventSourceStateError, Stream};
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
@@ -15,53 +16,57 @@ pub fn routes() -> Vec<Route> {
     routes![mono_command, stream_dto]
 }
 
+#[derive(Responder)]
+pub enum ResponderError {
+    #[response(status = 500, content_type = "text")]
+    ServerError(String),
+
+    #[response(status = 404, content_type = "text")]
+    NotFound(String),
+
+    #[response(status = 403, content_type = "text")]
+    Forbidden(String),
+
+    #[response(status = 409, content_type = "text")]
+    StateError(String),
+}
+
 #[post("/<model_id>", format = "json", data = "<command>")]
 pub async fn mono_command(
     state_repository: &State<PlanetRepository>,
-    state_admin_repository: &State<PlanetAdminRepository>,
     command: Json<SharedPlanetCommand>,
     claim: AuthAccountClaim,
     model_id: &str,
-) -> Result<(), String> {
-    let key = ModelKey::try_from(model_id).map_err(|_| "mono_command : invalid id")?;
+) -> Result<(), ResponderError> {
+
+    use ResponderError::*;
+
+    let key = ModelKey::try_from(model_id)
+        .map_err(|_| NotFound("mono_command : invalid id".to_string()))?;
 
     let model = state_repository
         .get_model(&key)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| ServerError(e.to_string()))?;
 
     dbg!(model.state().owner());
     dbg!(claim.claims.user());
     dbg!(claim.account_model_key);
 
-    // FIXME w00t
-    // if model.state().owner() != claim.claims.user() {
-    //     return Err("not your planet".to_string());
-    // }
-
-    let admin = state_admin_repository
-        .get_model(model.state().planet_admin())
-        .await
-        .map_err(|e| e.to_string())?;
+    // WIP
+    if model.state().owner() != claim.claims.user() {
+        return Err(Forbidden("not your planet".to_string()));
+    }
 
     let command = match command.0 {
-        SharedPlanetCommand::StartConstruction { key, .. } => {
-            SharedPlanetCommand::StartConstruction {
-                key,
-                time_config: admin.state().time(),
-            }
+        SharedPlanetCommand::StartConstruction { key } => {
+            SharedPlanetCommand::StartConstruction { key }
         }
-        SharedPlanetCommand::CancelConstruction { key, .. } => {
-            SharedPlanetCommand::CancelConstruction {
-                key,
-                time_config: admin.state().time(),
-            }
+        SharedPlanetCommand::CancelConstruction { key } => {
+            SharedPlanetCommand::CancelConstruction { key }
         }
-        SharedPlanetCommand::DestroyConstruction { key, .. } => {
-            SharedPlanetCommand::DestroyConstruction {
-                key,
-                time_config: admin.state().time(),
-            }
+        SharedPlanetCommand::DestroyConstruction { key } => {
+            SharedPlanetCommand::DestroyConstruction { key }
         }
         _ => command.0,
     };
@@ -69,7 +74,14 @@ pub async fn mono_command(
     state_repository
         .add_command(&key, PlanetCommand::Shared(command), None)
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| match e {
+            EventSourceStateError::EventSourceError(e) => {
+                ServerError(e.to_string())
+            },
+            EventSourceStateError::State(e) => {
+                StateError(e.to_string())
+            }
+        })?;
 
     Ok(())
 }

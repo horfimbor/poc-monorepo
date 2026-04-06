@@ -1,11 +1,11 @@
 #[cfg(feature = "server")]
 use crate::CIVILISATION_STATE_NAME;
+use crate::Nation;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::horfimbor_eventsource_derive::Event;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::{Event, EventName};
 use horfimbor_time::HfTimeConfiguration;
-use crate::Nation;
 use public_mono::Component;
 use serde::{Deserialize, Serialize};
 

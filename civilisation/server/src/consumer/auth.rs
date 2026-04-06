@@ -1,17 +1,17 @@
+use crate::web::AuthConfig;
 use crate::{CivilisationAdminRepository, CivilisationRepository};
 use anyhow::{Context, anyhow};
 use civilisation_shared::command::CivilisationCommand;
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
+use horfimbor_eventsource::repository::Repository;
 use horfimbor_eventsource::{Event, Stream};
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use public_account_event::PubAccountEvent;
 use public_mono::civilisation::{MONO_CIVILISATION_STREAM, UUID_V8_KIND};
 use std::env;
-use horfimbor_eventsource::repository::Repository;
 use url::Url;
-use crate::web::AuthConfig;
 
 pub async fn handle_account_public_event(
     event_store_db: Client,
@@ -73,12 +73,17 @@ pub async fn handle_account_public_event(
         } = json
             && current_app_id == app_id.to_string()
         {
-
-            let admin_model = admin_repository.get_model(&admin_id).await.context("cannot load admin model")?;
+            let admin_model = admin_repository
+                .get_model(&admin_id)
+                .await
+                .context("cannot load admin model")?;
 
             if let Some(time) = admin_model.state().time() {
-                let key =
-                    ModelKey::new_uuid_v8(MONO_CIVILISATION_STREAM, UUID_V8_KIND, event.stream_id());
+                let key = ModelKey::new_uuid_v8(
+                    MONO_CIVILISATION_STREAM,
+                    UUID_V8_KIND,
+                    event.stream_id(),
+                );
                 repository
                     .add_command(
                         &key,
@@ -86,7 +91,7 @@ pub async fn handle_account_public_event(
                             name,
                             owner: user_id.to_string(),
                             game_host: game_host.clone(),
-                            time
+                            time,
                         },
                         Some(&metadata),
                     )

@@ -1,13 +1,15 @@
 use crate::{PlanetRepository, consumer};
 use anyhow::Context;
+use chrono::{Duration, Utc};
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Event, Stream};
+use horfimbor_time::HfTimeConfiguration;
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use planet_shared::command::SharedPlanetCommand;
 use planet_state::PlanetCommand;
-use public_mono::civilisation::{PubCivilisationAdminEvent, PubCivilisationEvent};
+use public_mono::civilisation::{PubCivilisationEvent};
 use public_mono::planet::PLANET_STREAM;
 use url::Url;
 
@@ -20,6 +22,7 @@ pub async fn handle_account_public_event_for_planet(
         game_host: Url::parse("http://localhost").context("cannot create localhost dummy event")?,
         name: "".to_string(),
         owner: "".to_string(),
+        time: HfTimeConfiguration::new(Duration::minutes(2), Duration::minutes(1), Utc::now())?,
     };
 
     let stream = Stream::Event(e.event_name());
@@ -57,7 +60,12 @@ pub async fn handle_account_public_event_for_planet(
             .context("cannot extract json")?;
 
         match json {
-            PubCivilisationEvent::Created { game_host, .. } => {
+            PubCivilisationEvent::Created {
+                game_host,
+                time,
+                owner,
+                ..
+            } => {
                 let planet_id = ModelKey::new_uuid_v7(PLANET_STREAM);
 
                 let admin_id = consumer::generate_admin_id(&game_host, &current_host);
@@ -68,6 +76,7 @@ pub async fn handle_account_public_event_for_planet(
                         PlanetCommand::Shared(SharedPlanetCommand::Create {
                             account_id: event.stream_id().to_string(),
                             admin_id: admin_id.to_string(),
+                            time,
                         }),
                         Some(&metadata),
                     )

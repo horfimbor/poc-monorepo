@@ -140,14 +140,17 @@ pub struct PlanetDto {
     #[serde(rename = "av")]
     pub available_building: HashMap<Uuid, Building>,
     #[serde(rename = "c")]
-    pub construction: HashMap<Uuid, Building>,
+    pub construction: HashMap<Uuid, (Building, DateTime<Utc>)>,
     #[serde(rename = "b")]
     pub buildings: HashMap<Uuid, Building>,
+    #[serde(rename = "t")]
+    pub time_config: HfTimeConfiguration,
 }
 
 impl PlanetDto {
     pub fn play_event(&mut self, event: &SharedPlanetEvent) {
         match event {
+            SharedPlanetEvent::TimeSet(time) => self.time_config = *time,
             SharedPlanetEvent::UpdateResource { resource, calc } => {
                 self.resources.insert(*resource, calc.clone());
             }
@@ -157,8 +160,8 @@ impl PlanetDto {
             SharedPlanetEvent::RemoveAvailableBuilding { key } => {
                 self.available_building.remove(key);
             }
-            SharedPlanetEvent::UpdateConstruction { key, building } => {
-                self.construction.insert(*key, building.clone());
+            SharedPlanetEvent::UpdateConstruction { key, building, end } => {
+                self.construction.insert(*key, (building.clone(), *end));
             }
             SharedPlanetEvent::RemoveConstruction { key } => {
                 self.construction.remove(key);
