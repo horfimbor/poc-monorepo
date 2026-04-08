@@ -7,9 +7,10 @@ use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::{Event, Stream};
 use horfimbor_time::HfTimeConfiguration;
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
-use planet_admin::PlanetAdminCommand;
 use public_mono::civilisation::PubCivilisationAdminEvent;
 use url::Url;
+use planet_shared::command::SharedPlanetAdminCommand;
+use planet_state::admin::PlanetAdminCommand;
 // TODO handle planet removed
 
 pub async fn handle_service_planet_added(
@@ -63,17 +64,19 @@ pub async fn handle_service_planet_added(
             name: _name,
             game_host,
             balise: _tag,
-            time,
             service_host,
+            ..
         } = json
             && service_host == current_host
         {
             let key = generate_admin_id(&game_host, &service_host);
 
+            // TODO replace by create
+
             planet_admin_repository
                 .add_command(
                     &key,
-                    PlanetAdminCommand::Setup(time, game_host.clone()),
+                    PlanetAdminCommand::Shared(SharedPlanetAdminCommand::Create),
                     Some(&metadata),
                 )
                 .await

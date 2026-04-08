@@ -12,7 +12,6 @@ use consumer::civilisation::handle_account_public_event_for_planet;
 use horfimbor_eventsource::cache_db::redis::StateDb;
 use horfimbor_eventsource::repository::{Repository, StateRepository};
 use kurrentdb::Client;
-use planet_admin::PlanetAdminState;
 use planet_state::PlanetState;
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
@@ -20,6 +19,7 @@ use signal_hook::consts::signal::*;
 use signal_hook_tokio::Signals;
 use std::env;
 use url::Url;
+use planet_state::admin::PlanetAdminState;
 
 type PlanetStateCache = StateDb<PlanetState>;
 type PlanetRepository = StateRepository<PlanetState, PlanetStateCache>;
@@ -121,6 +121,7 @@ async fn main() -> Result<()> {
                     handle_account_public_event_for_planet(
                         event_store_db.clone(),
                         repo_planet_state.clone(),
+                        repo_planet_admin.clone(),
                         app_host.clone(),
                     )
                     .boxed(),

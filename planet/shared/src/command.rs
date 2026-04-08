@@ -1,6 +1,8 @@
 #[cfg(feature = "server")]
 use crate::PLANET_STATE_NAME;
 #[cfg(feature = "server")]
+use crate::PLANET_CONFIG_STATE_NAME;
+#[cfg(feature = "server")]
 use horfimbor_eventsource::horfimbor_eventsource_derive::Command;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::{Command, CommandName};
@@ -33,4 +35,12 @@ pub enum SharedPlanetCommand {
     DestroyConstruction {
         key: Uuid,
     },
+}
+
+#[cfg_attr(feature = "server", derive(Command))]
+#[cfg_attr(feature = "server", state(PLANET_CONFIG_STATE_NAME))]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum SharedPlanetAdminCommand {
+    UpdateNbStartPlanet(u8),
+    Create
 }

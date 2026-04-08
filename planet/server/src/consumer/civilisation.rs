@@ -1,10 +1,11 @@
-use crate::{PlanetRepository, consumer};
+use crate::{PlanetRepository, consumer, PlanetAdminRepository};
 use anyhow::Context;
 use chrono::{Duration, Utc};
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Event, Stream};
+use horfimbor_eventsource::repository::Repository;
 use horfimbor_time::HfTimeConfiguration;
 use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use planet_shared::command::SharedPlanetCommand;
@@ -16,6 +17,7 @@ use url::Url;
 pub async fn handle_account_public_event_for_planet(
     event_store_db: Client,
     planet_repository: PlanetRepository,
+    planet_admin_repository: PlanetAdminRepository,
     current_host: Url,
 ) -> anyhow::Result<()> {
     let e = PubCivilisationEvent::Created {
@@ -68,23 +70,29 @@ pub async fn handle_account_public_event_for_planet(
                 user_id,
                 ..
             } => {
-                let planet_id = ModelKey::new_uuid_v7(PLANET_STREAM);
 
                 let admin_id = consumer::generate_admin_id(&game_host, &current_host);
 
-                planet_repository
-                    .add_command(
-                        &planet_id,
-                        PlanetCommand::Shared(SharedPlanetCommand::Create {
-                            owner,
-                            user_id,
-                            admin_id: admin_id.to_string(),
-                            time,
-                        }),
-                        Some(&metadata),
-                    )
-                    .await
-                    .context("cannot create planet")?;
+                let admin = planet_admin_repository.get_model(&admin_id).await.context("cannot load admin")?;
+                let admin = admin.state();
+
+                for _ in 0 .. admin.dto().nb_planet() {
+                    let planet_id = ModelKey::new_uuid_v7(PLANET_STREAM);
+
+                    planet_repository
+                        .add_command(
+                            &planet_id,
+                            PlanetCommand::Shared(SharedPlanetCommand::Create {
+                                owner: owner.clone(),
+                                user_id : user_id.clone(),
+                                admin_id: admin_id.to_string(),
+                                time,
+                            }),
+                            Some(&metadata),
+                        )
+                        .await
+                        .context("cannot create planet")?;
+                }
             }
         }
 

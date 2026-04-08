@@ -49,3 +49,18 @@ impl Display for PlanetError {
         }
     }
 }
+
+#[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum PlanetAdminError {
+    SomeError,
+}
+
+impl Display for PlanetAdminError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SomeError => {
+                write!(f, "some error found")
+            }
+        }
+    }
+}

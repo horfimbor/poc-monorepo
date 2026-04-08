@@ -1,3 +1,5 @@
+pub mod admin;
+
 use chrono::{Utc};
 use horfimbor_eventsource::horfimbor_eventsource_derive::{Command, Event, StateNamed};
 use horfimbor_eventsource::model_key::ModelKey;

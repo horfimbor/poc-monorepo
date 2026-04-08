@@ -28,7 +28,8 @@ pub async fn handle_planet_start_building(
         .await
         .context("cannot create subscription")?;
 
-    let options = SubscribeToPersistentSubscriptionOptions::default().buffer_size(1);
+    let options = SubscribeToPersistentSubscriptionOptions::default()
+        .buffer_size(1);
 
     let mut sub = event_store_db
         .subscribe_to_persistent_subscription(stream.to_string(), group_name, &options)

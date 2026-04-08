@@ -5,11 +5,12 @@ use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
-use planet_admin::{PlanetAdminCommand, PlanetAdminEvent};
 use public_mono::planet::{PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
+use planet_shared::command::SharedPlanetAdminCommand;
+use planet_shared::event::SharedPlanetAdminEvent;
 
 pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]
@@ -26,7 +27,7 @@ pub fn routes() -> Vec<Route> {
 #[post("/", format = "json", data = "<command>")]
 pub async fn admin_command(
     state_repository: &State<PlanetAdminRepository>,
-    command: Json<PlanetAdminCommand>,
+    command: Json<SharedPlanetAdminCommand>,
     // _claim: AuthAccountAdminClaim,
     // auth_config: &State<AuthConfig>,
 ) -> Result<(), String> {
@@ -91,7 +92,7 @@ pub async fn stream_admin(
 
             if metadata.is_event(){
 
-                match original_event.as_json::<PlanetAdminEvent>(){
+                match original_event.as_json::<SharedPlanetAdminEvent>(){
                     Ok(event) =>{
                         yield Event::json(&event);
                     },
