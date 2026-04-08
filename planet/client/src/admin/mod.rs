@@ -1,11 +1,12 @@
 use horfimbor_client::EventStoreProps;
 use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client_derive::WebComponent;
-use planet_admin::{PlanetAdminEvent, PlanetAdminState};
+use planet_shared::dto_admin::PlanetAdminDto;
+use planet_shared::event::SharedPlanetAdminEvent;
 use serde::Deserialize;
 use yew::prelude::*;
 
-type PlanetAdmin = EventStoreState<PlanetAdminState, PlanetAdminEvent, PlanetAdminProps>;
+type PlanetAdmin = EventStoreState<PlanetAdminDto, SharedPlanetAdminEvent, PlanetAdminProps>;
 
 #[derive(WebComponent)]
 #[component(PlanetAdmin)]
@@ -33,8 +34,8 @@ impl EventStoreProps for PlanetAdminProps {
     }
 }
 
-impl AddEvent<PlanetAdminEvent, PlanetAdminProps> for PlanetAdminState {
-    fn play_event(&mut self, event: &PlanetAdminEvent) {
+impl AddEvent<SharedPlanetAdminEvent, PlanetAdminProps> for PlanetAdminDto {
+    fn play_event(&mut self, event: &SharedPlanetAdminEvent) {
         self.play_event(event);
     }
 

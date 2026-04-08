@@ -1,7 +1,7 @@
 #[cfg(feature = "server")]
-use crate::PLANET_STATE_NAME;
-#[cfg(feature = "server")]
 use crate::PLANET_CONFIG_STATE_NAME;
+#[cfg(feature = "server")]
+use crate::PLANET_STATE_NAME;
 use crate::dto::{Building, Resource, ResourceCalc};
 use chrono::{DateTime, Utc};
 #[cfg(feature = "server")]
@@ -45,10 +45,9 @@ pub enum SharedPlanetEvent {
     },
 }
 
-
 #[cfg_attr(feature = "server", derive(Event))]
 #[cfg_attr(feature = "server", state(PLANET_CONFIG_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum SharedPlanetAdminEvent {
-    NbPlanetUpdated(u8)
+    NbPlanetUpdated(u8),
 }

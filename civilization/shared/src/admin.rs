@@ -1,11 +1,8 @@
-pub mod civilization;
-pub mod planet;
-
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct Component {
-    pub endpoint: String,
+pub struct Service {
+    pub url: Url,
     pub balise: String,
-    pub id: String,
 }

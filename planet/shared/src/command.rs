@@ -1,7 +1,7 @@
 #[cfg(feature = "server")]
-use crate::PLANET_STATE_NAME;
-#[cfg(feature = "server")]
 use crate::PLANET_CONFIG_STATE_NAME;
+#[cfg(feature = "server")]
+use crate::PLANET_STATE_NAME;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::horfimbor_eventsource_derive::Command;
 #[cfg(feature = "server")]
@@ -42,5 +42,5 @@ pub enum SharedPlanetCommand {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum SharedPlanetAdminCommand {
     UpdateNbStartPlanet(u8),
-    Create
+    Create,
 }

@@ -1,10 +1,10 @@
+use crate::PlanetRepository;
 use crate::web::{AuthAccountClaim, get_jwt_claims};
-use crate::{ PlanetRepository};
-use horfimbor_eventsource::{EventSourceStateError, Stream};
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
+use horfimbor_eventsource::{EventSourceStateError, Stream};
 use planet_shared::command::SharedPlanetCommand;
 use planet_state::{PlanetCommand, PlanetEvent};
 use rocket::response::stream::{Event, EventStream};
@@ -37,7 +37,6 @@ pub async fn mono_command(
     claim: AuthAccountClaim,
     model_id: &str,
 ) -> Result<(), ResponderError> {
-
     use ResponderError::*;
 
     let key = ModelKey::try_from(model_id)
@@ -73,12 +72,8 @@ pub async fn mono_command(
         .add_command(&key, PlanetCommand::Shared(command), None)
         .await
         .map_err(|e| match e {
-            EventSourceStateError::EventSourceError(e) => {
-                ServerError(e.to_string())
-            },
-            EventSourceStateError::State(e) => {
-                StateError(e.to_string())
-            }
+            EventSourceStateError::EventSourceError(e) => ServerError(e.to_string()),
+            EventSourceStateError::State(e) => StateError(e.to_string()),
         })?;
 
     Ok(())

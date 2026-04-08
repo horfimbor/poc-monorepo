@@ -414,19 +414,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "civilisation-admin"
-version = "0.1.0"
-dependencies = [
- "horfimbor-eventsource",
- "horfimbor-time",
- "public-mono",
- "serde",
- "thiserror 2.0.18",
- "url",
-]
-
-[[package]]
-name = "civilisation-shared"
+name = "civilization-shared"
 version = "0.1.0"
 dependencies = [
  "garde",
@@ -439,11 +427,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "civilisation-state"
+name = "civilization-state"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "civilisation-shared",
+ "civilization-shared",
  "cucumber",
  "garde",
  "horfimbor-eventsource",
@@ -2583,12 +2571,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "mono-civilisation-client"
+name = "mono-civilization-client"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "civilisation-admin",
- "civilisation-shared",
+ "civilization-shared",
  "custom-elements",
  "futures",
  "garde",
@@ -2612,15 +2599,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "mono-civilisation-server"
+name = "mono-civilization-server"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "built",
  "chrono",
- "civilisation-admin",
- "civilisation-shared",
- "civilisation-state",
+ "civilization-shared",
+ "civilization-state",
  "clap",
  "dotenvy",
  "futures",

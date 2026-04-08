@@ -7,7 +7,7 @@ use thiserror::Error;
 pub enum PlanetError {
     InvalidOwner,
     InvalidAdminId,
-    InvalidCivilisation,
+    InvalidCivilization,
     AvailableIdNotExists,
     ConstructionIdNotExists,
     BuildingIdNotExists,
@@ -22,8 +22,8 @@ impl Display for PlanetError {
             Self::InvalidOwner => {
                 write!(f, "owner id is not a ModelKey")
             }
-            Self::InvalidCivilisation => {
-                write!(f, "civilisation id is not a ModelKey")
+            Self::InvalidCivilization => {
+                write!(f, "civilization id is not a ModelKey")
             }
             Self::InvalidAdminId => {
                 write!(f, "admin id is not a ModelKey")

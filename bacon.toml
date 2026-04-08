@@ -35,28 +35,28 @@ need_stdout = true
 allow_warnings = true
 on_change_strategy = "kill_then_restart"
 
-[jobs.watch-client-civilisation]
+[jobs.watch-client-civilization]
 command = [
-    "wasm-pack", "build", "./civilisation/client",
+    "wasm-pack", "build", "./civilization/client",
     "--target", "web",
-    "--out-dir", "../../civilisation/server/web/client",
+    "--out-dir", "../../civilization/server/web/client",
     "--out-name", "index-v0-1-0"
 ]
 default_watch = false
-watch = ["civilisation/client/", "civilisation/shared/", "public/"]
+watch = ["civilization/client/", "civilization/shared/", "public/"]
 background = false
 
-[jobs.watch-server-civilisation]
+[jobs.watch-server-civilization]
 command = [
-    "cargo", "run" ,"-p", "mono-civilisation-server", "service"
+    "cargo", "run" ,"-p", "mono-civilization-server", "service"
 ]
 default_watch = false
 watch = [
-    "civilisation/server/",
-    "civilisation/shared/",
-    "civilisation/state/",
-    "civilisation/server/web",
-    "civilisation/server/templates",
+    "civilization/server/",
+    "civilization/shared/",
+    "civilization/state/",
+    "civilization/server/web",
+    "civilization/server/templates",
     "public/",
     ".env"
 ]

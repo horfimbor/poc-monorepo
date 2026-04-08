@@ -1,0 +1,42 @@
+[package]
+name = "mono-civilization-client"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+horfimbor-client-derive.workspace = true
+horfimbor-client.workspace = true
+horfimbor-jwt = { path = "../../../horfimbor-engine/horfimbor-jwt", features = ["client"] }
+horfimbor-time = { path = "../../../horfimbor-engine/horfimbor-time"}
+chrono = { version = "0.4", default-features = false }
+yew = { version= "0.23", features=["csr", "serde"] }
+custom-elements = "0.2"
+civilization-shared = { path = "../shared" }
+gloo-net = "0.7"
+gloo-timers = "0.4"
+reqwasm = "0.5"
+weblog = "0.3"
+wasm-bindgen = "0.2"
+serde.workspace = true
+serde_json.workspace = true
+garde.workspace = true
+futures = "0.3.28"
+rand = "0.10"
+url = "2.5.4"
+# getrandom is used  by rand in wasm even if it's marked as unused
+getrandom = { version = "0.4", features = ["wasm_js"] }
+
+[dependencies.web-sys]
+features = ["HtmlInputElement", "InputEvent"]
+version = "0.3"
+
+# this is needed to compile horfimbor-jwt
+[dependencies.uuid]
+version = "*"
+features = ["js"]
+
+[lints]
+workspace = true

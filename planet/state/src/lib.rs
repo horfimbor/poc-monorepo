@@ -1,6 +1,6 @@
 pub mod admin;
 
-use chrono::{Utc};
+use chrono::Utc;
 use horfimbor_eventsource::horfimbor_eventsource_derive::{Command, Event, StateNamed};
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Command, CommandName, Event, EventName};
@@ -99,9 +99,7 @@ impl Dto for PlanetState {
             }
             PlanetEvent::Private(event) => match event {
                 PrvPlanetEvent::PlanetAdminSet(model_key) => self.planet_admin = model_key.clone(),
-                PrvPlanetEvent::PlanetUserIdSet(user_id) => {
-                    self.user_id = user_id.clone()
-                }
+                PrvPlanetEvent::PlanetUserIdSet(user_id) => self.user_id = user_id.clone(),
             },
             PlanetEvent::Public(event) => match event {
                 PubPlanetEvent::NewOwner {
@@ -150,9 +148,8 @@ impl State for PlanetState {
                         }
 
                         Ok(vec![PlanetEvent::Private(PrvPlanetEvent::PlanetUserIdSet(
-                            model.unwrap()
+                            model.unwrap(),
                         ))])
-
                     }
                     SharedPlanetCommand::Create {
                         owner: account_id,

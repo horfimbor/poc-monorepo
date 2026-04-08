@@ -5,7 +5,7 @@ use horfimbor_client_derive::WebComponent;
 use planet_shared::dto::PlanetDto;
 use planet_shared::event::SharedPlanetEvent;
 use serde::Deserialize;
-use weblog::{console_debug};
+use weblog::console_debug;
 use yew::prelude::*;
 
 type PlanetState = EventStoreState<PlanetDto, SharedPlanetEvent, PlanetStateProps>;

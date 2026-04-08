@@ -1,6 +1,6 @@
-use crate::{ PlanetRepository};
+use crate::PlanetRepository;
 use anyhow::{Context, Error};
-use chrono::{ Utc};
+use chrono::Utc;
 use horfimbor_eventsource::helper::create_subscription;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::{Event, Stream};
@@ -8,7 +8,7 @@ use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use planet_shared::event::SharedPlanetEvent;
 use planet_state::PlanetCommand;
 use planet_state::PrivatePlanetCommand::FinnishConstruction;
-pub use std::time::{Duration};
+pub use std::time::Duration;
 use tokio::time::sleep;
 
 pub async fn handle_planet_start_building(
@@ -28,8 +28,7 @@ pub async fn handle_planet_start_building(
         .await
         .context("cannot create subscription")?;
 
-    let options = SubscribeToPersistentSubscriptionOptions::default()
-        .buffer_size(1);
+    let options = SubscribeToPersistentSubscriptionOptions::default().buffer_size(1);
 
     let mut sub = event_store_db
         .subscribe_to_persistent_subscription(stream.to_string(), group_name, &options)

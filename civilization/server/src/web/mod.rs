@@ -1,44 +1,39 @@
-use crate::{PlanetAdminRepository, PlanetRepository, built_info};
+use crate::web::base::load_base_routes;
+use crate::{CivilizationAdminRepository, CivilizationRepository};
 use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
-use horfimbor_jwt::Claims;
+use horfimbor_jwt::{Claims, Role};
 use kurrentdb::Client;
-use public_mono::civilization::{MONO_CIVILIZATION_STREAM, UUID_V8_KIND};
+use public_mono::civilization::{
+    MONO_CIVILIZATION_ADMIN_STREAM, MONO_CIVILIZATION_STREAM, UUID_ADMIN_V8_KIND, UUID_V8_KIND,
+};
 use redis::Client as RedisClient;
 use rocket::Request;
 use rocket::fs::{FileServer, relative};
 use rocket::http::{Method, Status};
 use rocket::request::{FromRequest, Outcome};
-use rocket::response::Redirect;
 use rocket::response::content::RawHtml;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
+use rocket_dyn_templates::Template;
 use std::env;
+use url::Url;
 
-mod admin;
-pub mod planet;
+pub mod admin;
+mod base;
+pub mod civilization;
 
 pub async fn start_server(
     event_store_db: Client,
-    planet_repo_state: PlanetRepository,
-    planet_repo_admin: PlanetAdminRepository,
+    civilization_repo: CivilizationRepository,
+    civilization_admin_repo: CivilizationAdminRepository,
     dto_redis: RedisClient,
-    port: Option<u16>,
+    auth_config: AuthConfig,
 ) -> Result<(), Error> {
-    let auth_port = if let Some(port) = port {
-        port
-    } else {
-        env::var("APP_PORT")
-            .context("APP_PORT is not defined")?
-            .parse::<u16>()
-            .context("APP_PORT cannot be parse in u16")?
-    };
+    let app_port = auth_config.app_host.port();
 
-    let env_cors = env::var("CORS_HOST").context("CORS_HOST is not defined")?;
-    let app_host = env_cors.split(";");
-    let list: Vec<&str> = app_host.clone().collect();
-    let allowed_origins = AllowedOrigins::some_exact(&list);
+    dbg!(app_port);
 
-    dbg!(&allowed_origins);
+    let allowed_origins = AllowedOrigins::some_exact(&[auth_config.app_host.to_string()]);
 
     let cors = rocket_cors::CorsOptions {
         allowed_origins,
@@ -54,18 +49,21 @@ pub async fn start_server(
     .context("fail to create cors")?;
 
     let figment = rocket::Config::figment()
-        .merge(("port", auth_port))
-        .merge(("address", "0.0.0.0"));
+        .merge(("port", app_port))
+        .merge(("address", "0.0.0.0"))
+        .merge(("template_dir", "civilization/server/templates"));
     let _rocket = rocket::custom(figment)
-        .manage(planet_repo_state)
-        .manage(planet_repo_admin)
+        .manage(civilization_repo)
+        .manage(civilization_admin_repo)
+        .manage(auth_config)
         .manage(dto_redis)
         .manage(event_store_db)
-        .mount("/", routes![redirect_index_js])
-        .mount("/api/planet-admin/", admin::routes())
-        .mount("/api/planet", planet::routes())
+        .mount("/", load_base_routes())
+        .mount("/api/civilization-admin/", admin::routes())
+        .mount("/api/civilization", civilization::routes())
         .mount("/", FileServer::from(relative!("web")))
         .attach(cors)
+        .attach(Template::fairing())
         .register("/", catchers![general_not_found])
         .launch()
         .await;
@@ -76,10 +74,29 @@ pub async fn start_server(
 #[catch(404)]
 fn general_not_found() -> RawHtml<&'static str> {
     RawHtml(
-        r"
-        <p>Hmm... This is not the droïd you are looking for, oupsi</p>
-    ",
+        r#"<body style="background-color: darkgray;">
+            <p>Hmm... This is not the droïd you are looking for, oupsi</p>
+            </body>
+        "#,
     )
+}
+
+#[derive(Debug, Clone)]
+pub struct AuthConfig {
+    pub app_host: Url,
+    pub app_key: String,
+    pub auth_host: Url,
+    pub auth_callback_host: Url,
+}
+
+impl AuthConfig {
+    pub fn get_application_key(&self) -> ModelKey {
+        ModelKey::new_uuid_v8(
+            MONO_CIVILIZATION_ADMIN_STREAM,
+            UUID_ADMIN_V8_KIND,
+            &self.app_host.to_string(),
+        )
+    }
 }
 
 fn get_jwt_claims(token: &str) -> Result<Claims, String> {
@@ -101,6 +118,7 @@ pub struct AuthAccountClaim {
 #[derive(Debug)]
 pub enum AccountClaimError {
     Claim,
+    PermissionDenied,
     Missing,
 }
 
@@ -129,15 +147,32 @@ impl<'r> FromRequest<'r> for AuthAccountClaim {
     }
 }
 
-#[get("/client/index.js")]
-pub fn redirect_index_js() -> Redirect {
-    let wasm_tag: &'static str = env!("WASM_TAG");
-    if !wasm_tag.is_empty() {
-        Redirect::temporary(format!("/client/index-{wasm_tag}.js"))
-    } else {
-        Redirect::temporary(format!(
-            "/client/index-v{}.js",
-            built_info::PKG_VERSION.replace('.', "-")
-        ))
+pub struct AuthAccountAdminClaim {
+    pub claims: Claims,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for AuthAccountAdminClaim {
+    type Error = AccountClaimError;
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match req.headers().get_one("Authorization") {
+            None => Outcome::Error((Status::BadRequest, AccountClaimError::Missing)),
+            Some(token) => match get_jwt_claims(token) {
+                Ok(claims) => {
+                    if *claims.roles() != Role::Admin {
+                        return Outcome::Error((
+                            Status::Forbidden,
+                            AccountClaimError::PermissionDenied,
+                        ));
+                    }
+                    Outcome::Success(AuthAccountAdminClaim { claims })
+                }
+                Err(e) => {
+                    dbg!(e);
+                    Outcome::Error((Status::BadRequest, AccountClaimError::Claim))
+                }
+            },
+        }
     }
 }

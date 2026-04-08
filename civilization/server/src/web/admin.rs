@@ -1,13 +1,13 @@
-use crate::PlanetAdminRepository;
-use crate::web::get_jwt_claims;
+use crate::CivilizationAdminRepository;
+use crate::web::{AuthAccountAdminClaim, AuthConfig, get_jwt_claims};
+
+use civilization_shared::command::CivilizationAdminCommand;
+use civilization_shared::command::CivilizationAdminCommand::CreateServer;
+use civilization_shared::event::CivilizationAdminEvent;
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
-use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
-use planet_shared::command::SharedPlanetAdminCommand;
-use planet_shared::event::SharedPlanetAdminEvent;
-use public_mono::planet::{PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
@@ -16,55 +16,43 @@ pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]
 }
 
-// fn get_application_key(config: &AuthConfig) -> ModelKey {
-//     ModelKey::new_uuid_v8(
-//         PLANET_ADMIN_STREAM,
-//         UUID_ADMIN_V8_KIND,
-//         &config.app_host,
-//     )
-// }
-
 #[post("/", format = "json", data = "<command>")]
 pub async fn admin_command(
-    state_repository: &State<PlanetAdminRepository>,
-    command: Json<SharedPlanetAdminCommand>,
-    // _claim: AuthAccountAdminClaim,
-    // auth_config: &State<AuthConfig>,
+    state_repository: &State<CivilizationAdminRepository>,
+    command: Json<CivilizationAdminCommand>,
+    _claim: AuthAccountAdminClaim,
+    auth_config: &State<AuthConfig>,
 ) -> Result<(), String> {
-    // let key = get_application_key(auth_config);
-    // state_repository
-    //     .add_command(&key, command.0, None)
-    //     .await
-    //     .map_err(|e| e.to_string())?;
-
-    todo!("add security before enabling this");
+    let key = auth_config.get_application_key();
+    state_repository
+        .add_command(&key, command.0, None)
+        .await
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }
+
 #[get("/<jwt>")]
 pub async fn stream_admin(
-    state_repository: &State<PlanetAdminRepository>,
+    state_repository: &State<CivilizationAdminRepository>,
     jwt: &str,
-    // auth_config: &State<AuthConfig>,
+    auth_config: &State<AuthConfig>,
 ) -> Result<EventStream![], String> {
     let _claims = get_jwt_claims(jwt)?;
 
-    // FIXME
-    let key = ModelKey::new_uuid_v8(PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND, "localhost");
+    let key = auth_config.get_application_key();
 
     let dto = state_repository
         .get_model(&key)
         .await
         .map_err(|_| "cannot find the admin dto".to_string())?;
 
-    // let host = Url::parse(&auth_config.app_host).map_err(|_| "cannot parse app_host")?;
-
-    // if dto.position().is_none() {
-    //     state_repository
-    //         .add_command(&key, CreateServer(host), None)
-    //         .await
-    //         .map_err(|e| e.to_string())?;
-    // }
+    if dto.position().is_none() {
+        state_repository
+            .add_command(&key, CreateServer(auth_config.app_host.clone()), None)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
 
     let mut subscription = get_subscription(
         state_repository.event_db(),
@@ -92,7 +80,7 @@ pub async fn stream_admin(
 
             if metadata.is_event(){
 
-                match original_event.as_json::<SharedPlanetAdminEvent>(){
+                match original_event.as_json::<CivilizationAdminEvent>(){
                     Ok(event) =>{
                         yield Event::json(&event);
                     },

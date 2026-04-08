@@ -1,29 +1,27 @@
-use std::collections::HashMap;
+use crate::state::PlanetStateProps;
+use gloo_timers::callback::Timeout;
 use horfimbor_client::input::send_command;
-use uuid::Uuid;
-use web_sys::{EventTarget, HtmlElement, MouseEvent};
-use weblog::{console_error, console_info};
-use yew::{function_component, html, use_state, Callback, Html, Properties};
-use yew::platform::spawn_local;
 use planet_shared::command::SharedPlanetCommand;
 use planet_shared::dto::Building;
-use crate::state::PlanetStateProps;
+use std::collections::HashMap;
+use uuid::Uuid;
 use wasm_bindgen::JsCast;
-use gloo_timers::callback::Timeout;
-
+use web_sys::{EventTarget, HtmlElement, MouseEvent};
+use weblog::{console_error, console_info};
+use yew::platform::spawn_local;
+use yew::{Callback, Html, Properties, function_component, html, use_state};
 
 #[derive(Properties, PartialEq)]
-pub struct AvailableBuildingProps{
+pub struct AvailableBuildingProps {
     pub state_props: PlanetStateProps,
-    pub available_building: HashMap<Uuid, Building>
+    pub available_building: HashMap<Uuid, Building>,
 }
 
 #[function_component(AvailableBuilding)]
 pub fn draw_available_buildings(props: &AvailableBuildingProps) -> Html {
-
     let create_error = use_state(|| None::<String>);
 
-    if create_error.is_some(){
+    if create_error.is_some() {
         let timer = create_error.clone();
         let timeout = Timeout::new(1000, move || {
             timer.set(None);
@@ -53,8 +51,13 @@ pub fn draw_available_buildings(props: &AvailableBuildingProps) -> Html {
                     Ok(resp) => {
                         if resp.ok() {
                             console_info!("sent !");
-                        }else{
-                            let log = format!("{} - {}: {:?}", resp.status(), resp.status_text(), resp.body().unwrap().as_string());
+                        } else {
+                            let log = format!(
+                                "{} - {}: {:?}",
+                                resp.status(),
+                                resp.status_text(),
+                                resp.body().unwrap().as_string()
+                            );
                             create_error_setter.set(Some(log));
                         }
                     }
@@ -118,5 +121,4 @@ pub fn draw_available_buildings(props: &AvailableBuildingProps) -> Html {
             </table>
         </>
     )
-
 }

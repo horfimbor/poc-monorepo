@@ -1,8 +1,8 @@
 pub mod command;
 pub mod dto;
+pub mod dto_admin;
 pub mod error;
 pub mod event;
-pub mod dto_admin;
 
 pub const START_VALUE: usize = 1337;
 

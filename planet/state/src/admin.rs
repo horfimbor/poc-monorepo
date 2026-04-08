@@ -1,17 +1,17 @@
-use serde::{Deserialize, Serialize};
-use planet_shared::PLANET_CONFIG_STATE_NAME;
-use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
-use planet_shared::dto_admin::PlanetAdminDto;
-use planet_shared::event::SharedPlanetAdminEvent;
-use horfimbor_eventsource::{Command, CommandName, Event, EventName};
 use horfimbor_eventsource::horfimbor_eventsource_derive::{Command, Event, StateNamed};
+use horfimbor_eventsource::{Command, CommandName, Event, EventName};
+use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
+use planet_shared::PLANET_CONFIG_STATE_NAME;
 use planet_shared::command::SharedPlanetAdminCommand;
+use planet_shared::dto_admin::PlanetAdminDto;
 use planet_shared::error::PlanetAdminError;
+use planet_shared::event::SharedPlanetAdminEvent;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed, Default)]
 #[state(PLANET_CONFIG_STATE_NAME)]
 pub struct PlanetAdminState {
-    dto: PlanetAdminDto
+    dto: PlanetAdminDto,
 }
 
 impl PlanetAdminState {
@@ -36,7 +36,6 @@ pub enum PlanetAdminCommand {
     Shared(SharedPlanetAdminCommand),
 }
 
-
 impl Dto for PlanetAdminState {
     type Event = PlanetAdminEvent;
 
@@ -49,22 +48,22 @@ impl Dto for PlanetAdminState {
     }
 }
 
-impl State for PlanetAdminState{
+impl State for PlanetAdminState {
     type Command = PlanetAdminCommand;
     type Error = PlanetAdminError;
 
     fn try_command(&self, command: Self::Command) -> Result<Vec<Self::Event>, Self::Error> {
         match command {
-            PlanetAdminCommand::Shared(command) => {
-                match command {
-                    SharedPlanetAdminCommand::UpdateNbStartPlanet(nb) => {
-                        Ok(vec![PlanetAdminEvent::Shared(SharedPlanetAdminEvent::NbPlanetUpdated(nb))])
-                    }
-                    SharedPlanetAdminCommand::Create => {
-                        Ok(vec![PlanetAdminEvent::Shared(SharedPlanetAdminEvent::NbPlanetUpdated(1))])
-                    }
+            PlanetAdminCommand::Shared(command) => match command {
+                SharedPlanetAdminCommand::UpdateNbStartPlanet(nb) => {
+                    Ok(vec![PlanetAdminEvent::Shared(
+                        SharedPlanetAdminEvent::NbPlanetUpdated(nb),
+                    )])
                 }
-            }
+                SharedPlanetAdminCommand::Create => Ok(vec![PlanetAdminEvent::Shared(
+                    SharedPlanetAdminEvent::NbPlanetUpdated(1),
+                )]),
+            },
         }
     }
 }
