@@ -62,7 +62,7 @@ pub async fn stream_admin(
     .await;
 
     Ok(EventStream! {
-        yield Event::json(&dto.state());
+        yield Event::json(&dto.state().dto());
         loop {
             let event = if let Ok(event) = subscription.next().await{
                 event

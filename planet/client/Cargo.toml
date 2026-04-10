@@ -29,7 +29,13 @@ getrandom = { version = "0.4", features = ["wasm_js"] }
 uuid = { version = "1.23", features = ["v4"] }
 
 [dependencies.web-sys]
-features = ["HtmlInputElement", "InputEvent"]
+features = [
+    "HtmlInputElement",
+    "InputEvent",
+    "HtmlCanvasElement",
+    "CanvasRenderingContext2d",
+    "ImageData",
+]
 version = "0.3"
 
 [lints]

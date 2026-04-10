@@ -126,7 +126,7 @@ fn component_tag() -> Html {
     });
 
     html! {
-        <label>{"tag"}
+        <label>{"admin tag"}
             <input type="text"
                 oninput={cb} value={value}
                 />

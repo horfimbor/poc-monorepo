@@ -1,15 +1,19 @@
-mod component;
+mod add_service;
 mod timer;
 
-use crate::admin::component::AddService;
+use crate::admin::add_service::AddService;
 use crate::admin::timer::UpdateTimer;
 use civilization_shared::dto::CivilizationAdminDto;
 use civilization_shared::event::CivilizationAdminEvent;
 use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client::{EventStoreProps, LoadExternalComponent};
+use horfimbor_client::input::send_command;
 use horfimbor_client_derive::WebComponent;
 use serde::Deserialize;
+use weblog::{console_error, console_info};
+use yew::platform::spawn_local;
 use yew::prelude::*;
+use civilization_shared::command::CivilizationAdminCommand;
 
 type CivilizationAdmin =
     EventStoreState<CivilizationAdminDto, CivilizationAdminEvent, CivilizationAdminProps>;
@@ -63,73 +67,68 @@ impl AddEvent<CivilizationAdminEvent, CivilizationAdminProps> for CivilizationAd
             }
         };
 
+        let props = props.clone();
         let components = html!(
             <>
                 <ul>
                 {self.game_services().iter().map(|(name, comp)|{
+                    let service_props = props.clone();
+                    let service_name = name.clone();
+                    let on_click_delete = Callback::from(move |_| {
+                        let cmd = CivilizationAdminCommand::RemoveService(service_name.clone());
+                        let spawn_props = service_props.clone();
+                        spawn_local(async move {
+                            match send_command(&cmd, spawn_props.clone()).await {
+                                Ok(resp) => {
+                                    if resp.ok() {
+                                        console_info!("Sent !");
+                                    }
+                                }
+                                Err(e) => {
+                                    console_error!(e);
+                                }
+                            }
+                        });
+                    });
+
                     html!(
                         <li key={name.as_str()}>
-                        {name}
+                        {name} <button onclick={on_click_delete}>{"remove"}</button>
 
                         <fieldset>
-                                    <LoadExternalComponent
-                                        endpoint={comp.url.to_string()}
-                                    balise={comp.balise.to_string()}
-                                    jwt={props.jwt().to_owned()}
-                                    id={""}
-                                />
-                                </fieldset>
+                            <LoadExternalComponent
+                                endpoint={comp.url.to_string()}
+                            balise={comp.balise.to_string()}
+                            jwt={props.jwt().to_owned()}
+                            id={""}
+                        />
+                        </fieldset>
 
                         </li>
                     )
 
                 }).collect::<Html>()}
                 </ul>
-                <AddService
-                    endpoint={props.endpoint().to_owned()}
-                    jwt={props.jwt().to_owned()} />
+
             </>
         );
 
         html!(
             <>
-
-               <ToggleAdmin >
-                <>
-                    <p>
-                        {self.host().clone().map(|h| h.to_string()).unwrap_or_default()}
-                    </p>
-                    <p>
-                        {timer}
-                    </p>
-                    <p>
-                        {components}
-                    </p>
-                </>
-               </ToggleAdmin>
+                <p>
+                    {self.host().clone().map(|h| h.to_string()).unwrap_or_default()}
+                </p>
+                <p>
+                    {timer}
+                </p>
+                <p>
+                    {components}
+                </p>
+                <p>
+                    <AddService
+                    endpoint={props.endpoint().to_owned()}
+                    jwt={props.jwt().to_owned()} />
+                </p>
             </>)
-    }
-}
-
-#[derive(Properties, PartialEq)]
-pub struct ToggleAdminProps {
-    pub children: Html,
-}
-#[component]
-fn ToggleAdmin(props: &ToggleAdminProps) -> Html {
-    let admin_open = use_state(|| false);
-
-    let onclick = {
-        let admin_open = admin_open.clone();
-        Callback::from(move |_| admin_open.set(!*admin_open))
-    };
-
-    html! {
-        <fieldset>
-             <button onclick={onclick}>{"toggle admin"}</button>
-            if *admin_open {
-                  {props.children.clone()}
-            }
-        </fieldset>
     }
 }

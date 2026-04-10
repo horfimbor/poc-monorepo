@@ -2,7 +2,6 @@ use chrono::Utc;
 use horfimbor_client::LoadExternalComponent;
 use horfimbor_client_derive::WebComponent;
 use horfimbor_jwt::{Claims, Role};
-use std::ops::Not;
 use weblog::console_warn;
 use yew::{AttrValue, Component, Context, Html, Properties, html};
 
@@ -115,43 +114,29 @@ impl Component for GalaxyAuth {
             return login_needed;
         };
 
-        if Utc::now().timestamp() > claims.expiration_at() as i64 {
-            console_warn!("token expired");
-            return login_needed;
-        }
-
-        let content = html! {
-                    <LoadExternalComponent
-                        endpoint={endpoint.clone()}
-                        balise={"horfimbor-civilization-state"}
-                        jwt={jwt.clone()}
-                        id={""}
-                    />
-        };
-
-        let is_admin = *claims.roles() == Role::Admin;
-
-        if is_admin.not() {
-            return content;
-        }
-
-        let admin_content = html! {
-            <>
-                <LoadExternalComponent
+        if *claims.roles() == Role::Admin {
+            return html! {
+            <LoadExternalComponent
                     endpoint={endpoint.clone()}
                     balise={"horfimbor-civilization-admin"}
                     jwt={jwt.clone()}
                     id={""}
                 />
-            </>
-        };
+            };
+        }
+
+        if Utc::now().timestamp() > claims.expiration_at() as i64 {
+            console_warn!("token expired");
+            return login_needed;
+        }
 
         html! {
-            <div>
-                {admin_content}
-                <hr/>
-                {content}
-            </div>
+            <LoadExternalComponent
+                endpoint={endpoint.clone()}
+                balise={"horfimbor-civilization-state"}
+                jwt={jwt.clone()}
+                id={""}
+            />
         }
     }
 }

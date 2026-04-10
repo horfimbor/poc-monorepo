@@ -10,7 +10,7 @@ pub struct ClockProps {
 
 #[function_component(Clock)]
 pub fn draw_clock(props: &ClockProps) -> Html {
-    let state = use_state(|| Utc::now());
+    let state = use_state(Utc::now);
 
     let timer = state.clone();
     let timeout = Timeout::new(500, move || {
