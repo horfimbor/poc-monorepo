@@ -1,18 +1,15 @@
 use crate::{PlanetAdminRepository, PlanetRepository, built_info};
 use anyhow::{Context, Error};
-use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_jwt::Claims;
 use kurrentdb::Client;
-use public_mono::civilization::{MONO_CIVILIZATION_STREAM, UUID_V8_KIND};
 use redis::Client as RedisClient;
-use rocket::Request;
 use rocket::fs::{FileServer, relative};
-use rocket::http::{Method, Status};
-use rocket::request::{FromRequest, Outcome};
+use rocket::http::Method;
 use rocket::response::Redirect;
 use rocket::response::content::RawHtml;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use std::env;
+use url::Url;
 
 mod admin;
 pub mod planet;
@@ -22,9 +19,9 @@ pub async fn start_server(
     planet_repo_state: PlanetRepository,
     planet_repo_admin: PlanetAdminRepository,
     dto_redis: RedisClient,
-    port: Option<u16>,
+    app_host: Url,
 ) -> Result<(), Error> {
-    let auth_port = if let Some(port) = port {
+    let auth_port = if let Some(port) = app_host.port() {
         port
     } else {
         env::var("APP_PORT")
@@ -34,8 +31,8 @@ pub async fn start_server(
     };
 
     let env_cors = env::var("CORS_HOST").context("CORS_HOST is not defined")?;
-    let app_host = env_cors.split(";");
-    let list: Vec<&str> = app_host.clone().collect();
+    let cors_host = env_cors.split(";");
+    let list: Vec<&str> = cors_host.clone().collect();
     let allowed_origins = AllowedOrigins::some_exact(&list);
 
     dbg!(&allowed_origins);
@@ -61,6 +58,7 @@ pub async fn start_server(
         .manage(planet_repo_admin)
         .manage(dto_redis)
         .manage(event_store_db)
+        .manage(app_host)
         .mount("/", routes![redirect_index_js])
         .mount("/api/planet-admin/", admin::routes())
         .mount("/api/planet", planet::routes())
@@ -91,42 +89,6 @@ fn get_jwt_claims(token: &str) -> Result<Claims, String> {
         "Invalid claims"
     })?;
     Ok(claims)
-}
-
-pub struct AuthAccountClaim {
-    pub claims: Claims,
-    pub account_model_key: ModelKey,
-}
-
-#[derive(Debug)]
-pub enum AccountClaimError {
-    Claim,
-    Missing,
-}
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for AuthAccountClaim {
-    type Error = AccountClaimError;
-
-    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        match req.headers().get_one("Authorization") {
-            None => Outcome::Error((Status::BadRequest, AccountClaimError::Missing)),
-            Some(token) => match get_jwt_claims(token) {
-                Ok(claims) => Outcome::Success(AuthAccountClaim {
-                    account_model_key: ModelKey::new_uuid_v8(
-                        MONO_CIVILIZATION_STREAM,
-                        UUID_V8_KIND,
-                        &claims.account().to_string(),
-                    ),
-                    claims,
-                }),
-                Err(e) => {
-                    dbg!(e);
-                    Outcome::Error((Status::BadRequest, AccountClaimError::Claim))
-                }
-            },
-        }
-    }
 }
 
 #[get("/client/index.js")]

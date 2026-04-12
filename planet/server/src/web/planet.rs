@@ -1,10 +1,11 @@
 use crate::PlanetRepository;
-use crate::web::{AuthAccountClaim, get_jwt_claims};
+use crate::web::get_jwt_claims;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
 use horfimbor_eventsource::{EventSourceStateError, Stream};
+use horfimbor_jwt::rocket::{AuthClaim, GateUser};
 use planet_shared::command::SharedPlanetCommand;
 use planet_state::{PlanetCommand, PlanetEvent};
 use rocket::response::stream::{Event, EventStream};
@@ -34,7 +35,7 @@ pub enum ResponderError {
 pub async fn mono_command(
     state_repository: &State<PlanetRepository>,
     command: Json<SharedPlanetCommand>,
-    claim: AuthAccountClaim,
+    auth: AuthClaim<GateUser>,
     model_id: &str,
 ) -> Result<(), ResponderError> {
     use ResponderError::*;
@@ -48,10 +49,10 @@ pub async fn mono_command(
         .map_err(|e| ServerError(e.to_string()))?;
 
     dbg!(model.state().user_id());
-    dbg!(claim.claims.user());
+    dbg!(auth.claims().user());
 
     // WIP
-    if model.state().user_id() != claim.claims.user() {
+    if model.state().user_id() != auth.claims().user() {
         return Err(Forbidden("not your planet".to_string()));
     }
 

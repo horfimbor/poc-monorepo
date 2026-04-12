@@ -35,6 +35,6 @@ pub enum CivilizationCommand {
 pub enum CivilizationAdminCommand {
     CreateServer(Url),
     AddTime(HfTimeConfiguration),
-    AddService{ name: String, comp: Service },
+    AddService { name: String, comp: Service },
     RemoveService(String),
 }

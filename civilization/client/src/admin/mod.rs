@@ -3,17 +3,17 @@ mod timer;
 
 use crate::admin::add_service::AddService;
 use crate::admin::timer::UpdateTimer;
+use civilization_shared::command::CivilizationAdminCommand;
 use civilization_shared::dto::CivilizationAdminDto;
 use civilization_shared::event::CivilizationAdminEvent;
+use horfimbor_client::input::send_command;
 use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client::{EventStoreProps, LoadExternalComponent};
-use horfimbor_client::input::send_command;
 use horfimbor_client_derive::WebComponent;
 use serde::Deserialize;
 use weblog::{console_error, console_info};
 use yew::platform::spawn_local;
 use yew::prelude::*;
-use civilization_shared::command::CivilizationAdminCommand;
 
 type CivilizationAdmin =
     EventStoreState<CivilizationAdminDto, CivilizationAdminEvent, CivilizationAdminProps>;

@@ -1,5 +1,4 @@
 use crate::CivilizationRepository;
-use crate::web::{AuthAccountClaim, get_jwt_claims};
 use civilization_shared::command::CivilizationCommand;
 use civilization_state::CivilizationEvent;
 use horfimbor_eventsource::Stream;
@@ -7,6 +6,8 @@ use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
+use horfimbor_jwt::Role;
+use horfimbor_jwt::rocket::{AuthClaim, GateUser, get_checked_claims};
 use public_mono::civilization::{MONO_CIVILIZATION_STREAM, UUID_V8_KIND};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
@@ -20,20 +21,20 @@ pub fn routes() -> Vec<Route> {
 pub async fn mono_command(
     state_repository: &State<CivilizationRepository>,
     command: Json<CivilizationCommand>,
-    claim: AuthAccountClaim,
+    auth: AuthClaim<GateUser>,
 ) -> Result<(), String> {
     let model = state_repository
-        .get_model(&claim.account_model_key)
+        .get_model(&auth.claims().account())
         .await
         .map_err(|e| e.to_string())?;
 
     // TODO check why this to_string is needed :thinking:
-    if claim.claims.user().to_string() != model.state().owner().to_string() {
+    if auth.claims().user().to_string() != model.state().owner().to_string() {
         return Err("not your account".to_string());
     }
 
     state_repository
-        .add_command(&claim.account_model_key, command.0, None)
+        .add_command(&auth.claims().account(), command.0, None)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -45,7 +46,7 @@ pub async fn stream_dto(
     repository: &State<CivilizationRepository>,
     jwt: &str,
 ) -> Result<EventStream![], String> {
-    let claims = get_jwt_claims(jwt)?;
+    let claims = get_checked_claims(jwt, Role::User)?;
 
     let key = ModelKey::new_uuid_v8(
         MONO_CIVILIZATION_STREAM,

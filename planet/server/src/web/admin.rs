@@ -1,43 +1,41 @@
-use crate::PlanetAdminRepository;
 use crate::web::get_jwt_claims;
+use crate::{PlanetAdminRepository, get_admin_id};
 use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
-use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::Repository;
+use horfimbor_jwt::rocket::{AuthClaim, GateAdmin};
 use planet_shared::command::SharedPlanetAdminCommand;
 use planet_shared::event::SharedPlanetAdminEvent;
-use public_mono::planet::{PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
+use planet_state::admin::PlanetAdminCommand;
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
+use url::Url;
 
 pub fn routes() -> Vec<Route> {
     routes![admin_command, stream_admin]
 }
 
-// fn get_application_key(config: &AuthConfig) -> ModelKey {
-//     ModelKey::new_uuid_v8(
-//         PLANET_ADMIN_STREAM,
-//         UUID_ADMIN_V8_KIND,
-//         &config.app_host,
-//     )
-// }
-
 #[post("/", format = "json", data = "<command>")]
 pub async fn admin_command(
     state_repository: &State<PlanetAdminRepository>,
     command: Json<SharedPlanetAdminCommand>,
-    // _claim: AuthAccountAdminClaim,
-    // auth_config: &State<AuthConfig>,
+    auth: AuthClaim<GateAdmin>,
+    app_host: &State<Url>,
 ) -> Result<(), String> {
-    // let key = get_application_key(auth_config);
-    // state_repository
-    //     .add_command(&key, command.0, None)
-    //     .await
-    //     .map_err(|e| e.to_string())?;
+    let audience = auth
+        .claims()
+        .audience()
+        .try_into()
+        .map_err(|e| format!("audience is not a ModelKey: {e}"))?;
 
-    todo!("add security before enabling this");
+    let key = get_admin_id(&audience, app_host);
+
+    state_repository
+        .add_command(&key, PlanetAdminCommand::Shared(command.0), None)
+        .await
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }
@@ -45,12 +43,17 @@ pub async fn admin_command(
 pub async fn stream_admin(
     state_repository: &State<PlanetAdminRepository>,
     jwt: &str,
-    // auth_config: &State<AuthConfig>,
+    app_host: &State<Url>,
 ) -> Result<EventStream![], String> {
-    let _claims = get_jwt_claims(jwt)?;
+    //FIXME security ISSUE here
+    let claims = get_jwt_claims(jwt)?;
 
-    // FIXME
-    let key = ModelKey::new_uuid_v8(PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND, "localhost");
+    let audience = claims
+        .audience()
+        .try_into()
+        .map_err(|e| format!("audience is not a ModelKey: {e}"))?;
+
+    let key = get_admin_id(&audience, app_host);
 
     let dto = state_repository
         .get_model(&key)

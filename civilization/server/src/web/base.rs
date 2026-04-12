@@ -1,6 +1,8 @@
+use crate::built_info;
 use crate::web::AuthConfig;
-use crate::{built_info, web};
 use chrono::prelude::*;
+use horfimbor_jwt::Role;
+use horfimbor_jwt::rocket::get_checked_claims;
 use rocket::response::Redirect;
 use rocket::{Route, State};
 use rocket_dyn_templates::{Template, context};
@@ -68,7 +70,9 @@ pub async fn auth(token: &str, host: &State<AuthConfig>) -> Result<Template, Str
         .await
         .map_err(|e| e.to_string())?;
 
-    let claims = web::get_jwt_claims(&response)?;
+    dbg!(&response);
+
+    let claims = get_checked_claims(&response, Role::User)?;
 
     dbg!(&claims);
 

@@ -202,7 +202,7 @@ fn set_description() -> Html {
     html! {
         <>
             <label>{"Nation description"}
-                <input type="text"{oninput} {value} />
+                <input type="text" {oninput} {value} />
             </label>
         </>
     }

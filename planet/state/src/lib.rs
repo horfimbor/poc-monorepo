@@ -250,7 +250,7 @@ impl State for PlanetState {
                         })];
 
                         for (resource, quantity) in building.construction.iter() {
-                            let Some(calc) = self.shared.resources.get(&resource) else {
+                            let Some(calc) = self.shared.resources.get(resource) else {
                                 return Err(NotEnoughResources(*resource));
                             };
 
@@ -279,7 +279,7 @@ impl State for PlanetState {
                             let calc = self
                                 .shared
                                 .resources
-                                .get(&resource)
+                                .get(resource)
                                 .cloned()
                                 .unwrap_or_default();
 
@@ -304,15 +304,13 @@ impl State for PlanetState {
                             let calc = self
                                 .shared
                                 .resources
-                                .get(&resource)
+                                .get(resource)
                                 .cloned()
                                 .unwrap_or_default();
 
                             let mut new_quantities = calc.compute_quantity(self.shared.time_config);
-                            new_quantities.production =
-                                new_quantities.production - quantity.quantity as i64;
-                            new_quantities.stock_capacity =
-                                new_quantities.stock_capacity - quantity.stock;
+                            new_quantities.production -= quantity.quantity as i64;
+                            new_quantities.stock_capacity -= quantity.stock;
 
                             events.push(PlanetEvent::Shared(UpdateResource {
                                 resource: *resource,
@@ -362,15 +360,13 @@ impl State for PlanetState {
                         let calc = self
                             .shared
                             .resources
-                            .get(&resource)
+                            .get(resource)
                             .cloned()
                             .unwrap_or_default();
 
                         let mut new_quantities = calc.compute_quantity(self.shared.time_config);
-                        new_quantities.production =
-                            new_quantities.production + quantity.quantity as i64;
-                        new_quantities.stock_capacity =
-                            new_quantities.stock_capacity + quantity.stock;
+                        new_quantities.production += quantity.quantity as i64;
+                        new_quantities.stock_capacity += quantity.stock;
 
                         events.push(PlanetEvent::Shared(UpdateResource {
                             resource: *resource,

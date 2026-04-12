@@ -1,4 +1,4 @@
-use crate::{PlanetAdminRepository, PlanetRepository, consumer};
+use crate::{PlanetAdminRepository, PlanetRepository, get_admin_id};
 use anyhow::Context;
 use chrono::{Duration, Utc};
 use horfimbor_eventsource::helper::create_subscription;
@@ -12,6 +12,7 @@ use planet_shared::command::SharedPlanetCommand;
 use planet_state::PlanetCommand;
 use public_mono::civilization::PubCivilizationEvent;
 use public_mono::planet::PLANET_STREAM;
+use std::env;
 use url::Url;
 
 pub async fn handle_account_public_event_for_planet(
@@ -64,13 +65,18 @@ pub async fn handle_account_public_event_for_planet(
 
         match json {
             PubCivilizationEvent::Created {
-                game_host,
                 time,
                 owner,
                 user_id,
                 ..
             } => {
-                let admin_id = consumer::generate_admin_id(&game_host, &current_host);
+                let app_id = env::var("APP_ID").context("APP_ID is missing")?;
+                let audience = app_id
+                    .as_str()
+                    .try_into()
+                    .context("audience is not a ModelKey")?;
+
+                let admin_id = get_admin_id(&audience, &current_host);
 
                 let admin = planet_admin_repository
                     .get_model(&admin_id)

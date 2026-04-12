@@ -2,16 +2,11 @@ use crate::web::base::load_base_routes;
 use crate::{CivilizationAdminRepository, CivilizationRepository};
 use anyhow::{Context, Error};
 use horfimbor_eventsource::model_key::ModelKey;
-use horfimbor_jwt::{Claims, Role};
 use kurrentdb::Client;
-use public_mono::civilization::{
-    MONO_CIVILIZATION_ADMIN_STREAM, MONO_CIVILIZATION_STREAM, UUID_ADMIN_V8_KIND, UUID_V8_KIND,
-};
+use public_mono::civilization::{MONO_CIVILIZATION_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
 use redis::Client as RedisClient;
-use rocket::Request;
 use rocket::fs::{FileServer, relative};
-use rocket::http::{Method, Status};
-use rocket::request::{FromRequest, Outcome};
+use rocket::http::Method;
 use rocket::response::content::RawHtml;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
 use rocket_dyn_templates::Template;
@@ -96,83 +91,5 @@ impl AuthConfig {
             UUID_ADMIN_V8_KIND,
             &self.app_host.to_string(),
         )
-    }
-}
-
-fn get_jwt_claims(token: &str) -> Result<Claims, String> {
-    let secret = env::var("JWT_SECRET_KEY").map_err(|_| "JWT_SECRET_KEY is missing")?;
-    let auth_host = env::var("AUTH_HOST").map_err(|_| "AUTH_HOST is missing")?;
-    let app_id = env::var("APP_ID").map_err(|_| "APP_ID is missing")?;
-    let claims = Claims::from_jwt(token, &secret, &app_id, &auth_host).map_err(|e| {
-        println!("claims error : {e:?}");
-        "Invalid claims"
-    })?;
-    Ok(claims)
-}
-
-pub struct AuthAccountClaim {
-    pub claims: Claims,
-    pub account_model_key: ModelKey,
-}
-
-#[derive(Debug)]
-pub enum AccountClaimError {
-    Claim,
-    PermissionDenied,
-    Missing,
-}
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for AuthAccountClaim {
-    type Error = AccountClaimError;
-
-    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        match req.headers().get_one("Authorization") {
-            None => Outcome::Error((Status::BadRequest, AccountClaimError::Missing)),
-            Some(token) => match get_jwt_claims(token) {
-                Ok(claims) => Outcome::Success(AuthAccountClaim {
-                    account_model_key: ModelKey::new_uuid_v8(
-                        MONO_CIVILIZATION_STREAM,
-                        UUID_V8_KIND,
-                        &claims.account().to_string(),
-                    ),
-                    claims,
-                }),
-                Err(e) => {
-                    dbg!(e);
-                    Outcome::Error((Status::BadRequest, AccountClaimError::Claim))
-                }
-            },
-        }
-    }
-}
-
-pub struct AuthAccountAdminClaim {
-    pub claims: Claims,
-}
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for AuthAccountAdminClaim {
-    type Error = AccountClaimError;
-
-    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        match req.headers().get_one("Authorization") {
-            None => Outcome::Error((Status::BadRequest, AccountClaimError::Missing)),
-            Some(token) => match get_jwt_claims(token) {
-                Ok(claims) => {
-                    if *claims.roles() != Role::Admin {
-                        return Outcome::Error((
-                            Status::Forbidden,
-                            AccountClaimError::PermissionDenied,
-                        ));
-                    }
-                    Outcome::Success(AuthAccountAdminClaim { claims })
-                }
-                Err(e) => {
-                    dbg!(e);
-                    Outcome::Error((Status::BadRequest, AccountClaimError::Claim))
-                }
-            },
-        }
     }
 }

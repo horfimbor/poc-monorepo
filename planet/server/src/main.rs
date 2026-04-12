@@ -10,10 +10,12 @@ use anyhow::{Context, Result, anyhow, bail};
 use clap::{Parser, Subcommand, ValueEnum};
 use consumer::civilization::handle_account_public_event_for_planet;
 use horfimbor_eventsource::cache_db::redis::StateDb;
+use horfimbor_eventsource::model_key::ModelKey;
 use horfimbor_eventsource::repository::{Repository, StateRepository};
 use kurrentdb::Client;
 use planet_state::PlanetState;
 use planet_state::admin::PlanetAdminState;
+use public_mono::planet::{PLANET_ADMIN_STREAM, UUID_ADMIN_V8_KIND};
 use rocket::futures::future::try_join_all;
 use rocket::futures::{FutureExt, StreamExt};
 use signal_hook::consts::signal::*;
@@ -110,7 +112,7 @@ async fn main() -> Result<()> {
                         repo_planet_state.clone(),
                         repo_planet_admin.clone(),
                         redis_client.clone(),
-                        app_host.port(),
+                        app_host.clone(),
                     )
                     .boxed(),
                 );
@@ -166,4 +168,12 @@ async fn handle_signals(mut signals: Signals) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn get_admin_id(audience: &ModelKey, service_host: &Url) -> ModelKey {
+    ModelKey::new_uuid_v8(
+        PLANET_ADMIN_STREAM,
+        UUID_ADMIN_V8_KIND,
+        format!("{audience},{service_host}").as_str(),
+    )
 }

@@ -1,5 +1,5 @@
 use crate::CivilizationAdminRepository;
-use crate::web::{AuthAccountAdminClaim, AuthConfig, get_jwt_claims};
+use crate::web::AuthConfig;
 
 use civilization_shared::command::CivilizationAdminCommand;
 use civilization_shared::command::CivilizationAdminCommand::CreateServer;
@@ -8,6 +8,8 @@ use horfimbor_eventsource::Stream;
 use horfimbor_eventsource::helper::get_subscription;
 use horfimbor_eventsource::metadata::Metadata;
 use horfimbor_eventsource::repository::Repository;
+use horfimbor_jwt::Role;
+use horfimbor_jwt::rocket::{AuthClaim, GateAdmin, get_checked_claims};
 use rocket::response::stream::{Event, EventStream};
 use rocket::serde::json::Json;
 use rocket::{Route, State};
@@ -20,7 +22,7 @@ pub fn routes() -> Vec<Route> {
 pub async fn admin_command(
     state_repository: &State<CivilizationAdminRepository>,
     command: Json<CivilizationAdminCommand>,
-    _claim: AuthAccountAdminClaim,
+    _claim: AuthClaim<GateAdmin>,
     auth_config: &State<AuthConfig>,
 ) -> Result<(), String> {
     let key = auth_config.get_application_key();
@@ -38,7 +40,8 @@ pub async fn stream_admin(
     jwt: &str,
     auth_config: &State<AuthConfig>,
 ) -> Result<EventStream![], String> {
-    let _claims = get_jwt_claims(jwt)?;
+    //FIXME security ISSUE here
+    let _claims = get_checked_claims(jwt, Role::Admin)?;
 
     let key = auth_config.get_application_key();
 

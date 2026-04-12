@@ -1,5 +1,4 @@
-use crate::PlanetAdminRepository;
-use crate::consumer::generate_admin_id;
+use crate::{PlanetAdminRepository, get_admin_id};
 use anyhow::Context;
 use chrono::{Duration, Utc};
 use horfimbor_eventsource::helper::create_subscription;
@@ -10,8 +9,8 @@ use kurrentdb::{Client, SubscribeToPersistentSubscriptionOptions};
 use planet_shared::command::SharedPlanetAdminCommand;
 use planet_state::admin::PlanetAdminCommand;
 use public_mono::civilization::PubCivilizationAdminEvent;
+use std::env;
 use url::Url;
-// TODO handle planet removed
 
 pub async fn handle_service_planet_added(
     event_store_db: Client,
@@ -62,16 +61,19 @@ pub async fn handle_service_planet_added(
 
         if let PubCivilizationAdminEvent::AddedService {
             name: _name,
-            game_host,
             balise: _tag,
             service_host,
             ..
         } = json
             && service_host == current_host
         {
-            let key = generate_admin_id(&game_host, &service_host);
+            let app_id = env::var("APP_ID").context("APP_ID is missing")?;
+            let audience = app_id
+                .as_str()
+                .try_into()
+                .context("audience is not a ModelKey")?;
 
-            // TODO replace by create
+            let key = get_admin_id(&audience, &service_host);
 
             planet_admin_repository
                 .add_command(

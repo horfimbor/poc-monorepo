@@ -39,13 +39,6 @@ pub async fn handle_planet_start_building(
     loop {
         let rcv_event = sub.next().await.context("cannot get next event")?;
 
-        let full_event = match rcv_event.event.as_ref() {
-            None => {
-                continue;
-            }
-            Some(event) => event,
-        };
-
         let event = rcv_event.event.as_ref().context("cannot extract event")?;
 
         let json = event
