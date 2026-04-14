@@ -1,7 +1,19 @@
 use horfimbor_client_derive::WebComponent;
 use serde::Deserialize;
 use wasm_bindgen::JsCast;
+use weblog::console_info;
 use yew::prelude::*;
+
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
+// FIXME PLACEHOLDER AI SLOP TO REMOVE
 
 // ─── Biome palette constants ────────────────────────────────────────────────
 // Three anchor palettes: cold (0.0), temperate (0.5), hot (1.0)
@@ -141,7 +153,11 @@ fn elevation_color(elevation: f32, palette: &Palette) -> [u8; 3] {
 // ─── UUID → seed + temperature ───────────────────────────────────────────────
 
 fn parse_id(id: &str) -> Option<(u64, f32)> {
-    let uuid = uuid::Uuid::parse_str(id).ok()?;
+    console_info!(id);
+
+    let uuid = id.char_indices().rev().nth(35).map(|(i, _)| &id[i..])?;
+    console_info!(uuid);
+    let uuid = uuid::Uuid::parse_str(uuid).ok()?;
     let bytes = uuid.as_bytes();
     let seed = u64::from_le_bytes(bytes[0..8].try_into().ok()?);
     let temp_raw = u16::from_le_bytes([bytes[8], bytes[9]]);

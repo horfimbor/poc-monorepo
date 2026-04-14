@@ -7,6 +7,7 @@ use planet_shared::event::SharedPlanetEvent;
 use serde::Deserialize;
 use weblog::console_debug;
 use yew::prelude::*;
+use crate::visual::PlanetVisual;
 
 type PlanetState = EventStoreState<PlanetDto, SharedPlanetEvent, PlanetStateProps>;
 
@@ -48,6 +49,7 @@ impl AddEvent<SharedPlanetEvent, PlanetStateProps> for PlanetDto {
 
         html! {
             <div>
+                <PlanetVisual id={props.id.clone()}/>
                 <AvailableBuilding state_props={props} available_building={self.available_building.clone()} />
                 <h3>{"Construction"}</h3>
                 <table>
