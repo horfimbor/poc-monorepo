@@ -1,21 +1,32 @@
-use horfimbor_eventsource::horfimbor_eventsource_derive::{Event, StateNamed};
+pub mod admin;
+
+use chrono::Utc;
+use horfimbor_eventsource::horfimbor_eventsource_derive::{Command, Event, StateNamed};
 use horfimbor_eventsource::model_key::ModelKey;
+use horfimbor_eventsource::{Command, CommandName, Event, EventName};
 use horfimbor_eventsource::{Dto, State, StateName, StateNamed};
-use horfimbor_eventsource::{Event, EventName};
+
+use horfimbor_time::{HfDuration, HfTime};
 use planet_shared::PLANET_STATE_NAME;
-use planet_shared::command::PlanetCommand;
-use planet_shared::dto::PlanetDto;
+use planet_shared::command::SharedPlanetCommand;
+use planet_shared::dto::{Building, PlanetDto, Production, Resource, ResourceCalc};
 use planet_shared::error::PlanetError;
+use planet_shared::error::PlanetError::*;
 use planet_shared::event::SharedPlanetEvent;
+use planet_shared::event::SharedPlanetEvent::*;
 use public_mono::planet::PubPlanetEvent;
 use serde::{Deserialize, Serialize};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::collections::HashMap;
+use std::env;
+use uuid::Uuid;
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, StateNamed, Default)]
 #[state(PLANET_STATE_NAME)]
 pub struct PlanetState {
     shared: PlanetDto,
     owner: ModelKey,
+    user_id: ModelKey,
+    planet_admin: ModelKey,
     countdown: usize,
 }
 
@@ -23,7 +34,8 @@ pub struct PlanetState {
 #[state(PLANET_STATE_NAME)]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PrvPlanetEvent {
-    LowerCountDown(usize),
+    PlanetAdminSet(ModelKey),
+    PlanetUserIdSet(ModelKey),
 }
 
 #[derive(Event)]
@@ -36,19 +48,44 @@ pub enum PlanetEvent {
     Public(PubPlanetEvent),
 }
 
+#[derive(Command)]
+#[state(PLANET_STATE_NAME)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum PrivatePlanetCommand {
+    CalculateStock {
+        resource: Resource,
+        calc: ResourceCalc,
+    },
+    FinnishConstruction {
+        key: Uuid,
+    },
+}
+
+#[derive(Command)]
+#[state(PLANET_STATE_NAME)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(untagged)]
+pub enum PlanetCommand {
+    Private(PrivatePlanetCommand),
+    Shared(SharedPlanetCommand),
+}
+
 impl PlanetState {
     #[must_use]
     pub fn owner(&self) -> &ModelKey {
         &self.owner
     }
 
-    #[must_use]
-    pub fn nb(&self) -> u64 {
-        self.shared.nb() as u64
-    }
-
     pub fn shared(&self) -> &PlanetDto {
         &self.shared
+    }
+
+    pub fn planet_admin(&self) -> &ModelKey {
+        &self.planet_admin
+    }
+
+    pub fn user_id(&self) -> &ModelKey {
+        &self.user_id
     }
 }
 
@@ -59,27 +96,18 @@ impl Dto for PlanetState {
         match event {
             PlanetEvent::Shared(event) => {
                 self.shared.play_event(event);
-                match event {
-                    SharedPlanetEvent::Created(_) => {
-                        self.countdown = 25;
-                    }
-                    SharedPlanetEvent::Pong(_) => {}
-                    SharedPlanetEvent::Boom(_) => {
-                        self.countdown = 100;
-                    }
-                }
             }
             PlanetEvent::Private(event) => match event {
-                PrvPlanetEvent::LowerCountDown(_) => {
-                    self.countdown -= 1;
-                }
+                PrvPlanetEvent::PlanetAdminSet(model_key) => self.planet_admin = model_key.clone(),
+                PrvPlanetEvent::PlanetUserIdSet(user_id) => self.user_id = user_id.clone(),
             },
             PlanetEvent::Public(event) => match event {
                 PubPlanetEvent::NewOwner {
-                    old_account_id: _,
-                    account_id,
+                    endpoint: _,
+                    old_owner: _,
+                    owner,
                 } => {
-                    self.owner = account_id.as_str().try_into().unwrap_or_default();
+                    self.owner = owner.as_str().try_into().unwrap_or_default();
                 }
             },
         }
@@ -92,49 +120,261 @@ impl State for PlanetState {
 
     fn try_command(&self, command: Self::Command) -> Result<Vec<Self::Event>, Self::Error> {
         match command {
-            PlanetCommand::Create { account_id } => {
-                let model: Result<ModelKey, _> = account_id.as_str().try_into();
+            PlanetCommand::Shared(command) => {
+                match command {
+                    SharedPlanetCommand::ChangeOwner { owner: account_id } => {
+                        let model: Result<ModelKey, _> = account_id.as_str().try_into();
 
-                if model.is_err() {
-                    return Err(PlanetError::InvalidOwner);
-                }
+                        if model.is_err() {
+                            return Err(InvalidOwner);
+                        }
 
-                Ok(vec![
-                    PlanetEvent::Shared(SharedPlanetEvent::Created(0)),
-                    PlanetEvent::Public(PubPlanetEvent::NewOwner {
-                        old_account_id: None,
-                        account_id,
-                    }),
-                ])
-            }
+                        let Ok(app_host) = env::var("APP_HOST") else {
+                            return Err(NoAppHost);
+                        };
 
-            PlanetCommand::ChangeOwner { account_id } => {
-                let model: Result<ModelKey, _> = account_id.as_str().try_into();
+                        Ok(vec![PlanetEvent::Public(PubPlanetEvent::NewOwner {
+                            endpoint: app_host,
+                            old_owner: Some(self.owner.to_string()),
+                            owner: account_id,
+                        })])
+                    }
 
-                if model.is_err() {
-                    return Err(PlanetError::InvalidOwner);
-                }
-                Ok(vec![PlanetEvent::Public(PubPlanetEvent::NewOwner {
-                    old_account_id: Some(self.owner.to_string()),
-                    account_id,
-                })])
-            }
-            PlanetCommand::Ping => {
-                let mut res = vec![PlanetEvent::Shared(SharedPlanetEvent::Pong(0))];
-                let timestamp = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs();
+                    SharedPlanetCommand::ChangeUserId { user_id } => {
+                        let model: Result<ModelKey, _> = user_id.as_str().try_into();
 
-                if timestamp % 2 == self.nb() % 2 {
-                    if self.countdown == 1 {
-                        res.push(PlanetEvent::Shared(SharedPlanetEvent::Boom(0)))
-                    } else {
-                        res.push(PlanetEvent::Private(PrvPlanetEvent::LowerCountDown(0)))
+                        match model {
+                            Ok(model) => Ok(vec![PlanetEvent::Private(
+                                PrvPlanetEvent::PlanetUserIdSet(model),
+                            )]),
+                            Err(_) => Err(InvalidOwner),
+                        }
+                    }
+                    SharedPlanetCommand::Create {
+                        owner: account_id,
+                        user_id,
+                        admin_id,
+                        time,
+                    } => {
+                        let model: Result<ModelKey, _> = account_id.as_str().try_into();
+
+                        if model.is_err() {
+                            return Err(InvalidOwner);
+                        }
+
+                        let Ok(admin_id) = admin_id.as_str().try_into() else {
+                            return Err(InvalidAdminId);
+                        };
+
+                        let Ok(user_id) = user_id.as_str().try_into() else {
+                            return Err(InvalidAdminId);
+                        };
+
+                        let Ok(app_host) = env::var("APP_HOST") else {
+                            return Err(NoAppHost);
+                        };
+
+                        Ok(vec![
+                            PlanetEvent::Private(PrvPlanetEvent::PlanetAdminSet(admin_id)),
+                            PlanetEvent::Private(PrvPlanetEvent::PlanetUserIdSet(user_id)),
+                            PlanetEvent::Shared(SharedPlanetEvent::TimeSet(time)),
+                            PlanetEvent::Public(PubPlanetEvent::NewOwner {
+                                endpoint: app_host,
+                                old_owner: None,
+                                owner: account_id,
+                            }),
+                            PlanetEvent::Shared(UpdateResource {
+                                resource: Resource::Population,
+                                calc: ResourceCalc {
+                                    quantity: 10000,
+                                    date_time: Utc::now(),
+                                    production: 0,
+                                    stock_capacity: 100000,
+                                },
+                            }),
+                            PlanetEvent::Shared(UpdateResource {
+                                resource: Resource::Electricity,
+                                calc: ResourceCalc {
+                                    quantity: 11000,
+                                    date_time: Utc::now(),
+                                    production: 0,
+                                    stock_capacity: 0,
+                                },
+                            }),
+                            PlanetEvent::Shared(UpdateAvailableBuilding {
+                                key: Uuid::new_v4(),
+                                building: Building {
+                                    name: "Steal factory".to_string(),
+                                    construction: HashMap::from([
+                                        (Resource::Electricity, 998),
+                                        (Resource::Population, 800),
+                                    ]),
+                                    construction_time: 100,
+                                    running_cost: HashMap::from([
+                                        (Resource::Population, 23),
+                                        (Resource::Electricity, 51),
+                                    ]),
+                                    production: HashMap::from([(
+                                        Resource::Steal,
+                                        Production {
+                                            quantity: 49,
+                                            stock: 1000,
+                                        },
+                                    )]),
+                                },
+                            }),
+                        ])
+                    }
+                    SharedPlanetCommand::StartConstruction { key } => {
+                        let Some(building) = self.shared.available_building.get(&key) else {
+                            return Err(AvailableIdNotExists);
+                        };
+
+                        let time = HfTime::now(self.shared.time_config);
+
+                        let Some(end) = (time
+                            + HfDuration::from_seconds(building.construction_time as i64))
+                        .as_datetime() else {
+                            return Err(CannotComputeTime);
+                        };
+
+                        let mut events = vec![PlanetEvent::Shared(UpdateConstruction {
+                            key: Uuid::new_v4(),
+                            building: building.clone(),
+                            end,
+                        })];
+
+                        for (resource, quantity) in building.construction.iter() {
+                            let Some(calc) = self.shared.resources.get(resource) else {
+                                return Err(NotEnoughResources(*resource));
+                            };
+
+                            let new_quantities = calc.compute_quantity(self.shared.time_config);
+
+                            if *quantity < new_quantities.quantity {
+                                return Err(NotEnoughResources(*resource));
+                            }
+
+                            events.push(PlanetEvent::Shared(UpdateResource {
+                                resource: *resource,
+                                calc: new_quantities - *quantity as i64,
+                            }));
+                        }
+
+                        Ok(events)
+                    }
+                    SharedPlanetCommand::CancelConstruction { key } => {
+                        let Some(building) = self.shared.construction.get(&key) else {
+                            return Err(ConstructionIdNotExists);
+                        };
+
+                        let mut events = vec![PlanetEvent::Shared(RemoveConstruction { key })];
+
+                        for (resource, quantity) in building.0.construction.iter() {
+                            let calc = self
+                                .shared
+                                .resources
+                                .get(resource)
+                                .cloned()
+                                .unwrap_or_default();
+
+                            let new_quantities = calc.compute_quantity(self.shared.time_config);
+
+                            events.push(PlanetEvent::Shared(UpdateResource {
+                                resource: *resource,
+                                calc: new_quantities + *quantity as i64 / 2,
+                            }));
+                        }
+
+                        Ok(events)
+                    }
+                    SharedPlanetCommand::DestroyConstruction { key } => {
+                        let Some(building) = self.shared.buildings.get(&key) else {
+                            return Err(BuildingIdNotExists);
+                        };
+
+                        let mut events = vec![PlanetEvent::Shared(RemoveRunningBuilding { key })];
+
+                        for (resource, quantity) in building.production.iter() {
+                            let calc = self
+                                .shared
+                                .resources
+                                .get(resource)
+                                .cloned()
+                                .unwrap_or_default();
+
+                            let mut new_quantities = calc.compute_quantity(self.shared.time_config);
+                            new_quantities.production -= quantity.quantity as i64;
+                            new_quantities.stock_capacity -= quantity.stock;
+
+                            events.push(PlanetEvent::Shared(UpdateResource {
+                                resource: *resource,
+                                calc: new_quantities,
+                            }));
+                        }
+
+                        // TODO give back some resources ?
+                        // for (resource, quantity) in building.construction.into_iter() {
+                        //     let calc =
+                        //         self.shared
+                        //             .resources
+                        //             .get(&resource)
+                        //             .cloned()
+                        //             .unwrap_or_default();
+                        //
+                        //     events.push(PlanetEvent::Shared(UpdateResource {
+                        //         resource,
+                        //         calc: ResourceCalc {
+                        //             quantity: calc.compute_quantity() + quantity / 5,
+                        //             date_time: Utc::now(),
+                        //             production: calc.production,
+                        //             stock_capacity: calc.stock_capacity ,
+                        //         },
+                        //     }));
+                        // }
+
+                        Ok(events)
                     }
                 }
-                Ok(res)
             }
+            PlanetCommand::Private(command) => match command {
+                PrivatePlanetCommand::FinnishConstruction { key } => {
+                    let Some(building) = self.shared.construction.get(&key) else {
+                        return Err(ConstructionIdNotExists);
+                    };
+
+                    let mut events = vec![
+                        PlanetEvent::Shared(RemoveConstruction { key }),
+                        PlanetEvent::Shared(UpdateRunningBuilding {
+                            key: Uuid::new_v4(),
+                            building: building.0.clone(),
+                        }),
+                    ];
+
+                    for (resource, quantity) in building.0.production.iter() {
+                        let calc = self
+                            .shared
+                            .resources
+                            .get(resource)
+                            .cloned()
+                            .unwrap_or_default();
+
+                        let mut new_quantities = calc.compute_quantity(self.shared.time_config);
+                        new_quantities.production += quantity.quantity as i64;
+                        new_quantities.stock_capacity += quantity.stock;
+
+                        events.push(PlanetEvent::Shared(UpdateResource {
+                            resource: *resource,
+                            calc: new_quantities,
+                        }));
+                    }
+
+                    Ok(events)
+                }
+                PrivatePlanetCommand::CalculateStock { resource, calc } => {
+                    Ok(vec![PlanetEvent::Shared(UpdateResource { resource, calc })])
+                }
+            },
         }
     }
 }

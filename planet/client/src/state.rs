@@ -1,9 +1,11 @@
+use crate::available_building::AvailableBuilding;
 use horfimbor_client::EventStoreProps;
 use horfimbor_client::state::{AddEvent, EventStoreState};
 use horfimbor_client_derive::WebComponent;
 use planet_shared::dto::PlanetDto;
 use planet_shared::event::SharedPlanetEvent;
 use serde::Deserialize;
+use weblog::console_debug;
 use yew::prelude::*;
 
 type PlanetState = EventStoreState<PlanetDto, SharedPlanetEvent, PlanetStateProps>;
@@ -12,9 +14,9 @@ type PlanetState = EventStoreState<PlanetDto, SharedPlanetEvent, PlanetStateProp
 #[component(PlanetState)]
 #[derive(Default, Properties, PartialEq, Deserialize, Clone)]
 pub struct PlanetStateProps {
-    pub endpoint: String,
-    pub jwt: String,
-    pub id: String,
+    pub endpoint: AttrValue,
+    pub jwt: AttrValue,
+    pub id: AttrValue,
 }
 
 impl EventStoreProps for PlanetStateProps {
@@ -41,14 +43,103 @@ impl AddEvent<SharedPlanetEvent, PlanetStateProps> for PlanetDto {
     }
 
     fn get_view(&self, props: PlanetStateProps) -> Html {
+        let data = format!("{:?}", self);
+        console_debug!(data);
+
         html! {
             <div>
-                {self.nb()}
-                <horfimbor-planet-input
-                        endpoint={props.endpoint().to_owned()}
-                        jwt={props.jwt().to_owned()}
-                        id={props.id().to_owned()}>
-                </horfimbor-planet-input>
+                <AvailableBuilding state_props={props} available_building={self.available_building.clone()} />
+                <h3>{"Construction"}</h3>
+                <table>
+                    <tr>
+                        <th>{"Name"}</th>
+                        <th>{"Cost"}</th>
+                        <th>{"Running cost"}</th>
+                        <th>{"Production"}</th>
+                        <th>{"Action"}</th>
+                    </tr>
+
+                    { for self.construction.iter().map(|(id, building)| html! {
+                        <tr key={id.to_string()}>
+                            <td>{&building.0.name}</td>
+                         <td>
+                        <ul>
+                                { for building.0.construction.iter().map(|(resource, quantity)| html!{
+                                    <li>{quantity}{" "}{resource}</li>
+                                })}
+                                <li>{building.0.construction_time}{" secondes"}</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                { for building.0.running_cost.iter().map(|(resource, quantity)| html!{
+                                    <li>{quantity}{" "}{resource}</li>
+                                })}
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                { for building.0.production.iter().map(|(resource, production)| html!{
+                                    <>
+                                    <li>{production.quantity}{" "}{resource}</li>
+                                    <li>{"( "}{production.stock}{" stock )"}</li>
+                                    </>
+                                })}
+                                </ul>
+                            </td>
+                            <td>
+                                {"cancel TODO"}
+                                // <button id={id.to_string()} onclick={on_cancel.clone()}>{"build"}</button>
+                            </td>
+                        </tr>
+                    }) }
+
+                </table>
+            <h3>{"Building"}</h3>
+                <table>
+                    <tr>
+                        <th>{"Name"}</th>
+                        <th>{"Cost"}</th>
+                        <th>{"Running cost"}</th>
+                        <th>{"Production"}</th>
+                        <th>{"Action"}</th>
+                    </tr>
+
+                    { for self.buildings.iter().map(|(id, building)| html! {
+                        <tr key={id.to_string()}>
+                            <td>{&building.name}</td>
+                            <td>
+                                <ul>
+                                { for building.construction.iter().map(|(resource, quantity)| html!{
+                                    <li>{quantity}{" "}{resource}</li>
+                                })}
+                                <li>{building.construction_time}{" secondes"}</li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                { for building.running_cost.iter().map(|(resource, quantity)| html!{
+                                    <li>{quantity}{" "}{resource}</li>
+                                })}
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                { for building.production.iter().map(|(resource, production)| html!{
+                                    <>
+                                    <li>{production.quantity}{" "}{resource}</li>
+                                    <li>{"( "}{production.stock}{" stock )"}</li>
+                                    </>
+                                })}
+                                </ul>
+                            </td>
+                            <td>
+                                {"delete TODO"}
+                                // <button id={id.to_string()} onclick={on_create.clone()}>{"build"}</button>
+                            </td>
+                        </tr>
+                    }) }
+                </table>
             </div>
         }
     }

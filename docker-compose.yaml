@@ -4,7 +4,7 @@ services:
     build:
       args:
         - WASM_TAG=v0-1-0
-        - APP_NAME=civilisation
+        - APP_NAME=civilization
         - APP_PORT=8000
       target: final-server
       context: .
@@ -17,7 +17,7 @@ services:
     environment:
       - APP_PORT=8000
       - APP_HOST=http://mono.localhost:8000
-    command: mono-civilisation-server --real-env service
+    command: mono-civilization-server --real-env service
     networks:
       - common_net
 

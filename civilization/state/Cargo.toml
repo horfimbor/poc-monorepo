@@ -1,0 +1,23 @@
+[package]
+name = "civilization-state"
+version = "0.1.0"
+edition = "2024"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+horfimbor-eventsource.workspace = true
+serde.workspace = true
+civilization-shared = { path = "../shared", features = ["server"] }
+public-mono = {path = "../../public", features = ["server"]}
+garde.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+tokio = { version = "1.50", features = ["rt", "rt-multi-thread", "macros"] }
+cucumber = { version = "0.22" }
+anyhow.workspace = true
+
+
+[lints]
+workspace = true

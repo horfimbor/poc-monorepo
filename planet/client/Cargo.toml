@@ -9,24 +9,33 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 horfimbor-client-derive.workspace = true
 horfimbor-client.workspace = true
-bounce = "0.9"
-yew = { version= "0.21", features=["csr"] }
+yew = { version= "0.23", features=["csr", "serde"] }
 custom-elements = "0.2"
 planet-shared = { path = "../shared" }
-gloo-net = "0.6"
+
+gloo-net = "0.7"
 reqwasm = "0.5"
 weblog = "0.3"
 wasm-bindgen = "0.2"
 serde.workspace = true
 serde_json.workspace = true
-futures = "0.3.28"
-rand = "0.9.2"
-url = "2.5.4"
+futures = "0.3"
+rand = "0.10"
+gloo-timers = "0.4"
+
+
 # getrandom is used even by rand in wasm so it's marked as unused
-getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom = { version = "0.4", features = ["wasm_js"] }
+uuid = { version = "1.23", features = ["v4"] }
 
 [dependencies.web-sys]
-features = ["HtmlInputElement", "InputEvent"]
+features = [
+    "HtmlInputElement",
+    "InputEvent",
+    "HtmlCanvasElement",
+    "CanvasRenderingContext2d",
+    "ImageData",
+]
 version = "0.3"
 
 [lints]

@@ -23,13 +23,21 @@ open:
 watch-client NAME:
     bacon watch-client-{{NAME}}
 
-watch-server NAME PORT:
-    bacon watch-server-{{NAME}} -- -- -p{{PORT}} service
+watch-server NAME:
+    bacon watch-server-{{NAME}}
 
 precommit:
+    reset
     cargo fmt
-    cargo clippy -- -D clippy::expect_used -D clippy::panic  -D clippy::unwrap_used
     cargo test
+    cargo clippy -- -D clippy::expect_used -D clippy::panic  -D clippy::unwrap_used -D warnings
+
+precheck:
+    reset
+    cargo fmt
+    cargo test
+    cargo clippy
+
 
 test-mutation:
     cargo test

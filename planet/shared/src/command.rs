@@ -1,17 +1,46 @@
 #[cfg(feature = "server")]
+use crate::PLANET_CONFIG_STATE_NAME;
+#[cfg(feature = "server")]
 use crate::PLANET_STATE_NAME;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::horfimbor_eventsource_derive::Command;
 #[cfg(feature = "server")]
 use horfimbor_eventsource::{Command, CommandName};
-
+use horfimbor_time::HfTimeConfiguration;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[cfg_attr(feature = "server", derive(Command))]
 #[cfg_attr(feature = "server", state(PLANET_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub enum PlanetCommand {
-    Create { account_id: String },
-    ChangeOwner { account_id: String },
-    Ping,
+pub enum SharedPlanetCommand {
+    Create {
+        owner: String,
+        user_id: String,
+        admin_id: String,
+        time: HfTimeConfiguration,
+    },
+    ChangeOwner {
+        owner: String,
+    },
+    ChangeUserId {
+        user_id: String,
+    },
+    StartConstruction {
+        key: Uuid,
+    },
+    CancelConstruction {
+        key: Uuid,
+    },
+    DestroyConstruction {
+        key: Uuid,
+    },
+}
+
+#[cfg_attr(feature = "server", derive(Command))]
+#[cfg_attr(feature = "server", state(PLANET_CONFIG_STATE_NAME))]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub enum SharedPlanetAdminCommand {
+    UpdateNbStartPlanet(u8),
+    Create,
 }

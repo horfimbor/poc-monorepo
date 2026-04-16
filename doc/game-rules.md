@@ -8,8 +8,8 @@ show as many use cases as possible.
 - [x] use [hfb-auth](https://github.com/horfimbor/hfb-auth) to authenticate users
 - [x] do not use cookies and allow to use one account on each browsers tabs
 - [ ] use refresh token to stay connected
-- [ ] use rooting to go back to the pages
-- [X] use multiple ms (micro-services)  linked only by public event and web components
+- [ ] use routing to go back to the pages
+- [X] use multiple ms (micro-services) linked only by public event and web components
 - [ ] allow multiple ms A depends on the same ms B and then depend on different ms C
 - [ ] game server time using [horfimbor-time](https://github.com/horfimbor/horfimbor-engine/tree/main/horfimbor-time)
 - [ ] use delayed events that can be cancelled by the user
@@ -21,7 +21,7 @@ show as many use cases as possible.
 
 this ms is responsible for:
 - the login
-- the definition of time
+- the definition of time ( pause and speed )
 - the name and description of the civilisation
 - the list of planets
 - the kind of army
@@ -45,6 +45,7 @@ this ms is responsible for:
 - the movement of the army
 - the number of lost before withdrawing
 - fight are a simple shi fu mi one shot
+- take control of a planet with a special unit
 
 ### army hard
 
@@ -52,4 +53,5 @@ this ms is responsible for:
 - the movement of the army
 - the list of available ships
 - each ship shot every X seconds, one event is generated at those times.
+- take control of a planet after enough time without loses
 
