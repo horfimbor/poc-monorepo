@@ -35,8 +35,6 @@ pub async fn start_server(
     let list: Vec<&str> = cors_host.clone().collect();
     let allowed_origins = AllowedOrigins::some_exact(&list);
 
-    dbg!(&allowed_origins);
-
     let cors = rocket_cors::CorsOptions {
         allowed_origins,
         allowed_methods: vec![Method::Get, Method::Post]

@@ -26,8 +26,6 @@ pub async fn start_server(
 ) -> Result<(), Error> {
     let app_port = auth_config.app_host.port();
 
-    dbg!(app_port);
-
     let allowed_origins = AllowedOrigins::some_exact(&[auth_config.app_host.to_string()]);
 
     let cors = rocket_cors::CorsOptions {
@@ -89,7 +87,7 @@ impl AuthConfig {
         ModelKey::new_uuid_v8(
             MONO_CIVILIZATION_ADMIN_STREAM,
             UUID_ADMIN_V8_KIND,
-            &self.app_host.to_string(),
+            self.app_host.as_ref(),
         )
     }
 }

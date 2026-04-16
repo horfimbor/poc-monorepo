@@ -70,11 +70,7 @@ pub async fn auth(token: &str, host: &State<AuthConfig>) -> Result<Template, Str
         .await
         .map_err(|e| e.to_string())?;
 
-    dbg!(&response);
-
     let claims = get_checked_claims(&response, Role::User)?;
-
-    dbg!(&claims);
 
     Ok(Template::render(
         "index",

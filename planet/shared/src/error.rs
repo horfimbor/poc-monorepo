@@ -10,6 +10,7 @@ pub enum PlanetError {
     InvalidCivilization,
     AvailableIdNotExists,
     ConstructionIdNotExists,
+    CannotComputeTime,
     BuildingIdNotExists,
     NoTimeConfig,
     NoAppHost,
@@ -33,6 +34,9 @@ impl Display for PlanetError {
             }
             PlanetError::ConstructionIdNotExists => {
                 write!(f, "id is not in building being construct")
+            }
+            PlanetError::CannotComputeTime => {
+                write!(f, "time wasn't valid")
             }
             PlanetError::BuildingIdNotExists => {
                 write!(f, "id is not a building")

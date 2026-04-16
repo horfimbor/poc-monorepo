@@ -24,7 +24,7 @@ pub async fn mono_command(
     auth: AuthClaim<GateUser>,
 ) -> Result<(), String> {
     let model = state_repository
-        .get_model(&auth.claims().account())
+        .get_model(auth.claims().account())
         .await
         .map_err(|e| e.to_string())?;
 
@@ -34,7 +34,7 @@ pub async fn mono_command(
     }
 
     state_repository
-        .add_command(&auth.claims().account(), command.0, None)
+        .add_command(auth.claims().account(), command.0, None)
         .await
         .map_err(|e| e.to_string())?;
 

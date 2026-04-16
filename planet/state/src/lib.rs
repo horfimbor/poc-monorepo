@@ -143,13 +143,12 @@ impl State for PlanetState {
                     SharedPlanetCommand::ChangeUserId { user_id } => {
                         let model: Result<ModelKey, _> = user_id.as_str().try_into();
 
-                        if model.is_err() {
-                            return Err(InvalidOwner);
+                        match model {
+                            Ok(model) => Ok(vec![PlanetEvent::Private(
+                                PrvPlanetEvent::PlanetUserIdSet(model),
+                            )]),
+                            Err(_) => Err(InvalidOwner),
                         }
-
-                        Ok(vec![PlanetEvent::Private(PrvPlanetEvent::PlanetUserIdSet(
-                            model.unwrap(),
-                        ))])
                     }
                     SharedPlanetCommand::Create {
                         owner: account_id,
@@ -233,20 +232,16 @@ impl State for PlanetState {
 
                         let time = HfTime::now(self.shared.time_config);
 
-                        dbg!(&time);
-                        dbg!(building.construction_time);
-                        dbg!(building.construction_time as i64);
-
-                        let end =
-                            time + HfDuration::from_seconds(building.construction_time as i64);
-
-                        dbg!(&end);
-                        dbg!(&end.as_datetime().unwrap());
+                        let Some(end) = (time
+                            + HfDuration::from_seconds(building.construction_time as i64))
+                        .as_datetime() else {
+                            return Err(CannotComputeTime);
+                        };
 
                         let mut events = vec![PlanetEvent::Shared(UpdateConstruction {
                             key: Uuid::new_v4(),
                             building: building.clone(),
-                            end: end.as_datetime().unwrap(),
+                            end,
                         })];
 
                         for (resource, quantity) in building.construction.iter() {

@@ -94,9 +94,6 @@ impl State for CivilizationState {
                 game_host,
                 time,
             } => {
-                dbg!(&user_id);
-                dbg!(&owner);
-
                 let model: Result<ModelKey, _> = owner.as_str().try_into();
 
                 if model.is_err() {

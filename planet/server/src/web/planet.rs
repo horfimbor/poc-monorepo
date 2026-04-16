@@ -48,9 +48,6 @@ pub async fn mono_command(
         .await
         .map_err(|e| ServerError(e.to_string()))?;
 
-    dbg!(model.state().user_id());
-    dbg!(auth.claims().user());
-
     // WIP
     if model.state().user_id() != auth.claims().user() {
         return Err(Forbidden("not your planet".to_string()));
@@ -87,8 +84,6 @@ pub async fn stream_dto(
     jwt: &str,
 ) -> Result<EventStream![], String> {
     let _ = get_jwt_claims(jwt)?; // TODO move into FromRequest
-
-    dbg!(model_id);
 
     let key = ModelKey::try_from(model_id).map_err(|_| "stream_dto : invalid id")?;
 

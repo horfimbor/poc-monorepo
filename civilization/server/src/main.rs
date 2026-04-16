@@ -152,8 +152,6 @@ async fn main() -> Result<()> {
             let signals_task = handle_signals(signals).boxed();
             services.push(signals_task);
 
-            dbg!(services.len());
-
             try_join_all(services)
                 .await
                 .map(|_| ())

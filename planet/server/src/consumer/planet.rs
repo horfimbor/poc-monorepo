@@ -55,7 +55,6 @@ pub async fn handle_planet_start_building(
                 let now = Utc::now();
 
                 let to_wait = (end - now).num_seconds();
-                dbg!(to_wait);
                 if to_wait > 0 {
                     sleep(Duration::from_secs(to_wait as u64)).await;
                 }

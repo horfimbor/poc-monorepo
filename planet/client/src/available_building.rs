@@ -56,7 +56,7 @@ pub fn draw_available_buildings(props: &AvailableBuildingProps) -> Html {
                                 "{} - {}: {:?}",
                                 resp.status(),
                                 resp.status_text(),
-                                resp.body().unwrap().as_string()
+                                resp.body().map(|b| b.as_string()).unwrap_or_default()
                             );
                             create_error_setter.set(Some(log));
                         }
