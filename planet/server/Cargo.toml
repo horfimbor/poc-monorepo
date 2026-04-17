@@ -10,6 +10,7 @@ horfimbor-eventsource.workspace = true
 horfimbor-jwt.workspace = true
 horfimbor-time.workspace = true
 public-account-event.workspace = true
+horfimbor-callback-recall.workspace = true
 clap.workspace = true
 serde.workspace = true
 kurrentdb.workspace = true
