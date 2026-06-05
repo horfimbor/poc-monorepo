@@ -1,6 +1,8 @@
 use crate::state::PlanetStateProps;
+use chrono::{DateTime, Utc};
 use gloo_timers::callback::Timeout;
 use horfimbor_client::input::send_command;
+use horfimbor_time::{HfTime, HfTimeConfiguration};
 use planet_shared::command::SharedPlanetCommand;
 use planet_shared::dto::Building;
 use std::collections::HashMap;
@@ -12,13 +14,14 @@ use yew::platform::spawn_local;
 use yew::{Callback, Html, Properties, function_component, html, use_state};
 
 #[derive(Properties, PartialEq)]
-pub struct AvailableBuildingProps {
+pub struct UnderConstructionBuildingProps {
     pub state_props: PlanetStateProps,
-    pub available_building: HashMap<Uuid, Building>,
+    pub under_construction_building: HashMap<Uuid, (Building, DateTime<Utc>)>,
+    pub time_config: HfTimeConfiguration,
 }
 
-#[function_component(AvailableBuilding)]
-pub fn draw_available_buildings(props: &AvailableBuildingProps) -> Html {
+#[function_component(UnderConstructionBuilding)]
+pub fn draw_under_construction_buildings(props: &UnderConstructionBuildingProps) -> Html {
     let create_error = use_state(|| None::<String>);
 
     if create_error.is_some() {
@@ -46,7 +49,7 @@ pub fn draw_available_buildings(props: &AvailableBuildingProps) -> Html {
             let state_props = state_props.clone();
             spawn_local(async move {
                 let create_error_setter = create_error_setter.clone();
-                let cmd = SharedPlanetCommand::StartConstruction { key };
+                let cmd = SharedPlanetCommand::CancelConstruction { key };
                 match send_command(&cmd, state_props.clone()).await {
                     Ok(resp) => {
                         if resp.ok() {
@@ -71,54 +74,68 @@ pub fn draw_available_buildings(props: &AvailableBuildingProps) -> Html {
 
     html!(
         <>
-            <h3>{"Available Building"}</h3>
+            <h3>{"Under Construction Building"}</h3>
             <table>
                 <tr>
                     <th>{"Name"}</th>
-                    <th>{"Cost"}</th>
-                    <th>{"Running cost"}</th>
-                    <th>{"Production"}</th>
+                    <th>{"Remaining Time"}</th>
                     <th>{"Action"}</th>
                 </tr>
 
-                { for props.available_building.iter().map(|(id, building)| html! {
+                { for props.under_construction_building.iter().map(|(id, (building, end))| html! {
                     <tr key={id.to_string()}>
                         <td>{&building.name}</td>
                         <td>
-                            <ul>
-                            { for building.construction.iter().map(|(resource, quantity)| html!{
-                                <li>{quantity}{" "}{resource}</li>
-                            })}
-                            <li>{building.construction_time}{" secondes"}</li>
-                            </ul>
-                        </td>
-                        <td>
-                            <ul>
-                            { for building.running_cost.iter().map(|(resource, quantity)| html!{
-                                <li>{quantity}{" "}{resource}</li>
-                            })}
-                            </ul>
-                        </td>
-                        <td>
-                            <ul>
-                            { for building.production.iter().map(|(resource, production)| html!{
-                                <>
-                                <li>{production.quantity}{" "}{resource}</li>
-                                <li>{"( "}{production.stock}{" stock )"}</li>
-                                </>
-                            })}
-                            </ul>
+                            <Clock config={props.time_config} end={*end} />
                         </td>
                         <td>
                             if let Some(create_error) = create_error.as_ref() {
                                 <span style="color:red">{create_error}</span>
                             }else{
-                                <button id={id.to_string()} onclick={on_create.clone()}>{"build"}</button>
+                                <button id={id.to_string()} onclick={on_create.clone()}>{"cancel"}</button>
                             }
                         </td>
                     </tr>
                 }) }
             </table>
         </>
+    )
+}
+
+#[derive(Properties, PartialEq)]
+pub struct ClockProps {
+    pub config: HfTimeConfiguration,
+    pub end: DateTime<Utc>,
+}
+
+#[function_component(Clock)]
+pub fn draw_clock(props: &ClockProps) -> Html {
+    let state = use_state(Utc::now);
+
+    let timer = state.clone();
+    let timeout = Timeout::new(500, move || {
+        timer.set(Utc::now());
+    });
+    timeout.forget();
+
+    let time = HfTime::new(*state, props.config);
+
+    let (duration, hf_duration) = time.remaining(props.end);
+
+    let remaining_time = format!(
+        "{:02}:{:02}:{:02}",
+        duration.num_hours(),
+        duration.num_minutes() % 60,
+        duration.num_seconds() % 60
+    );
+    let hf_remaining_time = format!(
+        "{:02}:{:02}:{:02}",
+        hf_duration.num_hours(),
+        hf_duration.num_minutes() % 60,
+        hf_duration.num_seconds() % 60
+    );
+
+    html!(
+        <p>{remaining_time} { "("}{hf_remaining_time}{")"}</p>
     )
 }

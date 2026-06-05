@@ -175,6 +175,7 @@ impl State for PlanetState {
                         };
 
                         Ok(vec![
+                            PlanetEvent::Shared(NameSet(Uuid::now_v7().to_string())),
                             PlanetEvent::Private(PrvPlanetEvent::PlanetAdminSet(admin_id)),
                             PlanetEvent::Private(PrvPlanetEvent::PlanetUserIdSet(user_id)),
                             PlanetEvent::Shared(SharedPlanetEvent::TimeSet(time)),
@@ -184,21 +185,30 @@ impl State for PlanetState {
                                 owner: account_id,
                             }),
                             PlanetEvent::Shared(UpdateResource {
-                                resource: Resource::Population,
+                                resource: Resource::Steal,
                                 calc: ResourceCalc {
-                                    quantity: 10000,
+                                    quantity: 2500,
                                     date_time: Utc::now(),
                                     production: 0,
                                     stock_capacity: 100000,
                                 },
                             }),
                             PlanetEvent::Shared(UpdateResource {
-                                resource: Resource::Electricity,
+                                resource: Resource::Population,
                                 calc: ResourceCalc {
-                                    quantity: 11000,
+                                    quantity: 10000,
                                     date_time: Utc::now(),
                                     production: 0,
-                                    stock_capacity: 0,
+                                    stock_capacity: 10000,
+                                },
+                            }),
+                            PlanetEvent::Shared(UpdateResource {
+                                resource: Resource::Electricity,
+                                calc: ResourceCalc {
+                                    quantity: 500,
+                                    date_time: Utc::now(),
+                                    production: 0,
+                                    stock_capacity: 100000,
                                 },
                             }),
                             PlanetEvent::Shared(UpdateAvailableBuilding {
@@ -206,6 +216,7 @@ impl State for PlanetState {
                                 building: Building {
                                     name: "Steal factory".to_string(),
                                     construction: HashMap::from([
+                                        (Resource::Steal, 850),
                                         (Resource::Electricity, 998),
                                         (Resource::Population, 800),
                                     ]),
@@ -219,6 +230,52 @@ impl State for PlanetState {
                                         Production {
                                             quantity: 49,
                                             stock: 1000,
+                                        },
+                                    )]),
+                                },
+                            }),
+                            PlanetEvent::Shared(UpdateAvailableBuilding {
+                                key: Uuid::new_v4(),
+                                building: Building {
+                                    name: "Electricity factory".to_string(),
+                                    construction: HashMap::from([
+                                        (Resource::Steal, 150),
+                                        (Resource::Electricity, 100),
+                                        (Resource::Population, 80),
+                                    ]),
+                                    construction_time: 100,
+                                    running_cost: HashMap::from([
+                                        (Resource::Population, 21),
+                                        (Resource::Steal, 3),
+                                    ]),
+                                    production: HashMap::from([(
+                                        Resource::Electricity,
+                                        Production {
+                                            quantity: 200,
+                                            stock: 0,
+                                        },
+                                    )]),
+                                },
+                            }),
+                            PlanetEvent::Shared(UpdateAvailableBuilding {
+                                key: Uuid::new_v4(),
+                                building: Building {
+                                    name: "Neighbourhood".to_string(),
+                                    construction: HashMap::from([
+                                        (Resource::Steal, 42),
+                                        (Resource::Electricity, 2),
+                                        (Resource::Population, 20),
+                                    ]),
+                                    construction_time: 500,
+                                    running_cost: HashMap::from([
+                                        (Resource::Steal, 3),
+                                        (Resource::Electricity, 43),
+                                    ]),
+                                    production: HashMap::from([(
+                                        Resource::Population,
+                                        Production {
+                                            quantity: 12,
+                                            stock: 2300,
                                         },
                                     )]),
                                 },
@@ -246,18 +303,19 @@ impl State for PlanetState {
 
                         for (resource, quantity) in building.construction.iter() {
                             let Some(calc) = self.shared.resources.get(resource) else {
-                                return Err(NotEnoughResources(*resource));
+                                return Err(NotResources(*resource));
                             };
 
-                            let new_quantities = calc.compute_quantity(self.shared.time_config);
+                            let current_quantity =
+                                calc.compute_quantity(self.shared.time_config, None);
 
-                            if *quantity < new_quantities.quantity {
+                            if *quantity > current_quantity.quantity {
                                 return Err(NotEnoughResources(*resource));
                             }
 
                             events.push(PlanetEvent::Shared(UpdateResource {
                                 resource: *resource,
-                                calc: new_quantities - *quantity as i64,
+                                calc: current_quantity - *quantity as i64,
                             }));
                         }
 
@@ -278,7 +336,8 @@ impl State for PlanetState {
                                 .cloned()
                                 .unwrap_or_default();
 
-                            let new_quantities = calc.compute_quantity(self.shared.time_config);
+                            let new_quantities =
+                                calc.compute_quantity(self.shared.time_config, None);
 
                             events.push(PlanetEvent::Shared(UpdateResource {
                                 resource: *resource,
@@ -303,7 +362,8 @@ impl State for PlanetState {
                                 .cloned()
                                 .unwrap_or_default();
 
-                            let mut new_quantities = calc.compute_quantity(self.shared.time_config);
+                            let mut new_quantities =
+                                calc.compute_quantity(self.shared.time_config, None);
                             new_quantities.production -= quantity.quantity as i64;
                             new_quantities.stock_capacity -= quantity.stock;
 
@@ -335,6 +395,12 @@ impl State for PlanetState {
 
                         Ok(events)
                     }
+                    SharedPlanetCommand::ChangeName(name) => {
+                        if name.len() < 2 {
+                            return Err(InvalidName);
+                        }
+                        Ok(vec![PlanetEvent::Shared(NameSet(name))])
+                    }
                 }
             }
             PlanetCommand::Private(command) => match command {
@@ -359,7 +425,8 @@ impl State for PlanetState {
                             .cloned()
                             .unwrap_or_default();
 
-                        let mut new_quantities = calc.compute_quantity(self.shared.time_config);
+                        let mut new_quantities =
+                            calc.compute_quantity(self.shared.time_config, None);
                         new_quantities.production += quantity.quantity as i64;
                         new_quantities.stock_capacity += quantity.stock;
 

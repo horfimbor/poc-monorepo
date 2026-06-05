@@ -82,11 +82,19 @@ impl Default for ResourceCalc {
 }
 
 impl ResourceCalc {
-    pub fn compute_quantity(&self, time_config: HfTimeConfiguration) -> Self {
-        let date_time = Utc::now();
+    pub fn compute_quantity(
+        &self,
+        time_config: HfTimeConfiguration,
+        time: Option<DateTime<Utc>>,
+    ) -> Self {
+        let date_time = match time {
+            None => Utc::now(),
+            Some(n) => n,
+        };
 
         let new_quantity = min(
-            time_config.diff_hf_millis(self.date_time, date_time) * self.production,
+            self.quantity as i64
+                + time_config.diff_hf_millis(self.date_time, date_time) * self.production / 1000,
             self.stock_capacity as i64,
         );
 
@@ -135,6 +143,8 @@ impl Sub<i64> for ResourceCalc {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Default, Eq)]
 pub struct PlanetDto {
+    #[serde(rename = "nm")]
+    pub name: String,
     #[serde(rename = "rs")]
     pub resources: HashMap<Resource, ResourceCalc>,
     #[serde(rename = "av")]
@@ -171,6 +181,9 @@ impl PlanetDto {
             }
             SharedPlanetEvent::RemoveRunningBuilding { key } => {
                 self.buildings.remove(key);
+            }
+            SharedPlanetEvent::NameSet(name) => {
+                self.name = name.clone();
             }
         }
     }

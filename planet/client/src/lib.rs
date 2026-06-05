@@ -1,5 +1,7 @@
 mod admin;
-mod available_building;
+mod buildings_available;
+mod buildings_under_construction;
+mod ressources;
 mod state;
 
 use custom_elements::CustomElement;

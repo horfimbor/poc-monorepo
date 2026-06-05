@@ -17,6 +17,7 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum SharedPlanetEvent {
     TimeSet(HfTimeConfiguration),
+    NameSet(String),
     UpdateResource {
         resource: Resource,
         calc: ResourceCalc,
