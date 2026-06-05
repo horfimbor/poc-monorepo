@@ -35,7 +35,6 @@ pub enum SharedPlanetCommand {
     DestroyConstruction {
         key: Uuid,
     },
-    ChangeName(String),
 }
 
 #[cfg_attr(feature = "server", derive(Command))]
