@@ -14,6 +14,7 @@ use uuid::Uuid;
 #[cfg_attr(feature = "server", state(PLANET_STATE_NAME))]
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum SharedPlanetCommand {
+    ChangeName(String),
     Create {
         owner: String,
         user_id: String,
