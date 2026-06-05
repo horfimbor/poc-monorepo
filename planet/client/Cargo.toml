@@ -13,6 +13,9 @@ yew = { version= "0.23", features=["csr", "serde"] }
 custom-elements = "0.2"
 planet-shared = { path = "../shared" }
 
+horfimbor-time.workspace = true
+
+chrono.workspace = true
 gloo-net = "0.7"
 reqwasm = "0.5"
 weblog = "0.3"

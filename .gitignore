@@ -19,3 +19,6 @@ client/dist/
 /*/server/web
 !/*/server/web/.gitkeep
 
+# sqlite files
+/identifier.sqlite
+/test

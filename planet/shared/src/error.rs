@@ -5,6 +5,7 @@ use thiserror::Error;
 
 #[derive(Error, Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum PlanetError {
+    InvalidName,
     InvalidOwner,
     InvalidAdminId,
     InvalidCivilization,
@@ -15,6 +16,7 @@ pub enum PlanetError {
     NoTimeConfig,
     NoAppHost,
     NotEnoughResources(Resource),
+    NotResources(Resource),
 }
 
 impl Display for PlanetError {
@@ -44,11 +46,17 @@ impl Display for PlanetError {
             PlanetError::NotEnoughResources(r) => {
                 write!(f, "Not enough {:?} (as least)", r)
             }
+            PlanetError::NotResources(r) => {
+                write!(f, "Not known {:?} (as least)", r)
+            }
             PlanetError::NoTimeConfig => {
                 write!(f, "Time config not loaded")
             }
             PlanetError::NoAppHost => {
                 write!(f, "APP_HOST notr defined")
+            }
+            PlanetError::InvalidName => {
+                write!(f, "planet name must be at least 2 char long")
             }
         }
     }

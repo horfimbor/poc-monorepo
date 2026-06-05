@@ -53,21 +53,8 @@ pub async fn mono_command(
         return Err(Forbidden("not your planet".to_string()));
     }
 
-    let command = match command.0 {
-        SharedPlanetCommand::StartConstruction { key } => {
-            SharedPlanetCommand::StartConstruction { key }
-        }
-        SharedPlanetCommand::CancelConstruction { key } => {
-            SharedPlanetCommand::CancelConstruction { key }
-        }
-        SharedPlanetCommand::DestroyConstruction { key } => {
-            SharedPlanetCommand::DestroyConstruction { key }
-        }
-        _ => command.0,
-    };
-
     state_repository
-        .add_command(&key, PlanetCommand::Shared(command), None)
+        .add_command(&key, PlanetCommand::Shared(command.0), None)
         .await
         .map_err(|e| match e {
             EventSourceStateError::EventSourceError(e) => ServerError(e.to_string()),
